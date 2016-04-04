@@ -14,6 +14,7 @@ import javax.annotation.Nonnull;
 
 import reach.project.R;
 import reach.project.apps.App;
+import reach.project.core.StaticData;
 import reach.project.coreViews.yourProfile.blobCache.CacheAdapterInterface;
 import reach.project.utils.ThreadLocalRandom;
 import reach.project.utils.viewHelpers.CustomGridLayoutManager;
@@ -112,9 +113,11 @@ class ParentAdapter<T extends Message> extends RecyclerViewMaterialAdapter<Recyc
                         R.layout.list_with_more_button_padding, //Main resource id
                         R.id.headerText, //id for header text
                         R.id.listOfItems, //id for list (recycler view)
-                        R.id.moreButton); //id of more button
+                        R.id.moreButton,
+                        StaticData.YOUR_PROFILE_APPS
+                        ); //id of more button
             case SMART_LIST_TYPE:
-                return new MoreListHolder(parent);
+                return new MoreListHolder(parent, StaticData.YOUR_PROFILE_APPS);
             default:
                 throw new IllegalArgumentException("Unknown view type found");
         }

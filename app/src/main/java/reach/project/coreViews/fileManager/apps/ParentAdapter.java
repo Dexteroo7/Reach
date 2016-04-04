@@ -238,7 +238,7 @@ public class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
 
             case VIEW_TYPE_RECENT: {
 
-                final MoreListHolder moreListHolder = new MoreListHolder(parent);
+                final MoreListHolder moreListHolder = new MoreListHolder(parent,"apps");
                 moreListHolder.headerText.setText("Recently Installed");
                 moreListHolder.listOfItems.setLayoutManager(new CustomGridLayoutManager(moreListHolder.listOfItems.getContext(), 2));
                 moreListHolder.listOfItems.setAdapter(recentAdapter);

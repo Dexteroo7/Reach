@@ -31,6 +31,7 @@ import android.widget.Toast;
 
 import com.facebook.drawee.view.SimpleDraweeView;
 import com.facebook.imagepipeline.common.ResizeOptions;
+import com.google.android.gms.analytics.HitBuilders;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
@@ -46,6 +47,7 @@ import java.util.concurrent.ExecutorService;
 import javax.annotation.Nonnull;
 
 import reach.project.R;
+import reach.project.core.ReachApplication;
 import reach.project.core.StaticData;
 import reach.project.coreViews.fileManager.myfiles_search.MyFilesSearchFragment;
 import reach.project.coreViews.myProfile.EmptyRecyclerView;
@@ -71,6 +73,7 @@ public class PlayerActivity extends AppCompatActivity implements LoaderManager.L
     private static final String player = "Player";
     public static final String TAG = PlayerActivity.class.getSimpleName();
     private SearchView searchView;
+    private Map<String, String> songPlayedGaEventBuilder;
 
     public static void openActivity(Context context) {
 
@@ -588,6 +591,7 @@ public class PlayerActivity extends AppCompatActivity implements LoaderManager.L
 
     @Override
     public void handOverMessage(@Nonnull Cursor cursor) {
+        final SharedPreferences preferences = (SharedPreferences)getSharedPreferences("Reach", MODE_PRIVATE);
 
         final Song song = SongCursorHelper.SONG_HELPER.parse(cursor);
         MiscUtils.playSong(song, this);

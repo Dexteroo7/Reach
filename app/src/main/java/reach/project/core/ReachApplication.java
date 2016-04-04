@@ -1,8 +1,10 @@
 package reach.project.core;
 
 import android.app.Application;
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.os.Build;
+import android.os.Environment;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
@@ -18,12 +20,22 @@ import com.google.android.gms.analytics.HitBuilders;
 import com.google.android.gms.analytics.Tracker;
 import com.google.common.base.Optional;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.StreamCorruptedException;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
@@ -33,7 +45,9 @@ import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 
 import okhttp3.OkHttpClient;
+import okhttp3.internal.DiskLruCache;
 import reach.project.R;
+import reach.project.apps.App;
 
 /**
  * Created by ashish on 23/3/15.
@@ -167,7 +181,10 @@ public class ReachApplication extends Application implements MemoryTrimmableRegi
         Fresco.initialize(this, configBuilder.build());
         FacebookSdk.sdkInitialize(getApplicationContext());
         AppEventsLogger.activateApp(this);
+
+
     }
+
 
     @Override
     public void onLowMemory() {
@@ -227,4 +244,40 @@ public class ReachApplication extends Application implements MemoryTrimmableRegi
     public void unregisterMemoryTrimmable(MemoryTrimmable trimmable) {
         trimmables.remove(trimmable);
     }
+
+    public synchronized static void createCachedFile (Context context, String key, List<App> fileName) throws IOException {
+
+        String tempFile = null;
+        //for (File file : fileName) {
+            FileOutputStream fos = context.openFileOutput (key, Context.MODE_PRIVATE);
+            ObjectOutputStream oos = new ObjectOutputStream(fos);
+            oos.writeObject (fileName);
+            oos.close ();
+            fos.close ();
+
+        //}
+    }
+
+
+    public static Object readCachedFile (Context context, String key) {
+
+        FileInputStream fis = null;
+        try {
+            fis = context.openFileInput (key);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+        ObjectInputStream ois = null;
+        Object object = null;
+        try {
+            ois = new ObjectInputStream(fis);
+            object = ois.readObject ();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return object;
+    }
+
+
 }

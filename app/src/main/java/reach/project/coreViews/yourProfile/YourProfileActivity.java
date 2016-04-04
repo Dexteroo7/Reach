@@ -13,6 +13,7 @@ import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.View;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -20,9 +21,12 @@ import android.widget.TextView;
 import com.facebook.drawee.view.SimpleDraweeView;
 import com.github.florent37.materialviewpager.MaterialViewPager;
 import com.github.florent37.materialviewpager.header.HeaderDesign;
+import com.google.android.gms.analytics.HitBuilders;
+import com.google.android.gms.analytics.Tracker;
 
 import reach.project.R;
 import reach.project.ancillaryViews.SettingsActivity;
+import reach.project.core.ReachApplication;
 import reach.project.core.StaticData;
 import reach.project.coreViews.friends.ReachFriendsHelper;
 import reach.project.coreViews.friends.ReachFriendsProvider;
@@ -38,6 +42,7 @@ public class YourProfileActivity extends AppCompatActivity {
 
     private static final String OPEN_MY_PROFILE_APPS = "OPEN_MY_PROFILE_APPS";
     private static final String OPEN_MY_PROFILE_SONGS = "OPEN_MY_PROFILE_SONGS";
+    private static final String TAG = YourProfileActivity.class.getSimpleName();
 
     public static void openProfile(long userId, Context context) {
 
@@ -222,5 +227,14 @@ public class YourProfileActivity extends AppCompatActivity {
         else if (action.equals(OPEN_MY_PROFILE_SONGS))
             viewPager.setCurrentItem(1);
 
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        Log.d(TAG, "yourprofile onResume");
+        final Tracker tracker = ((ReachApplication) getApplication()).getTracker();
+        tracker.setScreenName("Browsing Friend's Profile");
+        tracker.send(new HitBuilders.ScreenViewBuilder().build());
     }
 }

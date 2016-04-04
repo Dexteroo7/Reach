@@ -8,6 +8,7 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.util.Pair;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -26,6 +27,7 @@ import javax.annotation.Nonnull;
 
 import reach.project.R;
 import reach.project.apps.App;
+import reach.project.core.ReachApplication;
 import reach.project.core.StaticData;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
@@ -77,8 +79,26 @@ public class ApplicationFragment extends Fragment implements HandOverMessage<App
         mRecyclerView.setAdapter(parentAdapter);
         parentAdapter.packageVisibility.putAll(SharedPrefUtils.getPackageVisibilities(preferences));
 
-        loadingProgress.setVisibility(View.VISIBLE);
-        new GetApplications(this).executeOnExecutor(applicationsFetcher, context);
+
+        List<App> appData = null;
+        if((appData = (List<App>) ReachApplication.readCachedFile(getActivity(),StaticData.APP_DATA_CACHE_KEY))==null){
+            loadingProgress.setVisibility(View.VISIBLE);
+            new GetApplications(this).executeOnExecutor(applicationsFetcher, context);
+        }
+        else{
+            Log.d(TAG, "onCreateView: AppsData fetched from cache");
+            final List<App> recentApps = Ordering
+                    .from(StaticData.byInstallDate)
+                    .compound(StaticData.byName)
+                    .greatestOf(appData, 20);
+            if(parentAdapter!=null) {
+                parentAdapter.updateAllAppCount(appData);
+                parentAdapter.updateRecentApps(recentApps);
+            }
+
+        }
+
+
 
         return rootView;
     }

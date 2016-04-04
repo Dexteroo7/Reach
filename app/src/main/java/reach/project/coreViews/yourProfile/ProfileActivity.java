@@ -20,6 +20,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.facebook.drawee.view.SimpleDraweeView;
+import com.google.android.gms.analytics.HitBuilders;
+import com.google.android.gms.analytics.Tracker;
 import com.google.common.base.Optional;
 
 import java.io.IOException;
@@ -29,6 +31,7 @@ import java.util.concurrent.ExecutorService;
 import reach.backend.entities.messaging.model.MyString;
 import reach.project.R;
 import reach.project.ancillaryViews.SettingsActivity;
+import reach.project.core.ReachApplication;
 import reach.project.core.StaticData;
 import reach.project.coreViews.friends.ReachFriendsHelper;
 import reach.project.coreViews.friends.ReachFriendsProvider;
@@ -41,6 +44,7 @@ import reach.project.utils.SharedPrefUtils;
 // If a friend is not added, then this activity is displayed
 public class ProfileActivity extends AppCompatActivity {
 
+    private static final String TAG = ProfileActivity.class.getSimpleName() ;
     private static long userId = 0;
 
     private SharedPreferences sharedPreferences;
@@ -209,6 +213,13 @@ public class ProfileActivity extends AppCompatActivity {
             setRequestSent();
         } else
             sendButton.setOnClickListener(sendRequest);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+
     }
 
     @Override

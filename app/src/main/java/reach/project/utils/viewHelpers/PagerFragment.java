@@ -6,10 +6,14 @@ import android.content.Context;
 import android.graphics.Color;
 import android.graphics.Rect;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.design.widget.AppBarLayout;
+import android.support.design.widget.CoordinatorLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.app.FragmentTabHost;
@@ -32,6 +36,7 @@ import java.lang.reflect.Method;
 import reach.project.R;
 import reach.project.core.ReachActivity;
 import reach.project.core.SearchResultsActivity;
+import reach.project.core.StaticData;
 import reach.project.coreViews.fileManager.music.myLibrary.MyLibraryFragment;
 import reach.project.coreViews.fileManager.myfiles_search.MyFilesSearchFragment;
 import reach.project.utils.MiscUtils;
@@ -43,6 +48,7 @@ import reach.project.utils.ancillaryClasses.SuperInterface;
 public class PagerFragment extends Fragment {
 
     public static final String PARCEL_PAGER = "PARCEL_PAGER";
+    private static final int TRIGGER_SERACH =123;
     public SearchView searchView;
     private boolean isSearchViewFragVisible = false;
     private static final String TAG = PagerFragment.class.getSimpleName();
@@ -176,6 +182,8 @@ public class PagerFragment extends Fragment {
                 frag = new MyFilesSearchFragment();
 
                 searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+                    Bundle bundle = new Bundle();
+                    Message message = new Message();
                     @Override
                     public boolean onQueryTextSubmit(String query) {
                         return false;
@@ -187,7 +195,19 @@ public class PagerFragment extends Fragment {
                         if(frag!=null){
                             if(!frag.isAdded())
                                 return true;
-                            frag.filter(newText.toLowerCase());
+                            handler.removeMessages(TRIGGER_SERACH);
+                            final Message obtained = handler.obtainMessage(TRIGGER_SERACH);
+                            bundle.putString(StaticData.FILTER_STRING_KEY,newText.toLowerCase());
+                            if(obtained == null) {
+                                message.setData(bundle);
+                                message.what = TRIGGER_SERACH;
+                                handler.sendMessageDelayed(message, 150);
+                            }
+                            else{
+                                obtained.setData(bundle);
+                                handler.sendMessageDelayed(obtained,150);
+                            }
+                            //frag.filter(newText.toLowerCase());
                         }
 
                         return true;
@@ -206,6 +226,10 @@ public class PagerFragment extends Fragment {
                             getFragmentManager().beginTransaction().replace(R.id.search_results_fragment_container,frag ).commit();
                             isSearchViewFragVisible = true;
                             viewPagerContainer.setVisibility(View.GONE);
+                            //CoordinatorLayout.LayoutParams params = (CoordinatorLayout.LayoutParams) viewPagerContainer.getLayoutParams();
+                            //params.setBehavior( null );
+                            AppBarLayout.LayoutParams params1 = (AppBarLayout.LayoutParams) toolbar.getLayoutParams();
+                            params1.setScrollFlags(0);
                             Log.d(TAG, "onClick: searchview frag is now visible");
                             FragmentTabHost mTabHost = ((ReachActivity) getActivity()).mTabHost;
                             if(mTabHost!=null){
@@ -225,6 +249,8 @@ public class PagerFragment extends Fragment {
                         tabLayout.setVisibility(View.VISIBLE);
                         searchFragmentContainer.setVisibility(View.GONE);
                         FragmentTabHost mTabHost = ((ReachActivity) getActivity()).mTabHost;
+                        AppBarLayout.LayoutParams params1 = (AppBarLayout.LayoutParams) toolbar.getLayoutParams();
+                        params1.setScrollFlags(AppBarLayout.LayoutParams.SCROLL_FLAG_SCROLL| AppBarLayout.LayoutParams.SCROLL_FLAG_ENTER_ALWAYS);
                         if(mTabHost!=null){
                             mTabHost.setVisibility(View.VISIBLE);
                         }
@@ -374,6 +400,19 @@ public class PagerFragment extends Fragment {
         mListener = null;
     }
 
+
+    private Handler handler = new Handler() {
+        @Override
+        public void handleMessage(Message msg) {
+            if (msg.what == TRIGGER_SERACH) {
+                if(frag == null)
+                    return;
+                else{
+                    frag.filter(msg.getData().getString(StaticData.FILTER_STRING_KEY));
+                }
+            }
+        }
+    };
 
 
 }

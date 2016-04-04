@@ -25,6 +25,7 @@ import android.widget.Toast;
 
 import com.appspot.able_door_616.contentStateApi.ContentStateApi;
 import com.facebook.common.logging.LoggingDelegate;
+import com.google.android.gms.analytics.HitBuilders;
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.http.javanet.NetHttpTransport;
@@ -42,6 +43,7 @@ import java.util.concurrent.Executors;
 import javax.annotation.Nonnull;
 
 import reach.project.R;
+import reach.project.core.ReachApplication;
 import reach.project.core.StaticData;
 import reach.project.coreViews.myProfile.EmptyRecyclerView;
 import reach.project.music.ReachDatabase;
@@ -126,6 +128,8 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage, Pare
     @Override
     public void handOverMessage(@Nonnull Object message) {
         // Cursor is used for full list songs
+
+
         if (message instanceof Cursor) {
 
             final Cursor cursor = (Cursor) message;
@@ -153,6 +157,7 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage, Pare
             final Song musicData = (Song) message;
             //musicData.setProcessed(musicData.size);
             MiscUtils.playSong(musicData, getContext());
+
         } else
             throw new IllegalArgumentException("Unknown type handed over");
     }

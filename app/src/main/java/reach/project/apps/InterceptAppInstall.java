@@ -13,6 +13,7 @@ import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
 import android.util.Log;
 
+import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.util.List;
 import java.util.Map;
@@ -21,6 +22,8 @@ import javax.annotation.Nullable;
 
 import reach.project.R;
 import reach.project.core.ReachActivity;
+import reach.project.core.ReachApplication;
+import reach.project.core.StaticData;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
 
@@ -30,6 +33,7 @@ import reach.project.utils.SharedPrefUtils;
 public class InterceptAppInstall extends BroadcastReceiver {
 
     private static final int FOUND_NEW_NOTIFICATION = 1;
+    private static final String TAG = InterceptAppInstall.class.getSimpleName();
 
     @Nullable
     private static WeakReference<Context> reference = null;
@@ -95,6 +99,13 @@ public class InterceptAppInstall extends BroadcastReceiver {
                 new UpdateVisibility().execute(appBuilder, SharedPrefUtils.getServerId(preferences), NOT_VISIBLE);
         } else
             new UpdateVisibility().execute(appBuilder, SharedPrefUtils.getServerId(preferences), NOT_DEFINED);
+
+        try {
+            ReachApplication.createCachedFile(context, StaticData.APP_DATA_CACHE_KEY,MiscUtils.getApplications(packageManager,preferences));
+        } catch (IOException e) {
+            e.printStackTrace();
+            Log.e(TAG, "onReceive: Couldn't save app data into file cache " );
+        }
 
     }
 

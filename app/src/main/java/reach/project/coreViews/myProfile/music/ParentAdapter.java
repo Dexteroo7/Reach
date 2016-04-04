@@ -240,7 +240,8 @@ class ParentAdapter extends RecyclerViewMaterialAdapter<RecyclerView.ViewHolder>
                         R.layout.list_with_more_button_padding,
                         R.id.headerText,
                         R.id.listOfItems,
-                        R.id.moreButton);
+                        R.id.moreButton,
+                        "myProfile music");
             }
 
             default:

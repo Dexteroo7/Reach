@@ -40,6 +40,7 @@ import java.util.concurrent.Executors;
 import javax.annotation.Nonnull;
 import reach.project.R;
 import reach.project.apps.App;
+import reach.project.core.ReachApplication;
 import reach.project.core.StaticData;
 import reach.project.coreViews.fileManager.music.myLibrary.MyLibraryFragment;
 import reach.project.coreViews.myProfile.EmptyRecyclerView;
@@ -100,7 +101,7 @@ public class MyFilesSearchFragment extends Fragment implements HandOverMessage, 
         searchAdapter = new SearchAdapter(this,this,this,getActivity());
         mRecyclerView.setLayoutManager(new CustomLinearLayoutManager(context));
         mRecyclerView.setAdapter(searchAdapter);
-        new GetApplications(this).executeOnExecutor(applicationsFetcher, getContext());
+        //new GetApplications(this).executeOnExecutor(applicationsFetcher, getContext());
         getLoaderManager().initLoader(StaticData.MY_LIBRARY_LOADER, null, this);
         return rootView;
     }
@@ -113,6 +114,25 @@ public class MyFilesSearchFragment extends Fragment implements HandOverMessage, 
         getLoaderManager().destroyLoader(StaticData.MY_LIBRARY_LOADER);
         if (searchAdapter != null)
             searchAdapter.close();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+
+        if(!searchAdapter.appsDataPresent()){
+            if((appData = (List<App>) ReachApplication.readCachedFile(getActivity(),StaticData.APP_DATA_CACHE_KEY))==null)
+            new GetApplications(this).executeOnExecutor(applicationsFetcher, getContext());
+            else{
+
+                if(searchAdapter == null)
+                    return;
+                else {
+                    searchAdapter.updateRecentApps(appData);
+                    Log.d(TAG, "onResume: Application Data Fetched From Cache");
+                }
+            }
+        }
     }
 
     // The song is being played here
@@ -367,9 +387,12 @@ public class MyFilesSearchFragment extends Fragment implements HandOverMessage, 
 
 
     public void filter(String constraint){
+        if(!isAdded())
+            return;
         Bundle bundle = new Bundle();
         bundle.putString("filter",constraint);
         getLoaderManager().restartLoader(StaticData.MY_LIBRARY_LOADER,bundle,this);
+        if(searchAdapter!=null)
         searchAdapter.filterApps(constraint);
     }
 

@@ -7,6 +7,7 @@ import android.support.annotation.Nullable;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -35,30 +36,35 @@ public class MoreListHolder extends RecyclerView.ViewHolder implements View.OnCl
     public final RecyclerView listOfItems;
     private SharedPreferences preferences;
     public final TextView moreButton;
-
+    private static final String TAG = MoreListHolder.class.getSimpleName();
 
     public MoreListHolder(ViewGroup parent,
                           int itemViewResourceId,
                           int headerTextResourceId,
                           int listOfItemsResourceId,
-                          int moreButtonId) {
+                          int moreButtonId,
+                          String fileName) {
 
         super(LayoutInflater.from(parent.getContext()).inflate(itemViewResourceId, parent, false));
         this.headerText = (TextView) itemView.findViewById(headerTextResourceId);
         this.listOfItems = (RecyclerView) itemView.findViewById(listOfItemsResourceId);
         this.moreButton = (TextView) itemView.findViewById(R.id.moreButton);
-        itemView.findViewById(moreButtonId).setOnClickListener(this);
+        if(fileName!= null)
+            this.moreButton.setTag(fileName);
+        this.moreButton.setOnClickListener(this);
         itemView.setPadding(MiscUtils.dpToPx(10),MiscUtils.dpToPx(32), MiscUtils.dpToPx(10),0 );
         itemView.setBackgroundResource(R.drawable.border_shadow1);
     }
 
-    public MoreListHolder(ViewGroup parent) {
+    public MoreListHolder(ViewGroup parent, String fileName ) {
 
         super(LayoutInflater.from(parent.getContext()).inflate(R.layout.list_with_more_button, parent, false));
         this.headerText = (TextView) itemView.findViewById(R.id.headerText);
         this.listOfItems = (RecyclerView) itemView.findViewById(R.id.listOfItems);
         this.listOfItems.setNestedScrollingEnabled(false);
         this.moreButton = (TextView) itemView.findViewById(R.id.moreButton);
+        if(fileName!= null)
+        this.moreButton.setTag(fileName);
         this.moreButton.setOnClickListener(this);
     }
 
@@ -76,13 +82,16 @@ public class MoreListHolder extends RecyclerView.ViewHolder implements View.OnCl
         if(preferences == null) {
             preferences = SharedPrefUtils.getPreferences(view.getContext());
         }
-
-        ((ReachApplication) view.getContext().getApplicationContext()).getTracker().send(new HitBuilders.EventBuilder()
-                .setCategory("More button clicked")
-                .setAction("Username = " + SharedPrefUtils.getUserName(preferences))
-                .setAction("User id = " + SharedPrefUtils.getServerId(preferences))
-                .setValue(1)
-                .build());
+        final Object fileName = moreButton.getTag();
+        if(fileName != null) {
+            Log.d(TAG, "fileName for tracker = " + fileName.toString());
+            ((ReachApplication) view.getContext().getApplicationContext()).getTracker().send(new HitBuilders.EventBuilder()
+                    .setCategory("More button clicked")
+                    .setLabel(fileName.toString())
+                    .setAction("Username = " + SharedPrefUtils.getUserName(preferences) + " User id = " + SharedPrefUtils.getServerId(preferences))
+                    .setValue(1)
+                    .build());
+        }
 
         final RecyclerView.Adapter adapter = listOfItems.getAdapter();
 

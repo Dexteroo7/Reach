@@ -7,8 +7,10 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.graphics.Point;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -30,10 +32,14 @@ import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.common.base.Optional;
 
+import java.io.IOException;
 import java.io.Serializable;
 import java.lang.ref.WeakReference;
+import java.util.Collections;
+import java.util.List;
 
 import reach.project.R;
+import reach.project.apps.App;
 import reach.project.core.ReachActivity;
 import reach.project.core.ReachApplication;
 import reach.project.core.StaticData;
@@ -57,6 +63,7 @@ public class SplashActivity extends AppCompatActivity implements SplashInterface
 
     private static final int MY_PERMISSIONS_READ_CONTACTS = 11;
     private static final int MY_PERMISSIONS_WRITE_EXTERNAL_STORAGE = 22;
+    private static final String TAG = SplashActivity.class.getSimpleName();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -68,6 +75,11 @@ public class SplashActivity extends AppCompatActivity implements SplashInterface
 
         activityWeakReference = new WeakReference<>(this);
         contextWeakReference = new WeakReference<>(getApplication());
+
+            List<App> apps = (List<App>) ReachApplication.readCachedFile(SplashActivity.this, StaticData.APP_DATA_CACHE_KEY);
+        if(apps==null){
+            new GetApplications(SplashActivity.this).execute(this);
+        }
 
         Display display = getWindowManager().getDefaultDisplay();
         Point size = new Point();
@@ -363,4 +375,45 @@ public class SplashActivity extends AppCompatActivity implements SplashInterface
         }
 
     });
+
+    private static final class GetApplications extends AsyncTask<Context, Void, List<App>> {
+
+        private WeakReference<SplashActivity> weakReference;
+
+        public GetApplications(SplashActivity splash) {
+            this.weakReference = new WeakReference<>(splash);
+        }
+
+        @Override
+        protected List<App> doInBackground(Context... params) {
+            Log.d(TAG, "doInBackground: Getting Application Data to Store in FileCache");
+
+            final SharedPreferences preferences = params[0].getSharedPreferences("Reach", Context.MODE_PRIVATE);
+            final PackageManager packageManager = params[0].getPackageManager();
+
+            final List<App> apps = MiscUtils.getApplications(packageManager, preferences);
+            Collections.sort(apps, StaticData.byName);
+           /* final List<App> recentApps = Ordering
+                    .from(StaticData.byInstallDate)
+                    .compound(StaticData.byName)
+                    .greatestOf(apps, 20);
+            Collections.sort(apps, StaticData.byName);*/
+            if(weakReference.get()!=null){
+                try {
+                    ReachApplication.createCachedFile(weakReference.get(),StaticData.APP_DATA_CACHE_KEY,apps);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    Log.d(TAG, "onPostExecute: Couldn't Store Application Data in Cache, error = " + e.toString() );
+                }
+            }
+            return apps;
+        }
+
+        @Override
+        protected void onPostExecute(List<App> appData) {
+            super.onPostExecute(appData);
+
+        }
+    }
+
 }

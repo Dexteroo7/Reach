@@ -162,12 +162,18 @@ public class FriendsFragment extends Fragment implements
             @Override
             public boolean onMenuItemActionExpand(MenuItem item) {
                 Log.d(TAG, "onMenuItemActionExpand: searchview frag is now visible");
+                if(friendsAdapter!=null){
+                    friendsAdapter.DisplayEmptyImageView(false);
+                }
                 return true;
             }
 
             @Override
             public boolean onMenuItemActionCollapse(MenuItem item) {
                 Log.d(TAG, "onMenuItemActionCollapse: searchview frag is now invisible");
+                if(friendsAdapter!=null){
+                    friendsAdapter.DisplayEmptyImageView(true);
+                }
                 return true;
             }
         });
@@ -259,8 +265,9 @@ public class FriendsFragment extends Fragment implements
 
             Log.i("Ayush", "Detected status" + clickData.status);
             YourProfileActivity.openProfile(clickData.friendId, getActivity());
-        } else
+        } else {
             ProfileActivity.openProfile(clickData.friendId, getActivity());
+        }
     }
 
     @Override

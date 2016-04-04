@@ -41,6 +41,9 @@ public final class StaticData {
     public static final byte zeroByte = 0;
     public static final String PERCENTAGE_STRING = "%";
     public static final String FILTER_STRING_KEY = "filter";
+    public static final String YOUR_PROFILE_APPS = "yourProfile apps";
+    public static final String YOUR_PROFILE_MUSIC = "yourProfile music";
+    public static final String APP_DATA_CACHE_KEY = "app_data_cache";
 
     static {
 

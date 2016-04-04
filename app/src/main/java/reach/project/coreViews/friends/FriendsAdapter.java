@@ -48,6 +48,7 @@ class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> imple
 
     private boolean shouldShowCoach1;
     private TourGuide tourGuide = null;
+    private boolean emptyImageViewVisible;
 
     public FriendsAdapter(HandOverMessage<ClickData> handOverMessage, SharedPreferences sharedPreferences) {
 
@@ -141,7 +142,7 @@ class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> imple
 
             case VIEW_TYPE_LOCKED: {
 
-                final MoreListHolder moreListHolder = new MoreListHolder(parent);
+                final MoreListHolder moreListHolder = new MoreListHolder(parent,"Friends");
                 moreListHolder.headerText.setText(LOCKED_TEXT);
                 moreListHolder.listOfItems.setLayoutManager(new CustomLinearLayoutManager(moreListHolder.listOfItems.getContext(), LinearLayoutManager.HORIZONTAL, false));
                 moreListHolder.listOfItems.setAdapter(lockedFriendsAdapter);
@@ -156,6 +157,10 @@ class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> imple
             default:
                 throw new IllegalStateException("Illegal view type detected");
         }
+    }
+
+    public void DisplayEmptyImageView(boolean value){
+        this.emptyImageViewVisible = value;
     }
 
     @Override
@@ -262,6 +267,14 @@ class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> imple
                 viewHolder.lockIcon.setVisibility(View.VISIBLE);
                 viewHolder.lockText.setVisibility(View.VISIBLE);
             }
+        }
+        else if(holder instanceof EmptyTextViewHolder){
+
+            EmptyTextViewHolder emptyViewHolder = (EmptyTextViewHolder) holder;
+            if(!emptyImageViewVisible)
+            emptyViewHolder.mEmptyImageView.setImageResource(0);
+            else
+                emptyViewHolder.mEmptyImageView.setImageResource(R.drawable.friends_empty_view_owl);
         }
 
     }

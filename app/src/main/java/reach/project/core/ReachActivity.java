@@ -198,8 +198,7 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface, 
             case R.id.player_button:
                 ((ReachApplication) getApplication()).getTracker().send(new HitBuilders.EventBuilder()
                         .setCategory("Player button on action bar clicked")
-                        .setAction("Username = " + SharedPrefUtils.getUserName(preferences))
-                        .setAction("User id = " + SharedPrefUtils.getServerId(preferences))
+                        .setAction("Username = " + SharedPrefUtils.getUserName(preferences) + "User id = " + SharedPrefUtils.getServerId(preferences))
                         .setValue(1)
                         .build());
                 PlayerActivity.openActivity(this);
@@ -390,10 +389,7 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface, 
                     case "explore_page":
                         ((ReachApplication) getApplication()).getTracker().send(new HitBuilders.EventBuilder()
                                 .setCategory("Discover Page Opened")
-                                .setAction("Username = " + SharedPrefUtils.getUserName(preferences))
                                 .setAction("User id = " + SharedPrefUtils.getServerId(preferences))
-                                .setAction("Email id = " + SharedPrefUtils.getEmailId(preferences))
-                                .setAction("Phone Number = "+SharedPrefUtils.getPhoneNumber(preferences))
                                 .setValue(1)
                                 .build());
                         break;
@@ -401,10 +397,7 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface, 
                     case "manager_page":
                         ((ReachApplication) getApplication()).getTracker().send(new HitBuilders.EventBuilder()
                                 .setCategory("MyFiles Page Opened")
-                                .setAction("Username = " + SharedPrefUtils.getUserName(preferences))
                                 .setAction("User id = " + SharedPrefUtils.getServerId(preferences))
-                                .setAction("Email id = " + SharedPrefUtils.getEmailId(preferences))
-                                .setAction("Phone Number = "+SharedPrefUtils.getPhoneNumber(preferences))
                                 .setValue(1)
                                 .build());
                         break;
@@ -412,10 +405,7 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface, 
                     case "friends_page":
                         ((ReachApplication) getApplication()).getTracker().send(new HitBuilders.EventBuilder()
                                 .setCategory("Friends Page Opened")
-                                .setAction("Username = " + SharedPrefUtils.getUserName(preferences))
                                 .setAction("User id = " + SharedPrefUtils.getServerId(preferences))
-                                .setAction("Email id = " + SharedPrefUtils.getEmailId(preferences))
-                                .setAction("Phone Number = "+SharedPrefUtils.getPhoneNumber(preferences))
                                 .setValue(1)
                                 .build());
                         break;
@@ -675,8 +665,7 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface, 
         alertDialog = alertDialogBuilder.show();
         ((ReachApplication) getApplication()).getTracker().send(new HitBuilders.EventBuilder()
                 .setCategory("Rating Dialog Box Shown ")
-                .setAction("Username = " + SharedPrefUtils.getUserName(preferences))
-                .setAction("User id = " + SharedPrefUtils.getServerId(preferences))
+                .setAction("Username = " + SharedPrefUtils.getUserName(preferences)+" User id = " + SharedPrefUtils.getServerId(preferences))
                 .setValue(1)
                 .build());
 
@@ -709,8 +698,7 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface, 
                 putInviteDialogValueInSharedPref(false);
                 ((ReachApplication) getApplication()).getTracker().send(new HitBuilders.EventBuilder()
                         .setCategory("Invite button in dialog clicked")
-                        .setAction("Username = " + SharedPrefUtils.getUserName(preferences))
-                        .setAction("User id = " + SharedPrefUtils.getServerId(preferences))
+                        .setAction("Username = " + SharedPrefUtils.getUserName(preferences) + " User id = " + SharedPrefUtils.getServerId(preferences))
                         .setValue(1)
                         .build());
                 startActivity(new Intent(ReachActivity.this, InviteActivity.class));
@@ -759,8 +747,7 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface, 
         inviteDialog.show();
         ((ReachApplication) getApplication()).getTracker().send(new HitBuilders.EventBuilder()
                 .setCategory("Invite Dialog is shown")
-                .setAction("Username = " + SharedPrefUtils.getUserName(preferences))
-                .setAction("User id = " + SharedPrefUtils.getServerId(preferences))
+                .setAction("Username = " + SharedPrefUtils.getUserName(preferences) + " User id = " + SharedPrefUtils.getServerId(preferences) )
                 .setValue(1)
                 .build());
 

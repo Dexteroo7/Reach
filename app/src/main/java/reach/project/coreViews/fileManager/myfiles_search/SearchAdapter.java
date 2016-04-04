@@ -5,11 +5,13 @@ import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Color;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -23,6 +25,7 @@ import com.facebook.imagepipeline.request.ImageRequestBuilder;
 import com.google.common.base.Optional;
 
 import java.io.Closeable;
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -58,10 +61,11 @@ class SearchAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
     private final AppsSearchAdapter appsSearchAdapter;
     private final HandOverMessage<App> handOverApp;
     private final PackageManager packageManager;
-
+    private final HandOverVisibilityToggle handOverVisibilityToggle;
+    private List<App> appsData;
     private final ResizeOptions resizeOptions = new ResizeOptions(150, 150);
     private final long appHolderId = ThreadLocalRandom.current().nextLong(Long.MAX_VALUE);
-    private final long songHeaderHolderId = ThreadLocalRandom.current().nextLong(Long.MAX_VALUE);
+    private final long songHeaderHolderId = appHolderId - 1000;
 
     private final HandOverMessageExtra<Object> handOverSongMessageExtra = new HandOverMessageExtra<Object>() {
         @Override
@@ -100,13 +104,10 @@ class SearchAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
 
         @Override
         public void handOverSongVisibilityMessage(int position, Object message) {
-            SearchAdapter.this.handOverVisibilityToggle.HandoverMessage(position,message);
+            SearchAdapter.this.handOverVisibilityToggle.HandoverMessage(position, message);
         }
 
-
     };
-    private final HandOverVisibilityToggle handOverVisibilityToggle;
-    private List<App> appsData;
 
     public SearchAdapter(HandOverMessage<Cursor> handOverCursor,
                          HandOverVisibilityToggle handOverVisibilityToggle,
@@ -117,7 +118,7 @@ class SearchAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
         this.packageManager = context.getPackageManager();
         this.handOverApp = handOverApp;
         this.handOverVisibilityToggle = handOverVisibilityToggle;
-        this.appsSearchAdapter = new AppsSearchAdapter(new ArrayList<>(20), handOverApp, packageManager, R.layout.app_list_item,context);
+        this.appsSearchAdapter = new AppsSearchAdapter(new ArrayList<>(20), handOverApp, packageManager, R.layout.app_list_item, context);
         setHasStableIds(true);
     }
 
@@ -143,20 +144,32 @@ class SearchAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
         this.appsData = newRecent;
     }
 
-    void filterApps(String constraint) {
-        //List<App> appsData = appsSearchAdapter.getMessageList();
-        if(appsData == null){
-            throw new NullPointerException("filtering apps but app data is null");
+    public boolean appsDataPresent(){
+        if(this.appsData!=null){
+            return true;
         }
-        List<App> filteredAppData = new ArrayList<>();
+        return false;
+    }
+
+    void filterApps(String constraint) {
+
+
+        //List<App> appsData = appsSearchAdapter.getMessageList();
+        if (appsData == null) {
+            return;
+            //throw new NullPointerException("filtering apps but app data is null");
+        }
+        //List<App> filteredAppData = new ArrayList<>();
+        appsSearchAdapter.getMessageList().clear();
         for (App app : appsData) {
             if (app.applicationName.toLowerCase().contains(constraint)) {
-                filteredAppData.add(app);
+                /*filteredAppData.add(app);*/
+                appsSearchAdapter.getMessageList().add(app);
             }
 
         }
-        appsSearchAdapter.getMessageList().clear();
-        appsSearchAdapter.getMessageList().addAll(filteredAppData);
+        /*appsSearchAdapter.getMessageList().clear();
+        appsSearchAdapter.getMessageList().addAll(filteredAppData);*/
         appsSearchAdapter.notifyDataSetChanged();
     }
 
@@ -183,7 +196,7 @@ class SearchAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
 
             case VIEW_TYPE_APPS: {
 
-                final MoreListHolder moreListHolder = new MoreListHolder(parent);
+                final MoreListHolder moreListHolder = new MoreListHolder(parent, null);
                 moreListHolder.itemView.setBackgroundResource(0);
                 moreListHolder.headerText.setText("Apps");
                 moreListHolder.moreButton.setVisibility(View.GONE);
@@ -300,10 +313,10 @@ class SearchAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
 
     @Nonnull
     private Object getItem(int position) {
-        if(position == 0)
+        if (position == 0)
             return -1;
 
-        else if (myLibraryCursor != null && position == myLibraryCursor.getCount()+1)
+        else if (myLibraryCursor != null && position == myLibraryCursor.getCount() + 1)
             return false; //apps
 
         else {
@@ -319,7 +332,7 @@ class SearchAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
         final Object item = getItem(position);
         if (item instanceof Cursor)
             return VIEW_TYPE_SONGS;
-        else if(item instanceof Boolean)
+        else if (item instanceof Boolean)
             return VIEW_TYPE_APPS;
         else
             return VIEW_TYPE_SONG_HEADER;
@@ -352,7 +365,7 @@ class SearchAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
         public void HandoverMessage(int position, @NonNull Object message);
     }
 
-    private static class SongHeaderHolder extends RecyclerView.ViewHolder{
+    private static class SongHeaderHolder extends RecyclerView.ViewHolder {
 
         final TextView headerText;
 
@@ -360,7 +373,8 @@ class SearchAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
             super(itemView);
             headerText = (TextView) itemView.findViewById(android.R.id.text1);
             headerText.setText("Songs");
-            headerText.setTextColor(Color.DKGRAY);
+            headerText.setTextSize(TypedValue.COMPLEX_UNIT_SP, 18);
+            headerText.setTextColor(ContextCompat.getColor(itemView.getContext(),R.color.reach_color));
             headerText.setBackgroundColor(Color.WHITE);
         }
     }

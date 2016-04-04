@@ -16,6 +16,7 @@ import com.google.common.base.Optional;
 import com.squareup.wire.Message;
 
 import reach.project.R;
+import reach.project.core.StaticData;
 import reach.project.coreViews.yourProfile.blobCache.CacheAdapterInterface;
 import reach.project.music.Song;
 import reach.project.utils.AlbumArtUri;
@@ -125,10 +126,11 @@ class ParentAdapter<T extends Message> extends RecyclerViewMaterialAdapter<Recyc
                         R.layout.list_with_more_button_padding, //Main resource id
                         R.id.headerText, //id for header text
                         R.id.listOfItems, //id for list (recycler view)
-                        R.id.moreButton); //id of more button
+                        R.id.moreButton,
+                        StaticData.YOUR_PROFILE_MUSIC); //id of more button
 
             case SMART_LIST_TYPE:
-                return new MoreListHolder(parent);
+                return new MoreListHolder(parent, StaticData.YOUR_PROFILE_MUSIC);
 
             default:
                 throw new IllegalArgumentException("Unknown view type found");

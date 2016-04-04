@@ -30,6 +30,7 @@ import javax.annotation.Nonnull;
 
 import reach.project.R;
 import reach.project.apps.App;
+import reach.project.core.ReachApplication;
 import reach.project.core.StaticData;
 import reach.project.coreViews.myProfile.MyProfileFragment;
 import reach.project.utils.MiscUtils;
@@ -42,7 +43,7 @@ import reach.project.utils.viewHelpers.HandOverMessage;
  */
 public class ApplicationFragment extends Fragment implements HandOverMessage<App> {
 
-    private static final String TAG = ApplicationFragment.class.getSimpleName();
+    private static final String TAG = "MyProfile/" + ApplicationFragment.class.getSimpleName();
     private static long userId = 0;
     private ProgressBar mLoadingProgress;
 
@@ -109,9 +110,27 @@ public class ApplicationFragment extends Fragment implements HandOverMessage<App
         MaterialViewPagerHelper.registerRecyclerView(activity, mRecyclerView, null);
         userId = SharedPrefUtils.getServerId(preferences);
         mLoadingProgress = (ProgressBar) rootView.findViewById(R.id.loadingProgress);
-        mLoadingProgress.setVisibility(View.VISIBLE);
+        //mLoadingProgress.setVisibility(View.VISIBLE);
 
-        new GetApplications(this).executeOnExecutor(visibilityHandler, activity);
+        List<App> appData = null;
+        if((appData = (List<App>) ReachApplication.readCachedFile(getActivity(),StaticData.APP_DATA_CACHE_KEY))==null){
+            mLoadingProgress.setVisibility(View.VISIBLE);
+            new GetApplications(this).executeOnExecutor(visibilityHandler, activity);
+        }
+        else{
+            Log.d(TAG, "onCreateView: AppsData fetched from cache");
+            final List<App> recentApps = Ordering
+                    .from(StaticData.byInstallDate)
+                    .compound(StaticData.byName)
+                    .greatestOf(appData, 20);
+            if(parentAdapter!=null) {
+                parentAdapter.updateAllApps(appData);
+                parentAdapter.updateRecentApps(recentApps);
+            }
+
+        }
+
+        //new GetApplications(this).executeOnExecutor(visibilityHandler, activity);
 
         return rootView;
     }
