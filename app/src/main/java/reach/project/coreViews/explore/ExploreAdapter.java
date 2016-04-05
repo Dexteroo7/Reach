@@ -1,10 +1,5 @@
 package reach.project.coreViews.explore;
 
-import android.animation.ValueAnimator;
-import android.content.Context;
-import android.graphics.Bitmap;
-import android.graphics.Canvas;
-import android.graphics.Typeface;
 import android.net.Uri;
 import android.support.v4.util.Pair;
 import android.support.v4.view.PagerAdapter;
@@ -13,24 +8,19 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.animation.AccelerateInterpolator;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.RatingBar;
 import android.widget.TextView;
 
+import com.facebook.drawee.backends.pipeline.Fresco;
 import com.facebook.drawee.view.SimpleDraweeView;
-import com.facebook.share.model.SharePhoto;
-import com.facebook.share.model.SharePhotoContent;
-import com.facebook.share.widget.ShareDialog;
+import com.facebook.imagepipeline.request.ImageRequestBuilder;
 import com.google.gson.JsonObject;
-
-import org.w3c.dom.Text;
 
 import reach.project.R;
 import reach.project.utils.AlbumArtUri;
 import reach.project.utils.MiscUtils;
-import reach.project.utils.SharedPrefUtils;
 import reach.project.utils.viewHelpers.HandOverMessage;
 
 import static reach.project.coreViews.explore.ExploreJSON.AppViewInfo;
@@ -43,12 +33,12 @@ class ExploreAdapter extends PagerAdapter implements View.OnClickListener {
 
     private static final String TAG = ExploreAdapter.class.getSimpleName() ;
     private final Explore explore;
-    private final HandOverMessage<Integer> handOverMessage;
+    private final HandOverMessage<Object> handOverMessage;
     /*//TODO: Delete when facebbok share is to be removed from explore
     boolean showFacebookButton = false;*/
 
     public ExploreAdapter(Explore explore,
-                          HandOverMessage<Integer> handOverId) {
+                          HandOverMessage<Object> handOverId) {
 
         this.explore = explore;
         this.handOverMessage = handOverId;
@@ -76,11 +66,14 @@ class ExploreAdapter extends PagerAdapter implements View.OnClickListener {
             final ExploreTypes exploreTypes = ExploreTypes.valueOf(MiscUtils.get(exploreJSON, ExploreJSON.TYPE).getAsString());
 
             layout = layoutInflater.inflate(exploreTypes.getLayoutResId(), collection, false);
-            final ImageView downButton = (ImageView) layout.findViewById(R.id.downButton);
+            //final PercentRelativeLayout percentRelativeLayout = (PercentRelativeLayout) layout.findViewById(R.id.percentRelativeLayout);
+            //final WebView webView = (WebView) layout.findViewById(R.id.webView);
+            //final ImageView downButton = (ImageView) layout.findViewById(R.id.downButton);
+            final ImageView downBtn = (ImageView) layout.findViewById(R.id.downBtn);
             final TextView title = (TextView) layout.findViewById(R.id.title);
             final TextView subTitle = (TextView) layout.findViewById(R.id.subtitle);
             final TextView userHandle = (TextView) layout.findViewById(R.id.userHandle);
-            final TextView typeText = (TextView) layout.findViewById(R.id.typeText);
+            //final ImageView saveBtn = (ImageView) layout.findViewById(R.id.saveBtn);
             final SimpleDraweeView image = (SimpleDraweeView) layout.findViewById(R.id.image);
             final SimpleDraweeView userImage = (SimpleDraweeView) layout.findViewById(R.id.userImage);
             //final TextView facebookShare = (TextView) layout.findViewById(R.id.facebook_share_text);
@@ -88,23 +81,51 @@ class ExploreAdapter extends PagerAdapter implements View.OnClickListener {
             switch (exploreTypes) {
 
                 case MUSIC: {
+                    downBtn.setOnClickListener(this);
 
-                    downButton.setOnClickListener(this);
-                    downButton.setTag(position);
+                    final String ytID = MiscUtils.get(exploreJSON, ExploreJSON.YOUTUBE_ID).getAsString();
+                    downBtn.setTag(ytID);
+                    final String albumArt = "https://i.ytimg.com/vi/" + ytID + "/hqdefault.jpg";
+                    if (!TextUtils.isEmpty(albumArt))
+                        image.setController(Fresco.newDraweeControllerBuilder()
+                                .setOldController(image.getController())
+                                .setImageRequest(ImageRequestBuilder.newBuilderWithSource(Uri.parse(albumArt))
+                                        .build())
+                                .build());
+
                     final long userId = MiscUtils.get(exploreJSON, ExploreJSON.ID).getAsLong();
+                    /*final Cursor cursor = collection.getContext().getContentResolver().query(
+                            Uri.parse(ReachFriendsProvider.CONTENT_URI + "/" + userId),
+                            new String[]{ReachFriendsHelper.COLUMN_STATUS},
+                            ReachFriendsHelper.COLUMN_ID + " = ?",
+                            new String[]{userId + ""}, null);
+                    if (cursor != null && cursor.getCount() > 0 && cursor.moveToFirst()) {
+                        saveBtn.setVisibility(cursor.getShort(0) == ReachFriendsHelper.ONLINE_REQUEST_GRANTED ? View.VISIBLE : View.INVISIBLE);
+                        cursor.close();
+                    }*/
                     final Pair<String, String> userNameAndImageId = ExploreFragment.USER_INFO_CACHE.getUnchecked(userId);
 
                     //take out view info from this object
                     final JsonObject musicViewInfo = MiscUtils.get(exploreJSON, ExploreJSON.VIEW_INFO).getAsJsonObject();
 
-                    title.setText(MiscUtils.get(musicViewInfo, MusicViewInfo.TITLE).getAsString());
-                    subTitle.setText(MiscUtils.get(musicViewInfo, MusicViewInfo.SUB_TITLE, "").getAsString());
+                    final String musicTitle = MiscUtils.get(musicViewInfo, MusicViewInfo.TITLE).getAsString();
+                    title.setText(musicTitle);
+                    /*downButton.setOnClickListener(v -> {
+                        explore.playYTVideo(fastSanitize(musicTitle));
+                        *//*percentRelativeLayout.setVisibility(View.GONE);
+                        webView.setWebViewClient(new WebViewClient());
+                        webView.getSettings().setJavaScriptEnabled(true);
+                        webView.loadUrl("https://www.youtube.com/results?q=" + MiscUtils.get(musicViewInfo, MusicViewInfo.TITLE).getAsString());
+                        webView.setVisibility(View.VISIBLE);*//*
+
+                    });*/
+                    subTitle.setText(MiscUtils.get(musicViewInfo, MusicViewInfo.SUB_TITLE).getAsString());
                     final String originalUserName = MiscUtils.get(musicViewInfo, MusicViewInfo.SENDER_NAME, "").getAsString();
                     if (TextUtils.isEmpty(originalUserName))
                         userHandle.setText(userNameAndImageId.first);
                     else
                         userHandle.setText(originalUserName);
-                    typeText.setText(MiscUtils.get(musicViewInfo, MusicViewInfo.TYPE_TEXT).getAsString());
+                    //typeText.setText(MiscUtils.get(musicViewInfo, MusicViewInfo.TYPE_TEXT).getAsString());
 
                     userImage.setImageURI(AlbumArtUri.getUserImageUri(
                             userId,
@@ -114,10 +135,8 @@ class ExploreAdapter extends PagerAdapter implements View.OnClickListener {
                             100,
                             100));
 
-                    final String albumArt = MiscUtils.get(musicViewInfo, MusicViewInfo.LARGE_IMAGE_URL, "").getAsString();
-                    if (!TextUtils.isEmpty(albumArt))
-                        image.setController(MiscUtils.getControllerResize(image.getController(),
-                                Uri.parse(albumArt), ExploreFragment.FULL_IMAGE_SIZE));
+                    //final String albumArt = MiscUtils.get(musicViewInfo, MusicViewInfo.LARGE_IMAGE_URL, "").getAsString();
+
 
                     /*if(showFacebookButton){
                         facebookShare.setVisibility(View.VISIBLE);
@@ -134,8 +153,8 @@ class ExploreAdapter extends PagerAdapter implements View.OnClickListener {
 
                     final RatingBar rating = (RatingBar) layout.findViewById(R.id.rating);
 
-                    downButton.setOnClickListener(this);
-                    downButton.setTag(position);
+                    //downButton.setOnClickListener(this);
+                    //downButton.setTag(position);
                     final long userId = MiscUtils.get(exploreJSON, ExploreJSON.ID).getAsLong();
                     final Pair<String, String> userNameAndImageId = ExploreFragment.USER_INFO_CACHE.getUnchecked(userId);
 
@@ -149,7 +168,7 @@ class ExploreAdapter extends PagerAdapter implements View.OnClickListener {
                         userHandle.setText(userNameAndImageId.first);
                     else
                         userHandle.setText(originalUserName);
-                    typeText.setText(MiscUtils.get(appViewInfo, AppViewInfo.TYPE_TEXT).getAsString());
+                    //typeText.setText(MiscUtils.get(appViewInfo, AppViewInfo.TYPE_TEXT).getAsString());
 
                     final String appIcon = MiscUtils.get(appViewInfo, AppViewInfo.SMALL_IMAGE_URL, "").getAsString();
                     if (!TextUtils.isEmpty(appIcon))
@@ -240,15 +259,15 @@ class ExploreAdapter extends PagerAdapter implements View.OnClickListener {
 
     @Override
     public void onClick(View view) {
-        final int id = view.getId();
+        //final int id = view.getId();
         /*if(id == R.id.facebook_share_text){
             handOverMessage.handOverMessage(-11);
             return;
         }*/
 
-        handOverMessage.handOverMessage((int) view.getTag());
+        handOverMessage.handOverMessage(view.getTag());
 
-        if (view instanceof ImageView) {
+        /*if (view instanceof ImageView) {
 
             ((ImageView) view).setImageResource(R.drawable.icon_downloading_active);
             final ValueAnimator animator = ValueAnimator.ofInt(0, MiscUtils.dpToPx(5));
@@ -262,7 +281,7 @@ class ExploreAdapter extends PagerAdapter implements View.OnClickListener {
             });
             animator.setInterpolator(new AccelerateInterpolator());
             animator.start();
-        }
+        }*/
     }
 
     interface Explore {
@@ -272,5 +291,7 @@ class ExploreAdapter extends PagerAdapter implements View.OnClickListener {
         int getCount();
 
         boolean isDoneForToday();
+
+        void playYTVideo(String search);
     }
 }
