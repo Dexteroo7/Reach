@@ -23,6 +23,9 @@ import reach.project.utils.SharedPrefUtils;
 
 public class InviteFragment extends Fragment {
 
+    private AllContactsFragment.ToolbarInteraction mToolbarInteractionListener;
+    public static final String TAG = InviteFragment.class.getSimpleName();
+
     public static InviteFragment newInstance() {
         return new InviteFragment();
     }
@@ -72,6 +75,9 @@ public class InviteFragment extends Fragment {
             return convertView;
         }
     }
+
+
+
     
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -83,7 +89,7 @@ public class InviteFragment extends Fragment {
         final SharedPreferences preferences = getActivity().getSharedPreferences("Reach", Context.MODE_PRIVATE);
         final String[] inviteOptions = {"Whatsapp","Facebook Messenger","Twitter","Google+"};
         final String [] packageNames = {"com.whatsapp","com.facebook.orca","com.twitter.android","com.google.android.apps.plus"};
-
+        mToolbarInteractionListener.uploadToolbarMenu(TAG);
         inviteList.setAdapter(new InviteListAdapter(getActivity(),R.layout.invite_list_item,inviteOptions));
         inviteList.setOnItemClickListener((parent, view, position, id) -> {
 
@@ -108,5 +114,14 @@ public class InviteFragment extends Fragment {
             }
         });
         return rootView;
+    }
+
+
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        if(context instanceof AllContactsFragment.ToolbarInteraction){
+            mToolbarInteractionListener = (AllContactsFragment.ToolbarInteraction) context;
+        }
     }
 }

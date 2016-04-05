@@ -40,8 +40,24 @@ public class AllContactsFragment extends Fragment implements
         LoaderManager.LoaderCallbacks<Cursor>,HandOverMessage<Cursor> {
 
     private AllContactsAdapter inviteAdapter;
+    private ToolbarInteraction toolbarInteractionListener;
+    private static final String TAG = AllContactsFragment.class.getSimpleName();
+    Bundle constraintArguments;
+
     public static AllContactsFragment newInstance() {
         return new AllContactsFragment();
+    }
+
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        if(context instanceof ToolbarInteraction){
+            toolbarInteractionListener = (ToolbarInteraction) context;
+        }
+        else{
+            throw new IllegalArgumentException("Context is not an instance of toolbar interaction");
+        }
+
     }
 
     public static void showAlert(String name, String number, Context context) {
@@ -124,6 +140,8 @@ public class AllContactsFragment extends Fragment implements
         inviteAdapter = new AllContactsAdapter(this, R.layout.allcontacts_user);
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         recyclerView.setAdapter(inviteAdapter);
+        toolbarInteractionListener.uploadToolbarMenu(TAG);
+        constraintArguments = new Bundle();
         getLoaderManager().initLoader(StaticData.ALL_CONTACTS_LOADER, null, this);
 
         return rootView;
@@ -134,21 +152,52 @@ public class AllContactsFragment extends Fragment implements
 
         if (id == StaticData.ALL_CONTACTS_LOADER) {
 
-            final String selection = ContactsContract.CommonDataKinds.Phone.IN_VISIBLE_GROUP + " = '"
-                    + ("1") + "'" + " AND " + ContactsContract.Contacts.HAS_PHONE_NUMBER + "=1";
-            final String sortOrder = ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME
-                    + " COLLATE LOCALIZED ASC";
+            if(args == null) {
 
-            final String[] projection = new String[]{
-                    ContactsContract.CommonDataKinds.Phone.NUMBER,
-                    ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME,
-                    ContactsContract.CommonDataKinds.Phone.CONTACT_ID};
+                final String selection = ContactsContract.CommonDataKinds.Phone.IN_VISIBLE_GROUP + " = '"
+                        + ("1") + "'" + " AND " + ContactsContract.Contacts.HAS_PHONE_NUMBER + "=1";
+                final String sortOrder = ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME
+                        + " COLLATE LOCALIZED ASC";
 
-            return new CursorLoader(getActivity(),
-                    ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
-                    projection,
-                    selection, null,
-                    sortOrder);
+                final String[] projection = new String[]{
+                        ContactsContract.CommonDataKinds.Phone.NUMBER,
+                        ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME,
+                        ContactsContract.CommonDataKinds.Phone.CONTACT_ID};
+
+                return new CursorLoader(getActivity(),
+                        ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+                        projection,
+                        selection, null,
+                        sortOrder);
+            }
+            else{
+                final String constraint = args.getString(StaticData.FILTER_STRING_KEY);
+                if(constraint == null){
+                    throw new IllegalArgumentException("filter string can not be null");
+                }
+
+                final String selection = ContactsContract.CommonDataKinds.Phone.IN_VISIBLE_GROUP + " = '"
+                        + ("1") + "'" + " AND " + ContactsContract.Contacts.HAS_PHONE_NUMBER + "=1" +  " AND "
+                        +ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME
+                        +" LIKE ?"
+
+                        ;
+                final String sortOrder = ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME
+                        + " COLLATE LOCALIZED ASC";
+
+                final String[] projection = new String[]{
+                        ContactsContract.CommonDataKinds.Phone.NUMBER,
+                        ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME,
+                        ContactsContract.CommonDataKinds.Phone.CONTACT_ID
+                };
+
+                return new CursorLoader(getActivity(),
+                        ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+                        projection,
+                        selection, new String[]{constraint},
+                        sortOrder);
+
+            }
         } else
             return null;
     }
@@ -191,4 +240,19 @@ public class AllContactsFragment extends Fragment implements
 
         showAlert(message.getString(1), builder.substring(builder.length() - 10), getContext());
     }
+
+
+    public void filter (String constraint){
+        final String likeConstraintString = MiscUtils.getFilterLikeString(constraint);
+        constraintArguments.putString(StaticData.FILTER_STRING_KEY,likeConstraintString);
+        getLoaderManager().restartLoader(StaticData.ALL_CONTACTS_LOADER,constraintArguments,this);
+    }
+
+
+    public static interface ToolbarInteraction{
+
+        void uploadToolbarMenu(String fragmentClassName);
+
+    }
+
 }
