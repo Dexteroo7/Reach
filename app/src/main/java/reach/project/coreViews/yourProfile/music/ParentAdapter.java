@@ -82,8 +82,13 @@ class ParentAdapter<T extends Message> extends RecyclerViewMaterialAdapter<Recyc
 
         } else if (message instanceof RecentSong && holder instanceof MoreListHolder) {
 
+
             final RecentSong recentSong = (RecentSong) message;
             final MoreListHolder simpleListHolder = (MoreListHolder) holder;
+            if(recentSong.songList!=null && recentSong.songList.size()==0){
+                simpleListHolder.itemView.setVisibility(View.GONE);
+                return;
+            }
             simpleListHolder.headerText.setText(recentSong.title);
             if (simpleListHolder.listOfItems.getLayoutManager() == null)
                 simpleListHolder.listOfItems.setLayoutManager(new CustomGridLayoutManager(simpleListHolder.listOfItems.getContext(), 2));

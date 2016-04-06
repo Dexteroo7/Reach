@@ -46,101 +46,11 @@ import reach.project.utils.SharedPrefUtils;
 /**
  * A placeholder fragment containing a simple view.
  */
-public class MyProfileFragment extends Fragment implements ViewPager.OnPageChangeListener{
+public class MyProfileFragment extends Fragment {
 
     private static final ResizeOptions PROFILE_PHOTO_RESIZE = new ResizeOptions(150, 150);
     private static final ResizeOptions COVER_PHOTO_RESIZE = new ResizeOptions(500, 300);
-
-    //private final Toolbar.OnMenuItemClickListener menuItemClickListener = item -> {
-
-      //  boolean check;
-    //    switch (item.getItemId()) {
-            /*case R.id.show_visible:
-                check = !item.isChecked();
-                //TODO show visible files
-                item.setChecked(check);
-                return true;
-            case R.id.show_invisible:
-                check = !item.isChecked();
-                //TODO show invisible files
-                item.setChecked(check);
-                return true;*/
-            /*case R.id.player_button:
-                PlayerActivity.openActivity(getContext());
-                return true;
-            case R.id.settings_button:
-                //startActivity(new Intent(getContext(), SettingsActivity.class));
-                return true;
-            case R.id.useMobileData:
-                final SharedPreferences preferences = getActivity().getSharedPreferences("Reach", Context.MODE_PRIVATE);
-                if(item.isChecked()){
-                    item.setChecked(false);
-                    SharedPrefUtils.setDataOff(preferences);
-                    new Thread(new Runnable() {
-                        @Override
-                        public void run() {
-                            getContext().getContentResolver().delete(
-                                    SongProvider.CONTENT_URI,
-                                    SongHelper.COLUMN_OPERATION_KIND + " = ? and " +
-                                            SongHelper.COLUMN_STATUS + " != ?",
-                                    new String[]{"1", ReachDatabase.Status.PAUSED_BY_USER.getString()});
-                        }
-                    }).start();
-                }
-                else{
-                    item.setChecked(true);
-                    SharedPrefUtils.setDataOn(preferences);
-                }
-                return true;
-
-            case R.id.conditions:{
-                startActivity(new Intent(getContext(), TermsActivity.class));
-                return true;
-            }
-
-            case R.id.rateOurApp:{
-
-                try {
-                    startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=reach.project")));
-                } catch (ActivityNotFoundException e) {
-                    e.printStackTrace();
-                    Toast.makeText(getContext(), "Play store app not installed", Toast.LENGTH_SHORT).show();
-                }
-                finally {
-                    return true;
-                }
-
-            }*/
-
-            /*case R.id.done_button:{
-                final Activity activity = getActivity();
-                final Intent intent = new Intent(activity, ReachActivity.class);
-                intent.setAction(ReachActivity.OPEN_MY_PROFILE_APPS_FIRST);
-                activity.startActivity(intent);
-                activity.finish();
-            }*/
-
-    //    }
-  //      return false;
-//    };
-
-    private static final ViewPager.PageTransformer PAGE_TRANSFORMER = (view, position) -> {
-
-        if (position <= 1) {
-            // Modify the default slide transition to shrink the page as well
-            float scaleFactor = Math.max(0.85f, 1 - Math.abs(position));
-            float vertMargin = view.getHeight() * (1 - scaleFactor) / 2;
-            float horzMargin = view.getWidth() * (1 - scaleFactor) / 2;
-            if (position < 0)
-                view.setTranslationX(horzMargin - vertMargin / 2);
-            else
-                view.setTranslationX(-horzMargin + vertMargin / 2);
-
-            // Scale the page down (between MIN_SCALE and 1)
-            view.setScaleX(scaleFactor);
-            view.setScaleY(scaleFactor);
-        }
-    };
+    private Toolbar toolbar;
 
     private static final MaterialViewPager.Listener MATERIAL_LISTENER = page -> {
 
@@ -158,80 +68,39 @@ public class MyProfileFragment extends Fragment implements ViewPager.OnPageChang
         }
     };
 
-    private static ViewPager viewPager = null;
-    private Toolbar toolbar;
-
-    public static void setItem(int position) {
-
-        if (viewPager != null)
-            viewPager.setCurrentItem(position, true);
-    }
-
-//    public void onDestroyView() {
-//        super.onDestroyView();
-//        Log.d("Ashish", "MyProfileFragment - onDestroyView");
-//    }
-//
-//    @Override
-//    public void onCreate(Bundle savedInstanceState) {
-//        super.onCreate(savedInstanceState);
-//        Log.d("Ashish", "MyProfileFragment - onCreate");
-//    }
-//
-//    @Override
-//    public void onDestroy() {
-//        super.onDestroy();
-//        Log.d("Ashish", "MyProfileFragment - onDestroy");
-//    }
-
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
 
         final View rootView = inflater.inflate(R.layout.fragment_my_profile, container, false);
         Log.d("Ashish", "MyProfileFragment - onCreateView");
 
-        final MaterialViewPager materialViewPager = (MaterialViewPager) rootView.findViewById(R.id.materialViewPager);
-        viewPager = materialViewPager.getViewPager();
-        toolbar = materialViewPager.getToolbar();
+        toolbar = (Toolbar) rootView.findViewById(R.id.toolbar);
         final Activity activity = getActivity();
 
         final SharedPreferences preferences = getActivity().getSharedPreferences("Reach", Context.MODE_PRIVATE);
 
         toolbar.setTitleTextColor(Color.WHITE);
-        toolbar.setTitle("Manage Apps Privacy");
+        toolbar.setTitle("Manage Songs Privacy");
         toolbar.inflateMenu(R.menu.myprofile_fragment_menu);
         final MenuItem menuItem = toolbar.getMenu().findItem(R.id.done_button);
         MenuItemCompat.setActionView(menuItem, R.layout.toolbar_done_button);
         final View doneButtonContainer = MenuItemCompat.getActionView(menuItem).findViewById(R.id.doneButtonLayout);
-        final TextView textButton = (TextView) doneButtonContainer.findViewById(R.id.toolbar_action_button);
-        textButton.setText("Next");
         doneButtonContainer.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                viewPager.setCurrentItem(1);
+                final Intent intent = new Intent(getActivity(), ReachActivity.class);
+                intent.setAction(ReachActivity.OPEN_MY_PROFILE_APPS_FIRST);
+                getActivity().startActivity(intent);
+                getActivity().finish();
             }
         });
-        //MenuItemCompat.getActionView(menuItem).findViewById(R.id.toolbar_done_button);
-        //menuItem.set
-        //MenuItemCompat.getActionView(menuItem).findViewById(R.id.editProfileLayout
-        /*final Menu menu = toolbar.getMenu();
-        final MenuItem useMobileData =  menu.findItem(R.id.useMobileData);
-        if(SharedPrefUtils.getMobileData(preferences)) {
-            useMobileData.setChecked(true);
-        }
-        else{
-            useMobileData.setChecked(false);
-        }
-
-        final MenuItem menuItem = toolbar.getMenu().findItem(R.id.edit_button);
-
-        final View editProfileContainer = MenuItemCompat.getActionView(menuItem).findViewById(R.id.editProfileLayout);
-        editProfileContainer.setOnClickListener(v -> startActivity(new Intent(activity, EditProfileActivity.class)));
-        */
         toolbar.setNavigationIcon(null);
         //toolbar.setOnMenuItemClickListener(menuItemClickListener);
+        if(savedInstanceState == null){
+            getFragmentManager().beginTransaction().replace(R.id.music_privacy_frag_container,MyLibraryFragment.getInstance("Songs")).commit();
+        }
 
-        final RelativeLayout headerRoot = (RelativeLayout) materialViewPager.findViewById(R.id.headerRoot);
+        final RelativeLayout headerRoot = (RelativeLayout) rootView.findViewById(R.id.headerRoot);
         final String userName = SharedPrefUtils.getUserName(preferences);
 
         ((TextView) headerRoot.findViewById(R.id.userName)).setText(userName);
@@ -255,113 +124,15 @@ public class MyProfileFragment extends Fragment implements ViewPager.OnPageChang
                 COVER_PHOTO_RESIZE.width,
                 COVER_PHOTO_RESIZE.height));
 
-        final PagerAdapter pagerAdapter = new FragmentPagerAdapter(getChildFragmentManager()) {
-
-            @Override
-            public Fragment getItem(int position) {
-                switch (position) {
-
-                    case 0:
-                        return ApplicationFragment.getInstance("Apps");
-                    case 1:
-                        return MyLibraryFragment.getInstance("Songs");
-                    default:
-                        throw new IllegalStateException("Count and size clash");
-                }
-            }
-
-            //
-            @Override
-            public int getCount() {
-                return 2;
-            }
-
-            @Override
-            public CharSequence getPageTitle(int position) {
-                switch (position) {
-
-                    case 0:
-                        return "Apps";
-                    case 1:
-                        return "Songs";
-                    default:
-                        throw new IllegalStateException("Count and size clash");
-                }
-            }
-        };
-
-        viewPager.setAdapter(pagerAdapter);
-        viewPager.setOffscreenPageLimit(viewPager.getAdapter().getCount());
-        viewPager.setPageMargin(-1 * (MiscUtils.dpToPx(20)));
-        viewPager.addOnPageChangeListener(this);
-        //viewPager.setPageTransformer(true, PAGE_TRANSFORMER);
-
-        materialViewPager.setMaterialViewPagerListener(MATERIAL_LISTENER);
-        materialViewPager.getPagerTitleStrip().setViewPager(viewPager);
-        materialViewPager.getPagerTitleStrip().setOnTouchListener((v, event) -> true);
-
         new CountUpdater((TextView) headerRoot.findViewById(R.id.musicCount),
                 (TextView) headerRoot.findViewById(R.id.appCount)).execute(activity);
 
         return rootView;
     }
 
+    private final static class CountUpdater extends AsyncTask<Context, Void, Integer> {
 
-    @Override
-    public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
-
-    }
-
-    @Override
-    public void onPageSelected(int position) {
-
-        switch (position){
-            case 0: {
-                toolbar.setTitle("Manage Apps Privacy");
-                final MenuItem menuItem = toolbar.getMenu().findItem(R.id.done_button);
-                MenuItemCompat.setActionView(menuItem, R.layout.toolbar_done_button);
-                final View doneButtonContainer = MenuItemCompat.getActionView(menuItem).findViewById(R.id.doneButtonLayout);
-                final TextView textButton = (TextView) doneButtonContainer.findViewById(R.id.toolbar_action_button);
-                textButton.setText("Next");
-                doneButtonContainer.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        viewPager.setCurrentItem(1);
-                    }
-                });
-                break;
-            }
-
-            case 1: {
-                toolbar.setTitle("Manage Songs Privacy");
-                final MenuItem menuItem = toolbar.getMenu().findItem(R.id.done_button);
-                MenuItemCompat.setActionView(menuItem, R.layout.toolbar_done_button);
-                final View doneButtonContainer = MenuItemCompat.getActionView(menuItem).findViewById(R.id.doneButtonLayout);
-                final TextView textButton = (TextView) doneButtonContainer.findViewById(R.id.toolbar_action_button);
-                textButton.setText("Done");
-                doneButtonContainer.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        final Intent intent = new Intent(getActivity(), ReachActivity.class);
-                        intent.setAction(ReachActivity.OPEN_MY_PROFILE_APPS_FIRST);
-                        getActivity().startActivity(intent);
-                        getActivity().finish();
-                    }
-                });
-                break;
-            }
-        }
-
-    }
-
-    @Override
-    public void onPageScrollStateChanged(int state) {
-
-    }
-
-    private final static class CountUpdater extends AsyncTask<Context, Void, Pair<String, String>> {
-
-        private static final String TAG = CountUpdater.class.getSimpleName() ;
+        private static final String TAG = CountUpdater.class.getSimpleName();
         private final WeakReference<TextView> musicCountReference, appCountReference;
 
         private CountUpdater(TextView musicCount, TextView appCount) {
@@ -370,10 +141,10 @@ public class MyProfileFragment extends Fragment implements ViewPager.OnPageChang
         }
 
         @Override
-        protected Pair<String, String> doInBackground(Context... params) {
+        protected Integer doInBackground(Context... params) {
 
             final ContentResolver contentResolver = params[0].getContentResolver();
-            final PackageManager packageManager = params[0].getPackageManager();
+            //final PackageManager packageManager = params[0].getPackageManager();
 
             //TODO done meta 1
             final Cursor cursor = contentResolver.query(SongProvider.CONTENT_URI,
@@ -385,23 +156,16 @@ public class MyProfileFragment extends Fragment implements ViewPager.OnPageChang
             } else
                 songCount = 0;
 
-            final int appCount = MiscUtils.getInstalledApps(packageManager).size();
-
-            return new Pair<>(songCount + "", appCount + "");
+            return songCount;
         }
 
         @Override
-        protected void onPostExecute(Pair<String, String> countPair) {
-            super.onPostExecute(countPair);
-
-            Log.d(TAG, "App Count = " + countPair.first);
+        protected void onPostExecute(Integer integer) {
+            super.onPostExecute(integer);
+            Log.d(TAG, "App Count = " + integer);
 
             MiscUtils.useReference(musicCountReference, textView -> {
-                textView.setText(countPair.first);
-            });
-
-            MiscUtils.useReference(appCountReference, textView -> {
-                textView.setText(countPair.second);
+                textView.setText(integer + "");
             });
         }
     }

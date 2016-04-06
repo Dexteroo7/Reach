@@ -14,6 +14,7 @@
         android:title="Player"
         app:showAsAction="always"
         android:icon="@drawable/ic_player"
+        android:visible="false"
         />
     <item
         android:id="@+id/notif_button"

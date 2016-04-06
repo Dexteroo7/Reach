@@ -189,14 +189,14 @@ public class ScanFragment extends Fragment {
                         rootView.findViewById(R.id.sendButton), //0
                         rootView.findViewById(R.id.scanCount), //1
                         rootView.findViewById(R.id.totalSongs), //2
-                        rootView.findViewById(R.id.totalApps), //3
-                        rootView.findViewById(R.id.scanProgress), //4
-                        rootView.findViewById(R.id.scan1), //5
-                        rootView.findViewById(R.id.scan2), //6
-                        onboardingData,//7
-                        arguments.getLong(OLD_USER_ID, 0), //8
-                        profilePicUri,//9
-                        rootView.findViewById(R.id.indeterminateProgress)); //10
+                        /*rootView.findViewById(R.id.totalApps),*/
+                        rootView.findViewById(R.id.scanProgress), //3
+                        rootView.findViewById(R.id.scan1), //4
+                        rootView.findViewById(R.id.scan2), //5
+                        onboardingData,//6
+                        arguments.getLong(OLD_USER_ID, 0), //7
+                        profilePicUri,//8
+                        rootView.findViewById(R.id.indeterminateProgress)); //9
 
         return rootView;
     }
@@ -206,7 +206,7 @@ public class ScanFragment extends Fragment {
         private TextView finishOnBoarding;
         private TextView scanCount;
         private TextView musicCount;
-        private TextView appCount;
+        /*private TextView appCount;*/
         private ProgressBar scanProgress;
         private LinearLayout switchLayout1, switchLayout2;
         private ProgressBar indeterminateProgress;
@@ -233,15 +233,15 @@ public class ScanFragment extends Fragment {
             this.finishOnBoarding = (TextView) objects[0];
             this.scanCount = (TextView) objects[1];
             this.musicCount = (TextView) objects[2];
-            this.appCount = (TextView) objects[3];
-            this.scanProgress = (ProgressBar) objects[4];
-            this.switchLayout1 = (LinearLayout) objects[5];
-            this.switchLayout2 = (LinearLayout) objects[6];
+            /*this.appCount = (TextView) objects[3];*/
+            this.scanProgress = (ProgressBar) objects[3];
+            this.switchLayout1 = (LinearLayout) objects[4];
+            this.switchLayout2 = (LinearLayout) objects[5];
 
-            final OnboardingData onboardingData = (OnboardingData) objects[7];
-            final long olderUserId = (long) objects[8];
-            final Uri profilePhotoUri = (Uri) objects[9];
-            this.indeterminateProgress = (ProgressBar) objects[10];
+            final OnboardingData onboardingData = (OnboardingData) objects[6];
+            final long olderUserId = (long) objects[7];
+            final Uri profilePhotoUri = (Uri) objects[8];
+            this.indeterminateProgress = (ProgressBar) objects[9];
 
             //get song cursor
             final Cursor musicCursor = MiscUtils.useContextFromFragment(reference, activity -> {
@@ -251,14 +251,14 @@ public class ScanFragment extends Fragment {
             }).orNull();
 
             //get installedApps
-            final List<ApplicationInfo> installedApps = MiscUtils.useContextFromFragment(reference, activity -> {
+            /*final List<ApplicationInfo> installedApps = MiscUtils.useContextFromFragment(reference, activity -> {
                 return MiscUtils.getInstalledApps(activity.getPackageManager());
-            }).or(Collections.emptyList());
+            }).or(Collections.emptyList());*/
 
             //get total file count
             Log.i("Ayush", "Scanning  " + (musicCursor != null ? musicCursor.getCount() : 0) + " songs");
-            Log.i("Ayush", "Scanning  " + installedApps.size() + " apps");
-            totalExpected = (musicCursor != null ? musicCursor.getCount() : 0) + installedApps.size();
+            //Log.i("Ayush", "Scanning  " + installedApps.size() + " apps");
+            totalExpected = (musicCursor != null ? musicCursor.getCount() : 0) /*+ installedApps.size()*/;
             publishProgress();
 
             //genres get filled here
@@ -279,7 +279,7 @@ public class ScanFragment extends Fragment {
             }).or(Collections.emptyList());
 
             //get the app builders
-            final List<App> deviceApps = MiscUtils.useContextFromFragment(reference, activity -> {
+            /*final List<App> deviceApps = MiscUtils.useContextFromFragment(reference, activity -> {
                 Map<String, EnumSet<ContentType.State>> appEnumSetMap = AccountCreation.OLD_STATES.get(ContentType.APP);
                 if (appEnumSetMap == null)
                     appEnumSetMap = Collections.emptyMap();
@@ -288,23 +288,23 @@ public class ScanFragment extends Fragment {
                         activity.getPackageManager(),
                         appProcessCounter,
                         appEnumSetMap);
-            }).or(Collections.emptyList());
+            }).or(Collections.emptyList());*/
 
             /*totalMusic = totalApps = totalExpected;*/
-            totalExpected = totalApps + totalMusic;
+            totalExpected = /*totalApps + */totalMusic;
             publishProgress();
 
             //we will post this
             final AccountCreationData accountCreationData = new AccountCreationData.Builder()
                     .onboardingData(onboardingData)
-                    .apps(deviceApps)
+                    .apps(/*deviceApps*/ null)
                     .songs(deviceSongs)
                     .genres(ImmutableList.copyOf(genres)).build();
 
             final byte[] toPost = MiscUtils.compressProto(accountCreationData);
             Log.i("Ayush",
                     "Found, Songs:" + accountCreationData.songs.size() +
-                            " Apps:" + accountCreationData.apps.size() +
+                            /*" Apps:" + accountCreationData.apps.size() +*/
                             " kBs:" + toPost.length / 1024);
 
             final Pair<String, Bitmap> imageHashBitmapPair = getImageHashBitmapPair(profilePhotoUri);
@@ -368,10 +368,10 @@ public class ScanFragment extends Fragment {
 
                 //store the user details
                 final SharedPreferences preferences = activity.getSharedPreferences("Reach", Context.MODE_PRIVATE);
-                Map<String, Boolean> visibilityMap = MiscUtils.getMap(100);
+                /*Map<String, Boolean> visibilityMap = MiscUtils.getMap(100);
                 for (App app : deviceApps)
                     visibilityMap.put(app.packageName, app.visible);
-                SharedPrefUtils.overWritePackageVisibility(preferences, visibilityMap);
+                SharedPrefUtils.overWritePackageVisibility(preferences, visibilityMap);*/
                 SharedPrefUtils.storeReachUser(
                         preferences,
                         accountCreationData.onboardingData,
@@ -439,11 +439,11 @@ public class ScanFragment extends Fragment {
 
             super.onProgressUpdate(values);
 
-            final int currentTotal = totalApps + totalMusic;
+            final int currentTotal = /*totalApps +*/totalMusic;
 
             scanCount.setText(currentTotal + "");
             musicCount.setText(totalMusic + "");
-            appCount.setText(totalApps + "");
+            //appCount.setText(totalApps + "");
 
             if (totalExpected > currentTotal)
                 scanProgress.setProgress((currentTotal * 100) / totalExpected);

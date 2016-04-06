@@ -356,12 +356,12 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface, 
         /*text.setText("Friends");
         image.setImageResource(R.drawable.friends_tab_selector);*/
 
-        mTabHost.addTab(mTabHost.newTabSpec("manager_page").setIndicator(setUpTabView(
+        /*mTabHost.addTab(mTabHost.newTabSpec("manager_page").setIndicator(setUpTabView(
                 inflater,
                 "My Files",
                 R.drawable.manager_tab_selector
                 ))
-                , PagerFragment.class, DOWNLOAD_PAGER_BUNDLE);
+                , PagerFragment.class, DOWNLOAD_PAGER_BUNDLE);*/
 
         mTabHost.addTab(mTabHost.newTabSpec("friends_page").setIndicator(setUpTabView(
                 inflater,

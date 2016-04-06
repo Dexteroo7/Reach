@@ -98,7 +98,7 @@ import reach.project.utils.viewHelpers.HandOverMessage;
 import static reach.project.coreViews.explore.ExploreJSON.MiscMetaInfo;
 import static reach.project.coreViews.explore.ExploreJSON.MusicMetaInfo;
 
-public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
+public class  ExploreFragment extends Fragment implements ExploreAdapter.Explore,
         ExploreBuffer.ExplorationCallbacks<JsonObject>, HandOverMessage<Object>, LoaderManager.LoaderCallbacks<Cursor> {
 
     private static final String TAG = ExploreFragment.class.getSimpleName();

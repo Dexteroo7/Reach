@@ -8,21 +8,17 @@ import android.graphics.Color;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentPagerAdapter;
-import android.support.v4.view.ViewPager;
+import android.support.design.widget.CoordinatorLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.facebook.drawee.view.SimpleDraweeView;
-import com.github.florent37.materialviewpager.MaterialViewPager;
-import com.github.florent37.materialviewpager.header.HeaderDesign;
 import com.google.android.gms.analytics.HitBuilders;
 import com.google.android.youtube.player.YouTubeInitializationResult;
 import com.google.android.youtube.player.YouTubePlayer;
@@ -59,6 +55,7 @@ public class YourProfileActivity extends AppCompatActivity {
 
     private static final String OPEN_MY_PROFILE_APPS = "OPEN_MY_PROFILE_APPS";
     private static final String OPEN_MY_PROFILE_SONGS = "OPEN_MY_PROFILE_SONGS";
+    private static final String TAG = YourProfileActivity.class.getSimpleName();
 
     private SharedPreferences sharedPreferences;
 
@@ -114,21 +111,24 @@ public class YourProfileActivity extends AppCompatActivity {
         reference = new WeakReference<>(this);
 
         sharedPreferences = getSharedPreferences("Reach", MODE_PRIVATE);
-
-
-        final MaterialViewPager materialViewPager = (MaterialViewPager) findViewById(R.id.materialViewPager);
-        final Toolbar toolbar = materialViewPager.getToolbar();
-        final ViewPager viewPager = materialViewPager.getViewPager();
-
-        toolbar.setTitle("Profile");
-        toolbar.setTitleTextColor(Color.WHITE);
+        final Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+            toolbar.setTitle("Profile");
+            toolbar.setTitleTextColor(Color.WHITE);
+            toolbar.setNavigationIcon(R.drawable.ic_arrow_back_white);
+        toolbar.setNavigationOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Log.d(TAG, "onClick: " + "Inside navigation click listener" );
+                onBackPressed();
+            }
+        });
 
         toolbar.inflateMenu(R.menu.yourprofile_menu);
         toolbar.setOnMenuItemClickListener(item -> {
             switch (item.getItemId()) {
-                case R.id.player_button:
+                /*case R.id.player_button:
                     PlayerActivity.openActivity(this);
-                    return true;
+                    return true;*/
                 case R.id.notif_button:
                     NotificationActivity.openActivity(this, NotificationActivity.OPEN_NOTIFICATIONS);
                     return true;
@@ -141,6 +141,7 @@ public class YourProfileActivity extends AppCompatActivity {
         });
         toolbar.setNavigationOnClickListener(v -> onBackPressed());
 
+
         final Intent intent = getIntent();
         final long userId = intent.getLongExtra("userId", 0L);
         if (userId == 0) {
@@ -148,6 +149,16 @@ public class YourProfileActivity extends AppCompatActivity {
             return;
         }
 
+
+        if(savedInstanceState == null) {
+
+            YourProfileMusicFragment frag = YourProfileMusicFragment.newInstance(userId);
+            /*CoordinatorLayout.LayoutParams params = (CoordinatorLayout.LayoutParams) ;
+            params.setBehavior( null );*/
+            getSupportFragmentManager().beginTransaction().replace(R.id.your_profile_music_frag_container, frag).commit();
+
+
+        }
         final Cursor cursor = getContentResolver().query(
                 Uri.parse(ReachFriendsProvider.CONTENT_URI + "/" + userId),
                 new String[]{ReachFriendsHelper.COLUMN_PHONE_NUMBER,
@@ -166,7 +177,7 @@ public class YourProfileActivity extends AppCompatActivity {
 
             final String uName = cursor.getString(1);
             numberOfSongs = cursor.getInt(2);
-            final int numberOfApps = cursor.getInt(6);
+            //final int numberOfApps = cursor.getInt(6);
             final String imageId = cursor.getString(3);
             /*final short status = cursor.getShort(5);
             if (status == ReachFriendsHelper.Status.OFFLINE_REQUEST_GRANTED.getValue())
@@ -179,17 +190,17 @@ public class YourProfileActivity extends AppCompatActivity {
                     Snackbar.make(rootView, uName + " is currently offline. You will be able to transfer music when the user comes online.", Snackbar.LENGTH_INDEFINITE).show();
             }*/
 
-            final RelativeLayout headerRoot = (RelativeLayout) materialViewPager.findViewById(R.id.headerRoot);
-            final TextView userName = (TextView) headerRoot.findViewById(R.id.userName);
-            final TextView musicCount = (TextView) headerRoot.findViewById(R.id.musicCount);
-            final TextView appCount = (TextView) headerRoot.findViewById(R.id.appCount);
-            final TextView userHandle = (TextView) headerRoot.findViewById(R.id.userHandle);
-            final SimpleDraweeView profilePic = (SimpleDraweeView) headerRoot.findViewById(R.id.profilePic);
-            final SimpleDraweeView coverPic = (SimpleDraweeView) headerRoot.findViewById(R.id.coverPic);
+            //final RelativeLayout headerRoot = (RelativeLayout) materialViewPager.findViewById(R.id.headerRoot);
+            final TextView userName = (TextView) findViewById(R.id.userName);
+            final TextView musicCount = (TextView) findViewById(R.id.musicCount);
+            //final TextView appCount = (TextView) findViewById(R.id.appCount);
+            final TextView userHandle = (TextView) findViewById(R.id.userHandle);
+            final SimpleDraweeView profilePic = (SimpleDraweeView) findViewById(R.id.profilePic);
+            final SimpleDraweeView coverPic = (SimpleDraweeView) findViewById(R.id.coverPic);
 
             userName.setText(uName);
             musicCount.setText(numberOfSongs + "");
-            appCount.setText(numberOfApps + "");
+            //appCount.setText(numberOfApps + "");
             userHandle.setText("@" + uName.toLowerCase().split(" ")[0]);
             profilePic.setController(MiscUtils.getControllerResize(profilePic.getController(),
                     Uri.parse(StaticData.CLOUD_STORAGE_IMAGE_BASE_URL + imageId), 100, 100));
@@ -202,76 +213,6 @@ public class YourProfileActivity extends AppCompatActivity {
         }
 
         final int finalNumberOfSongs = numberOfSongs;
-        viewPager.setAdapter(new FragmentPagerAdapter(getSupportFragmentManager()) {
-
-            @Override
-            public Fragment getItem(int position) {
-                switch (position) {
-
-                    case 0:
-                        return YourProfileAppFragment.newInstance(userId);
-                    case 1:
-                        return YourProfileMusicFragment.newInstance(userId);
-                    default:
-                        throw new IllegalStateException("Count and size clash");
-                }
-            }
-
-            @Override
-            public int getCount() {
-                return 2;
-            }
-
-            @Override
-            public CharSequence getPageTitle(int position) {
-                switch (position) {
-
-                    case 0:
-                        return "Apps";
-                    case 1:
-                        return "Songs";
-                    default:
-                        throw new IllegalStateException("Count and size clash");
-                }
-            }
-        });
-
-        materialViewPager.setMaterialViewPagerListener(page -> {
-            switch (page) {
-                case 0:
-                    return HeaderDesign.fromColorResAndUrl(
-                            R.color.reach_color,
-                            "");
-                case 1:
-                    return HeaderDesign.fromColorResAndUrl(
-                            R.color.reach_color,
-                            "");
-            }
-            return null;
-        });
-
-        viewPager.setOffscreenPageLimit(viewPager.getAdapter().getCount());
-        viewPager.setPageMargin(-1 * (MiscUtils.dpToPx(20)));
-        /*viewPager.setPageTransformer(true, (view, position) -> {
-
-            if (position <= 1) {
-                // Modify the default slide transition to shrink the page as well
-                float scaleFactor = Math.max(0.85f, 1 - Math.abs(position));
-                float vertMargin = view.getHeight() * (1 - scaleFactor) / 2;
-                float horzMargin = view.getWidth() * (1 - scaleFactor) / 2;
-                if (position < 0)
-                    view.setTranslationX(horzMargin - vertMargin / 2);
-                else
-                    view.setTranslationX(-horzMargin + vertMargin / 2);
-
-                // Scale the page down (between MIN_SCALE and 1)
-                view.setScaleX(scaleFactor);
-                view.setScaleY(scaleFactor);
-            }
-        });*/
-        materialViewPager.getPagerTitleStrip().setViewPager(viewPager);
-
-
         final int time = intent.getIntExtra("time", 0);
         final String ytId = intent.getStringExtra("ytId");
 
@@ -346,10 +287,7 @@ public class YourProfileActivity extends AppCompatActivity {
         final String action = intent.getAction();
         if (TextUtils.isEmpty(action))
             return;
-        if (action.equals(OPEN_MY_PROFILE_APPS))
-            viewPager.setCurrentItem(0);
-        else if (action.equals(OPEN_MY_PROFILE_SONGS))
-            viewPager.setCurrentItem(1);
+
 
     }
 

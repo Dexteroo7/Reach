@@ -166,7 +166,7 @@ public class MyProfileActivity extends AppCompatActivity implements View.OnClick
                 ReachActivity.openActivityOnParticularTab(this, 2);
                 break;
             }
-            case R.id.apps_manage_privacy: {
+            /*case R.id.apps_manage_privacy: {
                 if(appPrivacyAlertDialog!=null){
                     appPrivacyAlertDialog.show();
                 }
@@ -183,7 +183,7 @@ public class MyProfileActivity extends AppCompatActivity implements View.OnClick
                 }
 
                 break;
-            }
+            }*/
             case R.id.songs_manage_privacy: {
                 Log.d(TAG, "Show songs privacy");
                 if(songPrivacyAlertDialog!=null){

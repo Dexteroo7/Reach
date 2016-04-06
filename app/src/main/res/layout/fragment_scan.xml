@@ -102,6 +102,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:background="@null"
+                    android:paddingLeft="4dp"
                     >
                     <RelativeLayout
                         android:layout_width="wrap_content"
@@ -116,7 +117,8 @@
                             android:textSize="36sp"
                             android:background="@null"
                             android:layout_width="wrap_content"
-                            android:layout_height="wrap_content" />
+                            android:layout_height="wrap_content"
+                            />
                         <ImageView
                             android:id="@+id/songIcon"
                             android:layout_below="@id/totalSongs"
@@ -135,13 +137,13 @@
                             android:background="@null"
                             />
                     </RelativeLayout>
-                    <View
+                    <!--<View
                         android:background="@color/reach_grey"
                         android:layout_marginLeft="40dp"
                         android:layout_marginRight="40dp"
                         android:layout_width="0.1dp"
-                        android:layout_height="50dp" />
-                    <RelativeLayout
+                        android:layout_height="50dp" />-->
+                    <!--<RelativeLayout
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content">
                         <TextView
@@ -165,7 +167,7 @@
                             android:textColor="@color/reach_grey"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content" />
-                    </RelativeLayout>
+                    </RelativeLayout>-->
                 </LinearLayout>
             </FrameLayout>
             <RelativeLayout
