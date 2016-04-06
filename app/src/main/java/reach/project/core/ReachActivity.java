@@ -16,6 +16,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.Nullable;
+import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTabHost;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
@@ -65,6 +66,8 @@ import reach.project.coreViews.friends.ReachFriendsHelper;
 import reach.project.coreViews.invite.InviteActivity;
 import reach.project.coreViews.push.PushActivity;
 import reach.project.coreViews.push.PushContainer;
+import reach.project.coreViews.yourProfile.ProfileFragment;
+import reach.project.coreViews.yourProfile.YourProfileFragment;
 import reach.project.music.ReachDatabase;
 import reach.project.music.Song;
 import reach.project.music.SongHelper;
@@ -1226,6 +1229,26 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface, 
         }, 1000L);
     }
 
+    @Override
+    public void displayYourProfileFragment(long userId) {
+        getSupportFragmentManager().beginTransaction().replace(R.id.subContainer, YourProfileFragment.openProfile(userId,this),YourProfileFragment.TAG).commit();
+    }
+
+    @Override
+    public void displayProfileFragment(long userId) {
+        getSupportFragmentManager().beginTransaction().replace(R.id.subContainer, ProfileFragment.openProfile(userId,this), ProfileFragment.TAG).commit();
+    }
+
+    @Override
+    public void removeYourProfileFragment(Fragment fragment) {
+        getSupportFragmentManager().beginTransaction().remove(fragment).commit();
+    }
+
+    @Override
+    public void removeProfileFragment(Fragment fragment) {
+        getSupportFragmentManager().beginTransaction().remove(fragment).commit();
+    }
+
 
     //TODO: Activate with crittercism
     /*@Override
@@ -1272,5 +1295,24 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface, 
 
         super.onTrimMemory(level);
 
+    }
+
+    @Override
+    public void onBackPressed() {
+
+        Fragment frag = getSupportFragmentManager().findFragmentByTag(YourProfileFragment.TAG);
+        Fragment frag1 = getSupportFragmentManager().findFragmentByTag(ProfileFragment.TAG);
+
+        if(frag != null){
+            Log.d(TAG, "onBackPressed: yourprofilefragment is visible");
+            getSupportFragmentManager().beginTransaction().remove(frag).commit();
+            return;
+        }
+        if(frag1 != null){
+            Log.d(TAG, "onBackPressed: profilefragment is visible");
+            getSupportFragmentManager().beginTransaction().remove(frag).commit();
+            return;
+        }
+            super.onBackPressed();
     }
 }

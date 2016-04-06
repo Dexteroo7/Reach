@@ -1,6 +1,7 @@
 package reach.project.coreViews.friends;
 
 import android.app.Activity;
+import android.app.SearchManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -12,11 +13,14 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
+import android.support.v4.view.MenuItemCompat;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.RelativeLayout;
@@ -38,6 +42,9 @@ import reach.project.utils.viewHelpers.HandOverMessage;
 public class FriendsFragment extends Fragment implements
         LoaderManager.LoaderCallbacks<Cursor>, HandOverMessage<ClickData> {
 
+
+    private static final String TAG = FriendsFragment.class.getSimpleName();
+    private SearchView searchView;
     public static final View.OnClickListener INVITE_LISTENER =
             view -> view.getContext().startActivity(new Intent(view.getContext(), InviteActivity.class));
 
@@ -47,6 +54,8 @@ public class FriendsFragment extends Fragment implements
     private View rootView = null;
     @Nullable
     private SuperInterface mListener = null;
+
+    final Bundle bundle = new Bundle();
 
     @Override
     public void onDestroyView() {
@@ -73,7 +82,7 @@ public class FriendsFragment extends Fragment implements
 
         Log.d("Ashish", "FriendsFragment - onCreateView");
         final Activity activity = getActivity();
-         final SharedPreferences sharedPreferences = activity.getSharedPreferences("Reach", Context.MODE_PRIVATE);
+        final SharedPreferences sharedPreferences = activity.getSharedPreferences("Reach", Context.MODE_PRIVATE);
         final long serverId = SharedPrefUtils.getServerId(sharedPreferences);
 
         rootView = inflater.inflate(R.layout.fragment_friends, container, false);
@@ -81,7 +90,11 @@ public class FriendsFragment extends Fragment implements
         mToolbar.setTitle("Friends");
         mToolbar.inflateMenu(R.menu.pager_menu);
         mToolbar.setOnMenuItemClickListener(mListener != null ? mListener.getMenuClickListener() : null);
-
+        SearchManager searchManager =
+                (SearchManager) getActivity().getSystemService(Context.SEARCH_SERVICE);
+        MenuItem searchViewMenuItem = mToolbar.getMenu().findItem(R.id.search);
+        searchView = (SearchView) searchViewMenuItem.getActionView();
+        searchView.setQueryHint("Search Friends");
         //gridView = MiscUtils.addLoadingToGridView((GridView) rootView.findViewById(R.id.contactsList));
         //gridView.setOnItemClickListener(LocalUtils.clickListener);
         //gridView.setOnScrollListener(scrollListener);
@@ -115,26 +128,89 @@ public class FriendsFragment extends Fragment implements
 
         getLoaderManager().initLoader(StaticData.FRIENDS_VERTICAL_LOADER, null, this);
         getLoaderManager().initLoader(StaticData.FRIENDS_HORIZONTAL_LOADER, null, this);
+
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+                        @Override
+                        public boolean onQueryTextSubmit(String query) {
+                                return false;
+                            }
+
+                                @Override
+                        public boolean onQueryTextChange(String newText) {
+
+                                        if(newText == null){
+                                        return true;
+                                    }
+
+                                final String constraint = "%" + newText.toLowerCase() + "%";
+                                bundle.putString("filter",constraint );
+                                getLoaderManager().restartLoader(StaticData.FRIENDS_VERTICAL_LOADER, bundle, FriendsFragment.this);
+                                getLoaderManager().restartLoader(StaticData.FRIENDS_HORIZONTAL_LOADER, bundle, FriendsFragment.this);
+                                return true;
+                            }
+                    });
+
+                        MenuItemCompat.setOnActionExpandListener(searchViewMenuItem, new MenuItemCompat.OnActionExpandListener() {
+                                @Override
+                                public boolean onMenuItemActionExpand(MenuItem item) {
+                                        Log.d(TAG, "onMenuItemActionExpand: searchview frag is now visible");
+                                        if(friendsAdapter!=null){
+                                                friendsAdapter.DisplayEmptyImageView(false);
+                                            }
+                                        return true;
+                                    }
+
+                                        @Override
+                                public boolean onMenuItemActionCollapse(MenuItem item) {
+                                        Log.d(TAG, "onMenuItemActionCollapse: searchview frag is now invisible");
+                                        if(friendsAdapter!=null){
+                                                friendsAdapter.DisplayEmptyImageView(true);
+                                            }
+                                        return true;
+                                    }
+                            });
+
         return rootView;
     }
 
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
 
-        if (id == StaticData.FRIENDS_VERTICAL_LOADER)
-            return new CursorLoader(getActivity(),
-                    ReachFriendsProvider.CONTENT_URI,
-                    FriendsAdapter.REQUIRED_PROJECTION,
-                    ReachFriendsHelper.COLUMN_STATUS + " != ?",
-                    new String[]{ReachFriendsHelper.Status.REQUEST_NOT_SENT.getString()},
-                    ReachFriendsHelper.COLUMN_USER_NAME + " COLLATE NOCASE ASC");
-        else if (id == StaticData.FRIENDS_HORIZONTAL_LOADER)
-            return new CursorLoader(getActivity(),
-                    ReachFriendsProvider.CONTENT_URI,
-                    FriendsAdapter.REQUIRED_PROJECTION,
-                    ReachFriendsHelper.COLUMN_STATUS + " = ?",
-                    new String[]{ReachFriendsHelper.Status.REQUEST_NOT_SENT.getString()}, null);
-
+        if (id == StaticData.FRIENDS_VERTICAL_LOADER) {
+            if (args == null) {
+                return new CursorLoader(getActivity(),
+                        ReachFriendsProvider.CONTENT_URI,
+                        FriendsAdapter.REQUIRED_PROJECTION,
+                        ReachFriendsHelper.COLUMN_STATUS + " != ?",
+                        new String[]{ReachFriendsHelper.Status.REQUEST_NOT_SENT.getString()},
+                        ReachFriendsHelper.COLUMN_USER_NAME + " COLLATE NOCASE ASC");
+            } else {
+                Log.d(TAG, "filter : " + args.getString("filter"));
+                return new CursorLoader(getActivity(),
+                        ReachFriendsProvider.CONTENT_URI,
+                        FriendsAdapter.REQUIRED_PROJECTION,
+                        ReachFriendsHelper.COLUMN_STATUS + " != ? and " + ReachFriendsHelper.COLUMN_USER_NAME + " LIKE ? ",
+                        new String[]{ReachFriendsHelper.Status.REQUEST_NOT_SENT.getString(),
+                                args.getString("filter")},
+                        ReachFriendsHelper.COLUMN_USER_NAME + " COLLATE NOCASE ASC");
+            }
+        }
+        else if (id == StaticData.FRIENDS_HORIZONTAL_LOADER) {
+            if(args == null) {
+                return new CursorLoader(getActivity(),
+                        ReachFriendsProvider.CONTENT_URI,
+                        FriendsAdapter.REQUIRED_PROJECTION,
+                        ReachFriendsHelper.COLUMN_STATUS + " = ?",
+                        new String[]{ReachFriendsHelper.Status.REQUEST_NOT_SENT.getString()}, null);
+            }
+            else{
+                return new CursorLoader(getActivity(),
+                        ReachFriendsProvider.CONTENT_URI,
+                        FriendsAdapter.REQUIRED_PROJECTION,
+                        ReachFriendsHelper.COLUMN_STATUS + " = ? and " + ReachFriendsHelper.COLUMN_USER_NAME + " LIKE ? ",
+                        new String[]{ReachFriendsHelper.Status.REQUEST_NOT_SENT.getString(),args.getString("filter")}, null);
+            }
+        }
         else
             return null;
     }
@@ -147,13 +223,11 @@ public class FriendsFragment extends Fragment implements
 
         if (loader.getId() == StaticData.FRIENDS_VERTICAL_LOADER) {
             //if(StaticData.friendsCount < data.getCount()){
-              //  MyProfileActivity.countChanged = true;
-                StaticData.friendsCount = data.getCount();
+            //  MyProfileActivity.countChanged = true;
+            StaticData.friendsCount = data.getCount();
             //}
             friendsAdapter.setVerticalCursor(data);
-        }
-
-        else if (loader.getId() == StaticData.FRIENDS_HORIZONTAL_LOADER)
+        } else if (loader.getId() == StaticData.FRIENDS_HORIZONTAL_LOADER)
             friendsAdapter.setHorizontalCursor(data);
     }
 
@@ -180,9 +254,13 @@ public class FriendsFragment extends Fragment implements
 
         if (clickData.status < ReachFriendsHelper.Status.REQUEST_SENT_NOT_GRANTED.getValue()) {
             Log.i("Ayush", "Detected status" + clickData.status);
-            YourProfileActivity.openProfileWithPlayer(clickData.friendId, activity, activity.player.getCurrentTimeMillis(), activity.currentYTId);
-        } else
-            ProfileActivity.openProfile(clickData.friendId, activity);
+            //YourProfileActivity.openProfileWithPlayer(clickData.friendId, activity, activity.player.getCurrentTimeMillis(), activity.currentYTId);
+            mListener.displayYourProfileFragment(clickData.friendId);
+        } else {
+            //ProfileActivity.openProfile(clickData.friendId, activity);
+            mListener.displayProfileFragment(clickData.friendId);
+        }
+
     }
 
     @Override

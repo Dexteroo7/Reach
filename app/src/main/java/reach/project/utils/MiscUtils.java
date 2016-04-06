@@ -490,6 +490,13 @@ public enum MiscUtils {
 //        return listView;
 //    }
 
+    // For generating "%searchfilter%" for finding rows in database like that name
+    public static String getFilterLikeString(String filter){
+
+        return StaticData.PERCENTAGE_STRING + filter + StaticData.PERCENTAGE_STRING;
+
+    }
+
     public static ListView addLoadingToListView(ListView listView) {
 
         if (listView.getContext() == null)

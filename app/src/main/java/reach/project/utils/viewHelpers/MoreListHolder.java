@@ -45,7 +45,7 @@ public class MoreListHolder extends RecyclerView.ViewHolder implements View.OnCl
         this.listOfItems = (RecyclerView) itemView.findViewById(listOfItemsResourceId);
         itemView.findViewById(moreButtonId).setOnClickListener(this);
         itemView.setPadding(MiscUtils.dpToPx(10),MiscUtils.dpToPx(32), MiscUtils.dpToPx(10),0 );
-        itemView.setBackgroundResource(R.drawable.border_shadow1);
+        //itemView.setBackgroundResource(R.drawable.border_shadow1);
     }
 
     public MoreListHolder(ViewGroup parent) {

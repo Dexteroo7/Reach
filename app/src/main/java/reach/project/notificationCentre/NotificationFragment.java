@@ -112,11 +112,11 @@ public class NotificationFragment extends Fragment {
 
             case DEFAULT:
                 throw new IllegalArgumentException("Default notification in list !");
-            case PUSH:
+            /*case PUSH:
                 if (NotificationAdapter.accepted.get(notificationBaseLocal.getNotificationId())) {
                     NotificationAdapter.accepted.delete(notificationBaseLocal.getNotificationId());
                 } else return; //TODO fix this hack
-                break;
+                break;*/
             case LIKE:
                 YourProfileActivity.openProfile(hostID, getActivity());
                 break;
@@ -142,12 +142,12 @@ public class NotificationFragment extends Fragment {
                 cursor.close();
                 YourProfileActivity.openProfile(hostID, getActivity());
                 break;
-            case PUSH_ACCEPTED:
+            /*case PUSH_ACCEPTED:
                 final Intent foreGround = new Intent(getContext(), ReachActivity.class);
                 foreGround.setAction(ReachActivity.OPEN_MANAGER_SONGS_DOWNLOADING);
                 foreGround.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
                 startActivity(foreGround);
-                break;
+                break;*/
         }
 
         adapter.remove(notificationBaseLocal);
@@ -214,23 +214,23 @@ public class NotificationFragment extends Fragment {
 
                         } else if (base.getTypes().equals(Types.PUSH.name())) {
 
-                            final Push push = new Push();
+                            /*final Push push = new Push();
                             push.portData(base);
 
                             push.setPushContainer((String) base.get("pushContainer"));
                             push.setFirstSongName((String) base.get("firstSongName"));
                             push.setCustomMessage((String) base.get("customMessage"));
                             push.setSize(Integer.parseInt(base.get("size").toString()));
-                            fragment.notifications.add(push);
+                            fragment.notifications.add(push);*/
 
                         } else if (base.getTypes().equals(Types.PUSH_ACCEPTED.name())) {
 
-                            final PushAccepted pushAccepted = new PushAccepted();
+                            /*final PushAccepted pushAccepted = new PushAccepted();
                             pushAccepted.portData(base);
 
                             pushAccepted.setFirstSongName((String) base.get("firstSongName"));
                             pushAccepted.setSize(Integer.parseInt(base.get("size").toString()));
-                            fragment.notifications.add(pushAccepted);
+                            fragment.notifications.add(pushAccepted);*/
 
                         } else
                             throw new IllegalArgumentException("Wrong notification type received " + base.getTypes());

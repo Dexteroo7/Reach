@@ -139,7 +139,6 @@ public class YourProfileActivity extends AppCompatActivity {
                     return false;
             }
         });
-        toolbar.setNavigationOnClickListener(v -> onBackPressed());
 
 
         final Intent intent = getIntent();

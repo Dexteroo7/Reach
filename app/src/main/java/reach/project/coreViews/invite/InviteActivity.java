@@ -1,6 +1,10 @@
 package reach.project.coreViews.invite;
 
+import android.app.SearchManager;
+import android.content.Context;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.support.annotation.Nullable;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
@@ -9,13 +13,19 @@ import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
 import android.view.MenuItem;
 
 import reach.project.R;
+import reach.project.core.StaticData;
 import reach.project.utils.MiscUtils;
 
 public class InviteActivity extends AppCompatActivity implements ViewPager.OnPageChangeListener {
+    private Toolbar mToolbar;
+    private MenuItem searchViewMenuItem;
+    private SearchView searchView;
+    private static final int TRIGGER_SERACH =124;
 
     //private static WeakReference<InviteActivity> reference;
 
@@ -26,7 +36,7 @@ public class InviteActivity extends AppCompatActivity implements ViewPager.OnPag
 
         //reference = new WeakReference<>(this);
 
-        final Toolbar mToolbar = (Toolbar) findViewById(R.id.inviteToolbar);
+        mToolbar = (Toolbar) findViewById(R.id.inviteToolbar);
         mToolbar.inflateMenu(R.menu.all_contacts_frag_menu);
         setUpSearchView();
 
@@ -55,6 +65,25 @@ public class InviteActivity extends AppCompatActivity implements ViewPager.OnPag
 
     @Override
     public void onPageSelected(int position) {
+        if(searchViewMenuItem == null){
+            return;
+        }
+
+        switch (position){
+            case 0:
+
+                searchViewMenuItem.setVisible(false);
+
+                break;
+
+
+            case 1:
+
+                searchViewMenuItem.setVisible(true);
+
+                break;
+
+        }
 
     }
 
@@ -161,4 +190,27 @@ public class InviteActivity extends AppCompatActivity implements ViewPager.OnPag
             return 2;
         }
     }
+
+    private Handler handler = new Handler() {
+        @Override
+        public void handleMessage(Message msg) {
+            if(msg == null){
+                return;
+            }
+            if (msg.what == TRIGGER_SERACH) {
+                Fragment page = getSupportFragmentManager().findFragmentByTag("android:switcher:" + R.id.invitePager + ":"
+                        + 1);
+                // based on the current position you can then cast the page to the correct
+                // class and call the method:
+                if (page != null) {
+                    ((AllContactsFragment)page).filter(msg.getData().getString(StaticData.FILTER_STRING_KEY));
+                }
+            }
+        }
+    };
+
+
+
+
+
 }

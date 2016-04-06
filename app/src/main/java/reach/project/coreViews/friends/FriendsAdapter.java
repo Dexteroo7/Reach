@@ -42,7 +42,7 @@ class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> imple
     private final long emptyViewId = ThreadLocalRandom.current().nextLong(Long.MAX_VALUE);
     private static final String EMPTY_VIEW_TEXT = "No Friends to Reach! \nMake friends and checkout their collection !";
     private static final String LOCKED_TEXT = "People on Reach";
-
+    private boolean emptyImageViewVisible=true;
     ///////////Horizontal Cursor
     private final LockedFriendsAdapter lockedFriendsAdapter = new LockedFriendsAdapter(this, R.layout.friend_locked_item);
 
@@ -147,8 +147,8 @@ class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> imple
                 moreListHolder.listOfItems.setAdapter(lockedFriendsAdapter);
                 return moreListHolder;
             }
-            case VIEW_TYPE_EMPTY_OR_ERROR:{
-                final EmptyTextViewHolder emptyViewHolder = new EmptyTextViewHolder(parent,R.layout.general_emptyview, R.id.empty_view);
+            case VIEW_TYPE_EMPTY_OR_ERROR: {
+                final EmptyTextViewHolder emptyViewHolder = new EmptyTextViewHolder(parent, R.layout.general_emptyview, R.id.empty_view);
                 emptyViewHolder.mEmptyImageView.setImageResource(R.drawable.friends_empty_view_owl);
                 return emptyViewHolder;
             }
@@ -156,6 +156,10 @@ class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> imple
             default:
                 throw new IllegalStateException("Illegal view type detected");
         }
+    }
+
+    public void DisplayEmptyImageView(boolean value) {
+        this.emptyImageViewVisible = value;
     }
 
     @Override
@@ -262,6 +266,13 @@ class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> imple
                 viewHolder.lockIcon.setVisibility(View.VISIBLE);
                 viewHolder.lockText.setVisibility(View.VISIBLE);
             }
+        } else if (holder instanceof EmptyTextViewHolder) {
+
+            EmptyTextViewHolder emptyViewHolder = (EmptyTextViewHolder) holder;
+            if (!emptyImageViewVisible)
+                emptyViewHolder.mEmptyImageView.setImageResource(0);
+            else
+                emptyViewHolder.mEmptyImageView.setImageResource(R.drawable.friends_empty_view_owl);
         }
 
     }
@@ -275,35 +286,31 @@ class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> imple
     @Nonnull
     private Object getItem(int position) {
 
-        if(verticalCursor==null && lockedFriendsAdapter.getCursor()==null){
+        if (verticalCursor == null && lockedFriendsAdapter.getCursor() == null) {
             return 'a';
         }
 
-        if(position == 10){
+        if (position == 10) {
             return false;
         }
         //TODO: Resolved error
-        else if (position <10){
-            if(verticalCursorCount == 0){
-                if(position == 0){
+        else if (position < 10) {
+            if (verticalCursorCount == 0) {
+                if (position == 0) {
                     return 1;
-                }
-                else{
+                } else {
                     return false;
                 }
 
-            }
-            else if(position == verticalCursorCount){
+            } else if (position == verticalCursorCount) {
                 return false;
-            }
-            else{
+            } else {
                 if (verticalCursor.moveToPosition(position))
                     return verticalCursor;
                 else
                     throw new IllegalStateException("Cursor move should have been successful " + position + " " + verticalCursor.getCount());
             }
-        }
-        else{
+        } else {
             final int relativePosition = position - 1;
             if (verticalCursor.moveToPosition(relativePosition))
                 return verticalCursor;
@@ -344,20 +351,19 @@ class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> imple
         int count;
         if (verticalCursor == null) {
             if (lockedFriendsCursor == null) {
-                count =  0;
-            } else if(lockedFriendsCursor.getCount()>0){
-                count =  1;
-            }
-            else{
+                count = 0;
+            } else if (lockedFriendsCursor.getCount() > 0) {
+                count = 1;
+            } else {
                 count = 0;
             }
         } else {
             verticalCursorCount = verticalCursor.getCount();
             if (lockedFriendsCursor != null) {
                 if (lockedFriendsCursor.getCount() > 0) {
-                    count =  verticalCursorCount + 1;
+                    count = verticalCursorCount + 1;
                 } else {
-                    count =  verticalCursorCount;
+                    count = verticalCursorCount;
                 }
             } else {
                 count = verticalCursorCount;
@@ -365,7 +371,7 @@ class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> imple
 
         }
         //Comment out for empty image view when there are no friends
-        if(verticalCursorCount == 0){
+        if (verticalCursorCount == 0) {
             count = count + 1;
         }
 
