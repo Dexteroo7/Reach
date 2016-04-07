@@ -40,7 +40,6 @@ import java.util.concurrent.ExecutorService;
 
 import reach.project.R;
 import reach.project.core.StaticData;
-import reach.project.coreViews.yourProfile.YourProfileActivity;
 import reach.project.coreViews.yourProfile.blobCache.Cache;
 import reach.project.coreViews.yourProfile.blobCache.CacheAdapterInterface;
 import reach.project.coreViews.yourProfile.blobCache.CacheInjectorCallbacks;
@@ -50,6 +49,7 @@ import reach.project.utils.CloudEndPointsUtils;
 import reach.project.utils.CloudStorageUtils;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
+import reach.project.utils.ancillaryClasses.SuperInterface;
 import reach.project.utils.viewHelpers.CustomLinearLayoutManager;
 
 /**
@@ -66,6 +66,7 @@ public class YourProfileMusicFragment extends Fragment implements CacheInjectorC
     private static long hostId = 0;
     private static long myId = 0;
     private RecyclerView mRecyclerView;
+    private SuperInterface mListener = null;
     //private View emptyView;
 
     public static YourProfileMusicFragment newInstance(long hostId) {
@@ -226,11 +227,29 @@ public class YourProfileMusicFragment extends Fragment implements CacheInjectorC
     }
 
     @Override
+    public void onAttach(Context context) {
+
+        super.onAttach(context);
+        try {
+            mListener = (SuperInterface) context;
+        } catch (ClassCastException e) {
+            throw new ClassCastException(context.toString()
+                    + " must implement SplashInterface");
+        }
+    }
+
+    @Override
+    public void onDetach() {
+
+        super.onDetach();
+        Log.d("Ayush", "YourProfileMusicFragment - onDetach");
+        mListener = null;
+    }
+
+    @Override
     public void handOverMessage(@NonNull Song song) {
 
-        final YourProfileActivity activity = (YourProfileActivity) getActivity();
-
-        activity.showYTVideo(song.getDisplayName());
+        mListener.showYTVideo(song.getDisplayName());
         /*final Cursor senderCursor = activity.getContentResolver().query(
                 Uri.parse(ReachFriendsProvider.CONTENT_URI + "/" + hostId),
                 new String[]{ReachFriendsHelper.COLUMN_USER_NAME,

@@ -180,7 +180,7 @@ public class FriendsFragment extends Fragment implements
 
         if (clickData.status < ReachFriendsHelper.Status.REQUEST_SENT_NOT_GRANTED.getValue()) {
             Log.i("Ayush", "Detected status" + clickData.status);
-            YourProfileActivity.openProfileWithPlayer(clickData.friendId, activity, activity.player.getCurrentTimeMillis(), activity.currentYTId);
+            YourProfileActivity.openProfileWithPlayer(clickData.friendId, activity, activity.getCurrentPlayerTime(), activity.getCurrentYTId());
         } else
             ProfileActivity.openProfile(clickData.friendId, activity);
     }

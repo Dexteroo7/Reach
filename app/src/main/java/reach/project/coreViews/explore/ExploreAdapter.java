@@ -16,6 +16,7 @@ import android.widget.TextView;
 import com.facebook.drawee.backends.pipeline.Fresco;
 import com.facebook.drawee.view.SimpleDraweeView;
 import com.facebook.imagepipeline.request.ImageRequestBuilder;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
 import reach.project.R;
@@ -83,7 +84,12 @@ class ExploreAdapter extends PagerAdapter implements View.OnClickListener {
                 case MUSIC: {
                     downBtn.setOnClickListener(this);
 
-                    final String ytID = MiscUtils.get(exploreJSON, ExploreJSON.YOUTUBE_ID).getAsString();
+                    final JsonElement ytElement = MiscUtils.get(exploreJSON, ExploreJSON.YOUTUBE_ID);
+                    final String ytID;
+                    if (ytElement == null)
+                        ytID = "";
+                    else
+                        ytID = ytElement.getAsString();
                     downBtn.setTag(ytID);
                     final String albumArt = "https://i.ytimg.com/vi/" + ytID + "/hqdefault.jpg";
                     if (!TextUtils.isEmpty(albumArt))

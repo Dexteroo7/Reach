@@ -52,10 +52,11 @@ import reach.project.notificationCentre.NotificationActivity;
 import reach.project.player.PlayerActivity;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
+import reach.project.utils.ancillaryClasses.SuperInterface;
 
 
 // If a friend is added, then this activity is displayed
-public class YourProfileActivity extends AppCompatActivity {
+public class YourProfileActivity extends AppCompatActivity implements SuperInterface{
 
     private static final String OPEN_MY_PROFILE_APPS = "OPEN_MY_PROFILE_APPS";
     private static final String OPEN_MY_PROFILE_SONGS = "OPEN_MY_PROFILE_SONGS";
@@ -84,6 +85,17 @@ public class YourProfileActivity extends AppCompatActivity {
 
     private static WeakReference<YourProfileActivity> reference = null;
 
+    @Override
+    public Toolbar.OnMenuItemClickListener getMenuClickListener() {
+        return null;
+    }
+
+    @Override
+    public void showSwipeCoach() {
+
+    }
+
+    @Override
     public void showYTVideo(String text) {
         ((ReachApplication) getApplication()).getTracker().send(new HitBuilders.EventBuilder()
                 .setCategory("Transaction - Add SongBrainz")
@@ -319,12 +331,22 @@ public class YourProfileActivity extends AppCompatActivity {
                 //player.cueVideo("CuH3tJPiP-U");
 
                 if (TextUtils.isEmpty(ytId) || time == 0) {
-                    getSupportFragmentManager().beginTransaction().hide(ytFragment).commit();
+                    if (isFinishing())
+                        return;
+                    try {
+                        getSupportFragmentManager().beginTransaction().hide(ytFragment).commit();
+                    } catch (IllegalStateException ignored) {
+                    }
                     ytLayout.setVisibility(View.GONE);
                 }
                 else {
                     ytLayout.setVisibility(View.VISIBLE);
-                    getSupportFragmentManager().beginTransaction().show(ytFragment).commit();
+                    if (isFinishing())
+                        return;
+                    try {
+                        getSupportFragmentManager().beginTransaction().show(ytFragment).commit();
+                    } catch (IllegalStateException ignored) {
+                    }
                     player.loadVideo(ytId, time);
                     currentYTId = ytId;
                 }
@@ -332,7 +354,12 @@ public class YourProfileActivity extends AppCompatActivity {
                 if (ytCloseBtn != null)
                     ytCloseBtn.setOnClickListener(v -> {
                         ytLayout.setVisibility(View.GONE);
-                        getSupportFragmentManager().beginTransaction().hide(ytFragment).commit();
+                        if (isFinishing())
+                            return;
+                        try {
+                            getSupportFragmentManager().beginTransaction().hide(ytFragment).commit();
+                        } catch (IllegalStateException ignored) {
+                        }
                         player.pause();
                     });
             }
@@ -413,8 +440,14 @@ public class YourProfileActivity extends AppCompatActivity {
             MiscUtils.useActivity(reference, activity -> {
                 if (activity.ytLayout.getVisibility() != View.VISIBLE)
                     activity.ytLayout.setVisibility(View.VISIBLE);
-                if (activity.ytFragment.isHidden())
-                    activity.getSupportFragmentManager().beginTransaction().show(activity.ytFragment).commit();
+                if (activity.ytFragment.isHidden()) {
+                    if (activity.isFinishing())
+                        return;
+                    try {
+                        activity.getSupportFragmentManager().beginTransaction().show(activity.ytFragment).commit();
+                    } catch (IllegalStateException ignored) {
+                    }
+                }
                 activity.currentYTId = searchResult.getId().getVideoId();
                 activity.player.loadVideo(activity.currentYTId);
             });

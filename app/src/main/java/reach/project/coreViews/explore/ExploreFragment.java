@@ -74,16 +74,18 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import javax.annotation.Nonnull;
 
+import okhttp3.Interceptor;
 import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 import reach.backend.entities.messaging.model.MyString;
 import reach.project.R;
-import reach.project.core.ReachActivity;
 import reach.project.core.ReachApplication;
 import reach.project.core.StaticData;
 import reach.project.coreViews.friends.ReachFriendsHelper;
@@ -96,7 +98,6 @@ import reach.project.utils.ancillaryClasses.UseContext;
 import reach.project.utils.viewHelpers.HandOverMessage;
 
 import static reach.project.coreViews.explore.ExploreJSON.MiscMetaInfo;
-import static reach.project.coreViews.explore.ExploreJSON.MusicMetaInfo;
 
 public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
         ExploreBuffer.ExplorationCallbacks<JsonObject>, HandOverMessage<Object>, LoaderManager.LoaderCallbacks<Cursor> {
@@ -298,7 +299,30 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
                 .url("http://52.74.175.56:8080/explore/getObjects")
                 .post(body)
                 .build();
-        final Response response = ReachApplication.OK_HTTP_CLIENT.newCall(request).execute();
+        final OkHttpClient client = new OkHttpClient.Builder()
+                .connectTimeout(5000, TimeUnit.MILLISECONDS)
+                .readTimeout(5000, TimeUnit.MILLISECONDS)
+                .writeTimeout(5000, TimeUnit.MILLISECONDS)
+                .addNetworkInterceptor(new Interceptor() {
+                    @Override
+                    public Response intercept(Chain chain) throws IOException {
+                        final Request req = chain.request();
+                        int tryCount = 0;
+                        while (tryCount < 3) {
+                            try {
+                                // try the request
+                                return chain.proceed(req);
+                            } catch (Exception e) {
+                                Log.d("intercept", "Request is not successful - " + tryCount);
+                                tryCount++;
+                            }
+                        }
+                        // otherwise just pass the original response on
+                        return null;
+                    }
+                })
+                .build();
+        final Response response = client.newCall(request).execute();
         if (response.code() != HttpStatusCodes.STATUS_CODE_OK)
             return Collections.emptyList();
 
@@ -885,17 +909,12 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
             }
         }
         else if (object instanceof String) {
-            final ReachActivity activity = (ReachActivity) getActivity();
-            activity.showYTVideo((String) object);
+            mListener.showYTVideo((String) object);
         }
 
     }
 
     public void addToDownload(JsonObject exploreJSON) {
-
-        final ReachActivity activity = (ReachActivity) getActivity();
-
-        activity.showYTVideo(MiscUtils.get(exploreJSON.get(ExploreJSON.META_INFO.getName()).getAsJsonObject(), MusicMetaInfo.DISPLAY_NAME).getAsString());
         /*final ContentResolver contentResolver = activity.getContentResolver();
 
         //extract meta info to process current click request

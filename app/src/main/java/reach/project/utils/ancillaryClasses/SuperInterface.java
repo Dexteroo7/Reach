@@ -10,4 +10,6 @@ public interface SuperInterface {
     Toolbar.OnMenuItemClickListener getMenuClickListener();
 
     void showSwipeCoach();
+
+    void showYTVideo(String text);
 }
