@@ -93,7 +93,7 @@ final class LockedFriendsAdapter extends ReachCursorAdapter<FriendsViewHolder> i
         }*/
         friendsViewHolder.userNameList.setText(cursor.getString(2));
         friendsViewHolder.telephoneNumberList.setText(cursor.getInt(7) + "");
-        friendsViewHolder.appCount.setText(cursor.getInt(8) + "");
+        //friendsViewHolder.appCount.setText(cursor.getInt(8) + "");
         friendsViewHolder.coverPic.setImageURI(AlbumArtUri.getUserImageUri(
                 cursor.getLong(0),
                 "coverPicId",

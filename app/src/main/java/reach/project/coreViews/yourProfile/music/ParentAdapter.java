@@ -91,8 +91,8 @@ class ParentAdapter<T extends Message> extends RecyclerViewMaterialAdapter<Recyc
             }
             simpleListHolder.headerText.setText(recentSong.title);
             if (simpleListHolder.listOfItems.getLayoutManager() == null)
-                simpleListHolder.listOfItems.setLayoutManager(new CustomGridLayoutManager(simpleListHolder.listOfItems.getContext(), 2));
-            simpleListHolder.listOfItems.setAdapter(new MoreAdapter(recentSong.songList, cacheAdapterInterface, R.layout.song_grid_item));
+                simpleListHolder.listOfItems.setLayoutManager(new CustomLinearLayoutManager(simpleListHolder.listOfItems.getContext()));
+            simpleListHolder.listOfItems.setAdapter(new MoreAdapter(recentSong.songList, cacheAdapterInterface, R.layout.song_list_item));
 
         } else if (message instanceof SmartSong && holder instanceof MoreListHolder) {
 

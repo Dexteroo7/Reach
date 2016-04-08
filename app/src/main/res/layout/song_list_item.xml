@@ -37,6 +37,7 @@
         android:paddingBottom="10dp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:visibility="invisible"
         android:src="@drawable/icon_extra_dots_light_gray" />
     <ImageView
         android:id="@+id/likeButton"
@@ -45,7 +46,9 @@
         android:padding="8dp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:src="@drawable/like_selector_1" />
+        android:src="@drawable/like_selector_1"
+        android:visibility="invisible"
+        />
 
     <ImageView
         android:layout_width="20dp"

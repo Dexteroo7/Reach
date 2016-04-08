@@ -243,8 +243,8 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface, 
     }
 
     public YouTubePlayer player = null;
-    private YouTubePlayerSupportFragment ytFragment;
-    private LinearLayout ytLayout;
+    public YouTubePlayerSupportFragment ytFragment;
+    public LinearLayout ytLayout;
     public String currentYTId;
 
     @Nullable
@@ -520,7 +520,7 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface, 
         });
     }
 
-    private String fastSanitize(String str) {
+    public String fastSanitize(String str) {
 
         final StringBuilder stringBuilder = new StringBuilder();
 

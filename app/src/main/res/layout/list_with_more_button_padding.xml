@@ -2,14 +2,12 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginTop="4dp"
     android:background="@null">
 
     <TextView
         android:id="@+id/headerText"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
         android:layout_marginLeft="8dp"
         android:text="Test"
         android:background="@null"
@@ -22,8 +20,8 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentRight="true"
-        android:layout_marginRight="15dp"
-        android:layout_marginTop="20dp"
+        android:layout_marginRight="16dp"
+        android:layout_marginTop="4dp"
         android:background="@color/reach_color"
         android:paddingBottom="2dp"
         android:paddingLeft="4dp"

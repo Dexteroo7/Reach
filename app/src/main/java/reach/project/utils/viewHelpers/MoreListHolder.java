@@ -6,6 +6,7 @@ import android.database.Cursor;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.GridLayoutManager;
+import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -44,7 +45,7 @@ public class MoreListHolder extends RecyclerView.ViewHolder implements View.OnCl
         this.headerText = (TextView) itemView.findViewById(headerTextResourceId);
         this.listOfItems = (RecyclerView) itemView.findViewById(listOfItemsResourceId);
         itemView.findViewById(moreButtonId).setOnClickListener(this);
-        itemView.setPadding(MiscUtils.dpToPx(10),MiscUtils.dpToPx(32), MiscUtils.dpToPx(10),0 );
+        itemView.setPadding(MiscUtils.dpToPx(8),MiscUtils.dpToPx(12), MiscUtils.dpToPx(8),0 );
         //itemView.setBackgroundResource(R.drawable.border_shadow1);
     }
 
@@ -142,8 +143,9 @@ public class MoreListHolder extends RecyclerView.ViewHolder implements View.OnCl
             throw new IllegalArgumentException("More button invalid adapter type");
 
         final RecyclerView recyclerView = new RecyclerView(context);
-        recyclerView.setPadding(0, MiscUtils.dpToPx(10), 0, 0);
-        recyclerView.setLayoutManager(new GridLayoutManager(context, 2));
+        //TODO: Add bottom margin to recyclerview
+        //recyclerView.setPadding(0, MiscUtils.dpToPx(10), 0, 0);
+        recyclerView.setLayoutManager(new LinearLayoutManager(context));
         recyclerView.setAdapter(newAdapter);
 
         (dialog = new AlertDialog.Builder(context)

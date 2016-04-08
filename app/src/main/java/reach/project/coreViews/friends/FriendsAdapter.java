@@ -203,7 +203,7 @@ class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> imple
             final short status = cursorExactType.getShort(6);
 
             final int numberOfSongs = cursorExactType.getInt(7);
-            final int numberOfApps = cursorExactType.getInt(8);
+            //final int numberOfApps = cursorExactType.getInt(8);
             int newSongs = cursorExactType.getInt(9);
             if (newSongs > 99)
                 newSongs = 99;
@@ -218,7 +218,7 @@ class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> imple
                 viewHolder.userNameList.setText(userName);
 
             viewHolder.telephoneNumberList.setText(numberOfSongs + "");
-            viewHolder.appCount.setText(numberOfApps + "");
+            //viewHolder.appCount.setText(numberOfApps + "");
             if (status <= ReachFriendsHelper.Status.OFFLINE_REQUEST_GRANTED.getValue() && newSongs > 0) {
 
                 //display new songs
