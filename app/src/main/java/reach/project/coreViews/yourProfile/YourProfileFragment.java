@@ -27,6 +27,7 @@ import reach.project.coreViews.friends.ReachFriendsHelper;
 import reach.project.coreViews.friends.ReachFriendsProvider;
 import reach.project.coreViews.yourProfile.music.YourProfileMusicFragment;
 import reach.project.notificationCentre.NotificationActivity;
+import reach.project.utils.AlbumArtUri;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.ancillaryClasses.SuperInterface;
 
@@ -120,10 +121,30 @@ public class YourProfileFragment extends Fragment {
             musicCount.setText(numberOfSongs + "");
             //appCount.setText(numberOfApps + "");
             userHandle.setText("@" + uName.toLowerCase().split(" ")[0]);
+
+            /*Uri.parse(StaticData.CLOUD_STORAGE_IMAGE_BASE_URL + imageId), 200, 200)*/
+            /*Uri.parse(StaticData.CLOUD_STORAGE_IMAGE_BASE_URL + cursor.getString(7)), 500, 300)*/
+
             profilePic.setController(MiscUtils.getControllerResize(profilePic.getController(),
-                    Uri.parse(StaticData.CLOUD_STORAGE_IMAGE_BASE_URL + imageId), 100, 100));
+                    AlbumArtUri.getUserImageUri(
+                            userId,
+                            "imageId",
+                            "rw",
+                            true,
+                            150,
+                            150)
+            ,150,150));
             coverPic.setController(MiscUtils.getControllerResize(coverPic.getController(),
-                    Uri.parse(StaticData.CLOUD_STORAGE_IMAGE_BASE_URL + cursor.getString(7)), 500, 300));
+                    AlbumArtUri.getUserImageUri(
+                            userId,
+                            "coverPicId",
+                            "rw",
+                            false,
+                            300,
+                            150),
+                    300,
+                    150)
+                    );
 //            coverPic.setController(MiscUtils.getControllerResize(coverPic.getController(),
 //                    Uri.parse(MiscUtils.getRandomPic()), 500, 500));
 

@@ -141,7 +141,7 @@ class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> imple
 
             case VIEW_TYPE_LOCKED: {
 
-                final MoreListHolder moreListHolder = new MoreListHolder(parent);
+                final MoreListHolder moreListHolder = new MoreListHolder(parent,false);
                 moreListHolder.headerText.setText(LOCKED_TEXT);
                 moreListHolder.listOfItems.setLayoutManager(new CustomLinearLayoutManager(moreListHolder.listOfItems.getContext(), LinearLayoutManager.HORIZONTAL, false));
                 moreListHolder.listOfItems.setAdapter(lockedFriendsAdapter);

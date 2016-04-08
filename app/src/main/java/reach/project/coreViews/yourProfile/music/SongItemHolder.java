@@ -7,6 +7,7 @@ import android.widget.TextView;
 import com.facebook.drawee.view.SimpleDraweeView;
 
 import reach.project.R;
+import reach.project.utils.MiscUtils;
 import reach.project.utils.viewHelpers.HandOverMessage;
 import reach.project.utils.viewHelpers.SingleItemViewHolder;
 
@@ -32,5 +33,6 @@ class SongItemHolder extends SingleItemViewHolder {
         this.albumArt = (SimpleDraweeView) itemView.findViewById(R.id.albumArt);
         this.extraButton = (ImageView) itemView.findViewById(R.id.extraButton);
         this.likeButton = (ImageView) itemView.findViewById(R.id.likeButton);
+        itemView.setPadding(MiscUtils.dpToPx(8),MiscUtils.dpToPx(16), MiscUtils.dpToPx(8),0 );
     }
 }

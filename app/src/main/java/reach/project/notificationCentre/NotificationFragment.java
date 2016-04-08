@@ -31,6 +31,7 @@ import reach.project.core.StaticData;
 import reach.project.coreViews.friends.ReachFriendsHelper;
 import reach.project.coreViews.friends.ReachFriendsProvider;
 import reach.project.coreViews.yourProfile.YourProfileActivity;
+import reach.project.coreViews.yourProfile.YourProfileFragment;
 import reach.project.notificationCentre.notifications.BecameFriends;
 import reach.project.notificationCentre.notifications.Like;
 import reach.project.notificationCentre.notifications.NotificationBaseLocal;
@@ -140,7 +141,10 @@ public class NotificationFragment extends Fragment {
                     return;
                 }
                 cursor.close();
-                YourProfileActivity.openProfile(hostID, getActivity());
+
+                //TODO: Figure out how to open friend's profile
+
+                //YourProfileActivity.openProfile(hostID, getActivity());
                 break;
             /*case PUSH_ACCEPTED:
                 final Intent foreGround = new Intent(getContext(), ReachActivity.class);

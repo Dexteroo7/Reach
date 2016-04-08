@@ -146,7 +146,7 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
 
             case VIEW_TYPE_RECENT: {
 
-                final MoreListHolder moreListHolder = new MoreListHolder(parent);
+                final MoreListHolder moreListHolder = new MoreListHolder(parent,true);
                 moreListHolder.itemView.setBackgroundResource(0);
                 moreListHolder.headerText.setText("Recently Added");
                 moreListHolder.listOfItems.setLayoutManager(new CustomGridLayoutManager(moreListHolder.listOfItems.getContext(), 2));

@@ -50,7 +50,7 @@ import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
 import reach.project.utils.ancillaryClasses.SuperInterface;
 
-
+//TODO: Currently this is opened from notifications, but this will not play songs
 // If a friend is added, then this activity is displayed
 public class YourProfileActivity extends AppCompatActivity{
 
@@ -82,14 +82,14 @@ public class YourProfileActivity extends AppCompatActivity{
 
     private static WeakReference<YourProfileActivity> reference = null;
 
-    private YouTubePlayer player = null;
+    /*private YouTubePlayer player = null;
     private YouTubePlayerSupportFragment ytFragment;
     private LinearLayout ytLayout;
-    private String currentYTId;
+    private String currentYTId;*/
 
     @Override
     public void onBackPressed() {
-        MiscUtils.navigateUpWithPlayer(this, player.getCurrentTimeMillis(), currentYTId);
+        //MiscUtils.navigateUpWithPlayer(this, player.getCurrentTimeMillis(), currentYTId);
     }
 
     @Override
@@ -201,11 +201,11 @@ public class YourProfileActivity extends AppCompatActivity{
             cursor.close();
         }
 
-        final int finalNumberOfSongs = numberOfSongs;
+        /*final int finalNumberOfSongs = numberOfSongs;
         final int time = intent.getIntExtra("time", 0);
-        final String ytId = intent.getStringExtra("ytId");
+        final String ytId = intent.getStringExtra("ytId");*/
 
-        ytLayout = (LinearLayout) findViewById(R.id.ytLayout);
+        /*ytLayout = (LinearLayout) findViewById(R.id.ytLayout);
         ImageView ytCloseBtn = (ImageView) findViewById(R.id.ytCloseBtn);
 
         ytFragment = (YouTubePlayerSupportFragment) getSupportFragmentManager().findFragmentById(R.id.video_fragment_container);
@@ -286,7 +286,7 @@ public class YourProfileActivity extends AppCompatActivity{
             public void onInitializationFailure(YouTubePlayer.Provider provider, YouTubeInitializationResult youTubeInitializationResult) {
 
             }
-        });
+        });*/
 
         final String action = intent.getAction();
         if (TextUtils.isEmpty(action))
@@ -295,7 +295,7 @@ public class YourProfileActivity extends AppCompatActivity{
 
     }
 
-    private static class YTTest extends AsyncTask<String, Void, SearchResult> {
+    /*private static class YTTest extends AsyncTask<String, Void, SearchResult> {
         @Override
         protected SearchResult doInBackground(String... params) {
             try {
@@ -331,10 +331,10 @@ public class YourProfileActivity extends AppCompatActivity{
                 // Call the API and print results.
                 final SearchListResponse searchResponse = search.execute();
                 final List<SearchResult> searchResultList = searchResponse.getItems();
-                /*final StringBuilder stringBuilder = new StringBuilder();
+                *//*final StringBuilder stringBuilder = new StringBuilder();
                 for (SearchResult searchResult : searchResultList)
                     stringBuilder.append(searchResult.getSnippet().getTitle()).append("\n\n");
-                return stringBuilder.toString();*/
+                return stringBuilder.toString();*//*
                 if (searchResultList == null || searchResultList.isEmpty())
                     return null;
                 return searchResultList.get(0);
@@ -347,9 +347,9 @@ public class YourProfileActivity extends AppCompatActivity{
         @Override
         protected void onPostExecute(SearchResult searchResult) {
             super.onPostExecute(searchResult);
-            /*MiscUtils.useContextFromFragment(reference, activity -> {
+            *//*MiscUtils.useContextFromFragment(reference, activity -> {
                 new AlertDialog.Builder(activity).setMessage(s).setTitle("Youtube").create().show();
-            });*/
+            });*//*
             if (searchResult == null)
                 return;
             MiscUtils.useActivity(reference, activity -> {
@@ -367,7 +367,7 @@ public class YourProfileActivity extends AppCompatActivity{
                 activity.player.loadVideo(activity.currentYTId);
             });
         }
-    }
+    }*/
 
     private String fastSanitize(String str) {
 

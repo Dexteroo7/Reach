@@ -33,29 +33,37 @@ public class MoreListHolder extends RecyclerView.ViewHolder implements View.OnCl
     public final TextView headerText;
     public final RecyclerView listOfItems;
     private SharedPreferences preferences;
+    public final TextView moreButton;
 
 
     public MoreListHolder(ViewGroup parent,
                           int itemViewResourceId,
                           int headerTextResourceId,
                           int listOfItemsResourceId,
-                          int moreButtonId) {
+                          int moreButtonId,
+                          boolean linear) {
 
         super(LayoutInflater.from(parent.getContext()).inflate(itemViewResourceId, parent, false));
         this.headerText = (TextView) itemView.findViewById(headerTextResourceId);
         this.listOfItems = (RecyclerView) itemView.findViewById(listOfItemsResourceId);
-        itemView.findViewById(moreButtonId).setOnClickListener(this);
-        itemView.setPadding(MiscUtils.dpToPx(8),MiscUtils.dpToPx(12), MiscUtils.dpToPx(8),0 );
+        moreButton = (TextView) itemView.findViewById(moreButtonId);
+        moreButton.setTag(linear);
+        moreButton.setOnClickListener(this);
+        //headerText.setPadding(MiscUtils.dpToPx(8),MiscUtils.dpToPx(16), MiscUtils.dpToPx(8),0 );
         //itemView.setBackgroundResource(R.drawable.border_shadow1);
     }
 
-    public MoreListHolder(ViewGroup parent) {
+    public MoreListHolder(ViewGroup parent, boolean linear) {
 
         super(LayoutInflater.from(parent.getContext()).inflate(R.layout.list_with_more_button, parent, false));
         this.headerText = (TextView) itemView.findViewById(R.id.headerText);
         this.listOfItems = (RecyclerView) itemView.findViewById(R.id.listOfItems);
         this.listOfItems.setNestedScrollingEnabled(false);
-        itemView.findViewById(R.id.moreButton).setOnClickListener(this);
+        //itemView.setPadding(MiscUtils.dpToPx(8),MiscUtils.dpToPx(16), MiscUtils.dpToPx(8),0 );
+        moreButton = (TextView) itemView.findViewById(R.id.moreButton);
+        moreButton.setTag(linear);
+        moreButton.setOnClickListener(this);
+
     }
 
     @Nullable
@@ -72,6 +80,8 @@ public class MoreListHolder extends RecyclerView.ViewHolder implements View.OnCl
         if(preferences == null) {
             preferences = SharedPrefUtils.getPreferences(view.getContext());
         }
+
+        final boolean linearTag = (Boolean) view.getTag();
 
         ((ReachApplication) view.getContext().getApplicationContext()).getTracker().send(new HitBuilders.EventBuilder()
                 .setCategory("More button clicked")
@@ -145,7 +155,12 @@ public class MoreListHolder extends RecyclerView.ViewHolder implements View.OnCl
         final RecyclerView recyclerView = new RecyclerView(context);
         //TODO: Add bottom margin to recyclerview
         //recyclerView.setPadding(0, MiscUtils.dpToPx(10), 0, 0);
-        recyclerView.setLayoutManager(new LinearLayoutManager(context));
+        if(linearTag) {
+            recyclerView.setLayoutManager(new LinearLayoutManager(context));
+        }
+        else {
+            recyclerView.setLayoutManager(new GridLayoutManager(context,2));
+        }
         recyclerView.setAdapter(newAdapter);
 
         (dialog = new AlertDialog.Builder(context)

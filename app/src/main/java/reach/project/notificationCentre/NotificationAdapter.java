@@ -31,6 +31,7 @@ import reach.project.notificationCentre.notifications.NotificationBaseLocal;
 import reach.project.notificationCentre.notifications.Push;
 import reach.project.notificationCentre.notifications.PushAccepted;
 import reach.project.notificationCentre.notifications.Types;
+import reach.project.utils.AlbumArtUri;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
 
@@ -263,7 +264,15 @@ public class NotificationAdapter extends ArrayAdapter<NotificationBaseLocal> {
                 viewHolder.librarayBtn.setVisibility(View.VISIBLE);
                 viewHolder.notifType.setText("added to your friends");
                 viewHolder.profilePhoto.setController(MiscUtils.getControllerResize(viewHolder.profilePhoto.getController(),
-                        Uri.parse(StaticData.CLOUD_STORAGE_IMAGE_BASE_URL + becameFriends.getImageId()), 100, 100));
+                        AlbumArtUri.getUserImageUri(
+                                becameFriends.getHostId(),
+                                "imageId",
+                                "rw",
+                                true,
+                                100,
+                                100)
+                        ,100,100)
+                        );
                 break;
 
             case PUSH_ACCEPTED:
