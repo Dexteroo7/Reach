@@ -20,4 +20,6 @@ public interface SuperInterface {
 
     void removeProfileFragment(Fragment fragment);
 
+    void showYTVideo(String text);
+
 }

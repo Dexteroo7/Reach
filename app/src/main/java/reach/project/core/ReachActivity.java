@@ -226,6 +226,7 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface, 
         return false;
     };
 
+    @Override
     public void showYTVideo(String text) {
         ((ReachApplication) getApplication()).getTracker().send(new HitBuilders.EventBuilder()
                 .setCategory("Transaction - Add SongBrainz")
@@ -236,16 +237,38 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface, 
 
         if (ytLayout.getVisibility() != View.VISIBLE)
             ytLayout.setVisibility(View.VISIBLE);
-        if (ytFragment.isHidden())
-            getSupportFragmentManager().beginTransaction().show(ytFragment).commit();
+        if (ytFragment.isHidden()) {
+            if (isFinishing())
+                return;
+            try {
+                //TODO: Check why this error is coming
+                getSupportFragmentManager().beginTransaction().show(ytFragment).commit();
+            } catch (IllegalStateException ignored) {
+            }
+        }
         currentYTId = text;
-        player.loadVideo(currentYTId);
+        try {
+            player.loadVideo(currentYTId);
+        } catch (IllegalStateException e) {
+            initializePlayer();
+        }
     }
 
     public YouTubePlayer player = null;
     public YouTubePlayerSupportFragment ytFragment;
     public LinearLayout ytLayout;
     public String currentYTId;
+
+    public int getCurrentPlayerTime() {
+        if (player == null)
+            return 0;
+        return player.getCurrentTimeMillis();
+    }
+
+    @Nullable
+    public String getCurrentYTId() {
+        return currentYTId;
+    }
 
     @Nullable
     private static WeakReference<ReachActivity> reference = null;
@@ -458,8 +481,13 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface, 
 
         ytFragment = (YouTubePlayerSupportFragment) getSupportFragmentManager().findFragmentById(R.id.video_fragment_container);
         ytLayout = (LinearLayout) findViewById(R.id.ytLayout);
-        final ImageView ytCloseBtn = (ImageView) findViewById(R.id.ytCloseBtn);
 
+        initializePlayer();
+
+    }
+
+    private void initializePlayer() {
+        final ImageView ytCloseBtn = (ImageView) findViewById(R.id.ytCloseBtn);
         ytFragment.initialize("AIzaSyAYH8mcrHrqG7HJwjyGUuwxMeV7tZP6nmY", new YouTubePlayer.OnInitializedListener() {
             @Override
             public void onInitializationSuccess(YouTubePlayer.Provider provider, YouTubePlayer youTubePlayer, boolean b) {
@@ -503,13 +531,28 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface, 
                 //player.setPlayerStyle(YouTubePlayer.PlayerStyle.MINIMAL);
                 //player.cueVideo("CuH3tJPiP-U");
 
-                getSupportFragmentManager().beginTransaction().hide(ytFragment).commit();
+                if (isFinishing())
+                    return;
+                try {
+                    getSupportFragmentManager().beginTransaction().hide(ytFragment).commit();
+                } catch (IllegalStateException ignored) {
+                }
 
                 if (ytCloseBtn != null)
                     ytCloseBtn.setOnClickListener(v -> {
                         ytLayout.setVisibility(View.GONE);
-                        getSupportFragmentManager().beginTransaction().hide(ytFragment).commit();
-                        player.pause();
+                        if (isFinishing())
+                            return;
+                        try {
+                            getSupportFragmentManager().beginTransaction().hide(ytFragment).commit();
+                        } catch (IllegalStateException ignored) {
+                        }
+                        try {
+                            player.pause();
+                        } catch (IllegalStateException e) {
+                            initializePlayer();
+                            player.pause();
+                        }
                     });
             }
 
@@ -1057,8 +1100,14 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface, 
                         new Handler().post(() -> {
                             if (ytLayout.getVisibility() != View.VISIBLE)
                                 ytLayout.setVisibility(View.VISIBLE);
-                            if (ytFragment.isHidden())
-                                getSupportFragmentManager().beginTransaction().show(ytFragment).commit();
+                            if (ytFragment.isHidden()) {
+                                if (isFinishing())
+                                    return;
+                                try {
+                                    getSupportFragmentManager().beginTransaction().show(ytFragment).commit();
+                                } catch (IllegalStateException ignored) {
+                                }
+                            }
                             currentYTId = ytId;
                             player.loadVideo(currentYTId, time);
                         });
