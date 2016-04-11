@@ -81,9 +81,10 @@ public class FriendsFragment extends Fragment implements
         if(DISPLAY_FRIEND){
             if(FRIEND_ID!=0) {
                 mListener.displayYourProfileFragment(FRIEND_ID);
+                DISPLAY_FRIEND = false;
+                FRIEND_ID = 0;
             }
-            DISPLAY_FRIEND = false;
-            FRIEND_ID = 0;
+
         }
     }
 
