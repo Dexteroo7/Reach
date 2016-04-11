@@ -29,6 +29,7 @@ import reach.backend.notifications.notificationApi.model.NotificationBase;
 import reach.project.R;
 import reach.project.core.ReachActivity;
 import reach.project.core.StaticData;
+import reach.project.coreViews.friends.FriendsFragment;
 import reach.project.coreViews.friends.ReachFriendsHelper;
 import reach.project.coreViews.friends.ReachFriendsProvider;
 import reach.project.coreViews.yourProfile.YourProfileActivity;
@@ -123,7 +124,11 @@ public class NotificationFragment extends Fragment {
                 final Intent intent = new Intent(getActivity(),ReachActivity.class);
                 intent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
                 intent.putExtra(StaticData.USER_ID_KEY, hostID);
-                intent.setAction(ReachActivity.OPEN_FRIEND_PROFILE);
+                FriendsFragment.DISPLAY_FRIEND = true;
+                FriendsFragment.FRIEND_ID = hostID;
+                //intent.putExtra(StaticData.CALL_POST_RESUME_KEY,false);
+                //ReachActivity.PROCESS_ONPOSTRESUME_INTENT = false;
+                intent.setAction(ReachActivity.OPEN_MY_FRIENDS);
                 startActivity(intent);
                 getActivity().finish();
                 break;
@@ -154,9 +159,13 @@ public class NotificationFragment extends Fragment {
                 //YourProfileActivity.openProfile(hostID, getActivity());
                 //Opening reachActivity with YourProfile Fragment attached
                 final Intent intent = new Intent(getActivity(),ReachActivity.class);
-                intent.setAction(ReachActivity.OPEN_FRIEND_PROFILE);
+                intent.setAction(ReachActivity.OPEN_MY_FRIENDS);
                 intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                intent.putExtra(StaticData.USER_ID_KEY, hostID);
+                FriendsFragment.DISPLAY_FRIEND = true;
+                FriendsFragment.FRIEND_ID = hostID;
+                //intent.putExtra(StaticData.USER_ID_KEY, hostID);
+                //intent.putExtra(StaticData.CALL_POST_RESUME_KEY,false);
+                //ReachActivity.PROCESS_ONPOSTRESUME_INTENT = false;
                 Log.d(TAG, "UserId passed in intent: " + hostID);
                 startActivity(intent);
                 getActivity().finish();

@@ -95,6 +95,7 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface, 
     private AlertDialog alertDialog;
     private int tabPosition = -1;
     private AlertDialog inviteDialog;
+    //public static boolean PROCESS_ONPOSTRESUME_INTENT = true;
 
     public static void openActivity(Context context) {
 
@@ -295,14 +296,25 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface, 
     protected void onPostResume() {
 
         super.onPostResume();
-        Log.i("Ayush", "Called onPostResume");
+        Log.i(TAG, "Called onPostResume");
+        //From notification fragment, onPostResume is called after onNewIntent, due to which yourProfileFragment is not opening
+        //boolean value = getIntent().getBooleanExtra(StaticData.CALL_POST_RESUME_KEY,true);
+        //Log.d(TAG, "onPostResume: Value = " + value);
+        /*if(!PROCESS_ONPOSTRESUME_INTENT){
+            PROCESS_ONPOSTRESUME_INTENT = true;
+            return;
+        }*/
+
+        Log.d(TAG, "onPostResume: ProcessIntent called");
         processIntent(getIntent());
     }
+
+
 
     @Override
     protected void onNewIntent(Intent intent) {
 
-        Log.d("Ayush", "Received new Intent");
+        Log.d(TAG, "Received new Intent");
         tabPosition = intent.getIntExtra(TAB_POSITION_KEY,-1);
         Log.d(TAG,"tab position to use = " + tabPosition );
         processIntent(intent);
@@ -321,6 +333,7 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface, 
                     if (mTabHost == null || isFinishing())
                         return;
                     mTabHost.setCurrentTab(tabPosition);
+                    Log.d(TAG, "onResume: tab position set to " + tabPosition);
                 }, 1000L);
             }
             tabPosition = -1;
@@ -1090,7 +1103,7 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface, 
                         mTabHost.postDelayed(() -> {
                             if (mTabHost == null || isFinishing())
                                 return;
-                            mTabHost.setCurrentTab(2);
+                            mTabHost.setCurrentTab(1);
                         }, 1000L);
                     }
                     break;

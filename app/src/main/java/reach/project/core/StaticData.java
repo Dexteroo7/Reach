@@ -29,6 +29,7 @@ public final class StaticData {
     public static final String NULL_STRING = "NULL";
     public static final String PERCENTAGE_STRING = "%";
     public static final String USER_ID_KEY = "userId";
+    //public static final String CALL_POST_RESUME_KEY = "call_post_resume";
 
     public static final String NO_SONGS_TEXT = "No songs!";
     public static final String FILTER_STRING_KEY = "search_filter_key" ;
