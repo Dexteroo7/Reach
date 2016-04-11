@@ -137,6 +137,7 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface, 
     private static final String SHOW_RATING_DIALOG_SHARED_PREF_KEY = "show_rating_dialog";
     private static final String FIRST_TIME_DOWNLOADED_COUNT_SHARED_PREF_KEY = "first_time_downloaded_count";
     public static final String RESUME_PLAYER = "RESUME_PLAYER";
+    public static final String OPEN_FRIEND_PROFILE = "open_friend_profile";
 
     public static final Set<Song> SELECTED_SONGS = MiscUtils.getSet(5);
     public static final Set<App> SELECTED_APPS = MiscUtils.getSet(5);
@@ -1112,6 +1113,18 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface, 
                             player.loadVideo(currentYTId, time);
                         });
                     }
+                    break;
+                case OPEN_FRIEND_PROFILE:{
+
+                    //TODO: Add friend_profile fragment to ReachActivity
+                    final long userId = intent.getLongExtra(StaticData.USER_ID_KEY,0);
+                    if(userId == 0){
+                        throw new IllegalArgumentException("userID for opening a friend's fragment can not be 0");
+                    }
+                    Log.d(TAG, "processIntent: userId = " + userId);
+                    getSupportFragmentManager().beginTransaction().replace(R.id.subContainer, YourProfileFragment.openProfile(userId,this),YourProfileFragment.TAG).commit();
+                    break;
+                }
             }
         } catch (IllegalStateException ignored) {
         }
