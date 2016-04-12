@@ -4,13 +4,14 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     xmlns:fresco="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:descendantFocusability="blocksDescendants"
     android:id="@+id/card_view"
     android:layout_marginBottom="-10dp"
     card_view:cardUseCompatPadding="true"
     card_view:cardElevation="4dp"
     card_view:cardCornerRadius="2dp"
-    card_view:cardPreventCornerOverlap="true" >
+    card_view:cardPreventCornerOverlap="true">
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent">
@@ -26,6 +27,20 @@
             android:padding="3dp"
             android:layout_width="25dp"
             android:layout_height="25dp" />
+
+        <ImageView
+            android:id="@+id/fb_share_btn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/fb_button_circle"
+            android:layout_marginLeft="16dp"
+            android:layout_alignRight="@+id/downBtn"
+            android:layout_centerHorizontal="true"
+            android:layout_marginRight="6dp"
+            android:layout_alignTop="@+id/handle"
+            android:layout_alignBottom="@+id/handle"
+            />
+
         <LinearLayout
             android:id="@+id/handle"
             android:layout_marginLeft="16dp"
@@ -34,7 +49,9 @@
             android:orientation="horizontal"
             android:gravity="center_vertical"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="wrap_content"
+            android:layout_toLeftOf="@id/fb_share_btn"
+            >
             <com.facebook.drawee.view.SimpleDraweeView
                 android:id="@+id/userImage"
                 fresco:roundAsCircle="true"
@@ -51,8 +68,14 @@
                 android:textColor="@color/reach_grey"
                 android:textStyle="bold"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content" />
+                android:layout_height="wrap_content"
+                tools:text="this song is trending in your network"
+                />
+
         </LinearLayout>
+
+
+
         <TextView
             android:id="@+id/title"
             android:lines="1"

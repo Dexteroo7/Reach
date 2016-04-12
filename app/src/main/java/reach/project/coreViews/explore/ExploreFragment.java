@@ -40,6 +40,7 @@ import com.facebook.imagepipeline.common.ResizeOptions;
 import com.facebook.imagepipeline.core.ImagePipeline;
 import com.facebook.imagepipeline.request.ImageRequest;
 import com.facebook.imagepipeline.request.ImageRequestBuilder;
+import com.facebook.share.model.ShareLinkContent;
 import com.facebook.share.model.SharePhoto;
 import com.facebook.share.model.SharePhotoContent;
 import com.facebook.share.widget.ShareDialog;
@@ -92,6 +93,7 @@ import reach.project.coreViews.friends.ReachFriendsHelper;
 import reach.project.coreViews.friends.ReachFriendsProvider;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
+import reach.project.utils.YouTubeDataModel;
 import reach.project.utils.ancillaryClasses.SuperInterface;
 import reach.project.utils.ancillaryClasses.UseActivityWithResult;
 import reach.project.utils.ancillaryClasses.UseContext;
@@ -910,6 +912,17 @@ public class  ExploreFragment extends Fragment implements ExploreAdapter.Explore
         }
         else if (object instanceof String) {
             mListener.showYTVideo((String) object);
+        }
+        else if(object instanceof YouTubeDataModel){
+
+            final YouTubeDataModel data = (YouTubeDataModel) object;
+            Log.d(TAG, "handOverMessage: fb_share_button, id = " + data.getId());
+            ShareLinkContent.Builder content = new ShareLinkContent.Builder();
+                    content.setContentUrl(Uri.parse("http://www.youtube.com/watch?v="+data.getId()));
+                            if(data.getImageUrl() != null)
+                    content.setImageUrl(Uri.parse(data.getImageUrl()));
+
+            ShareDialog.show(getActivity(),content.build());
         }
 
     }

@@ -22,6 +22,7 @@ import com.google.gson.JsonObject;
 import reach.project.R;
 import reach.project.utils.AlbumArtUri;
 import reach.project.utils.MiscUtils;
+import reach.project.utils.YouTubeDataModel;
 import reach.project.utils.viewHelpers.HandOverMessage;
 
 import static reach.project.coreViews.explore.ExploreJSON.AppViewInfo;
@@ -77,12 +78,15 @@ class ExploreAdapter extends PagerAdapter implements View.OnClickListener {
             //final ImageView saveBtn = (ImageView) layout.findViewById(R.id.saveBtn);
             final SimpleDraweeView image = (SimpleDraweeView) layout.findViewById(R.id.image);
             final SimpleDraweeView userImage = (SimpleDraweeView) layout.findViewById(R.id.userImage);
+            final ImageView fb_share_btn = (ImageView) layout.findViewById(R.id.fb_share_btn);
             //final TextView facebookShare = (TextView) layout.findViewById(R.id.facebook_share_text);
 
             switch (exploreTypes) {
 
                 case MUSIC: {
                     downBtn.setOnClickListener(this);
+                    fb_share_btn.setOnClickListener(this);
+                    final YouTubeDataModel ytbData = new YouTubeDataModel();
 
                     final JsonElement ytElement = MiscUtils.get(exploreJSON, ExploreJSON.YOUTUBE_ID);
                     final String ytID;
@@ -91,13 +95,19 @@ class ExploreAdapter extends PagerAdapter implements View.OnClickListener {
                     else
                         ytID = ytElement.getAsString();
                     downBtn.setTag(ytID);
+                    ytbData.setId(ytID);
+
                     final String albumArt = "https://i.ytimg.com/vi/" + ytID + "/hqdefault.jpg";
-                    if (!TextUtils.isEmpty(albumArt))
+                    if (!TextUtils.isEmpty(albumArt)) {
                         image.setController(Fresco.newDraweeControllerBuilder()
                                 .setOldController(image.getController())
                                 .setImageRequest(ImageRequestBuilder.newBuilderWithSource(Uri.parse(albumArt))
                                         .build())
                                 .build());
+                        ytbData.setImageUrl(albumArt);
+                    }
+
+                    fb_share_btn.setTag(ytbData);
 
                     final long userId = MiscUtils.get(exploreJSON, ExploreJSON.ID).getAsLong();
                     /*final Cursor cursor = collection.getContext().getContentResolver().query(
