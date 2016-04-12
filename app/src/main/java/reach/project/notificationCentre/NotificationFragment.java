@@ -8,6 +8,7 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -28,15 +29,13 @@ import reach.backend.notifications.notificationApi.model.NotificationBase;
 import reach.project.R;
 import reach.project.core.ReachActivity;
 import reach.project.core.StaticData;
+import reach.project.coreViews.friends.FriendsFragment;
 import reach.project.coreViews.friends.ReachFriendsHelper;
 import reach.project.coreViews.friends.ReachFriendsProvider;
 import reach.project.coreViews.yourProfile.YourProfileActivity;
-import reach.project.coreViews.yourProfile.YourProfileFragment;
 import reach.project.notificationCentre.notifications.BecameFriends;
 import reach.project.notificationCentre.notifications.Like;
 import reach.project.notificationCentre.notifications.NotificationBaseLocal;
-import reach.project.notificationCentre.notifications.Push;
-import reach.project.notificationCentre.notifications.PushAccepted;
 import reach.project.notificationCentre.notifications.Types;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
@@ -46,6 +45,7 @@ public class NotificationFragment extends Fragment {
 
     private static long serverId = 0;
     private static NotificationAdapter notificationAdapter = null;
+    public static final String TAG = NotificationFragment.class.getSimpleName();
 
     public static NotificationFragment newInstance() {
         return new NotificationFragment();
@@ -111,17 +111,29 @@ public class NotificationFragment extends Fragment {
 
         switch (type) {
 
-            case DEFAULT:
+            case DEFAULT: {
                 throw new IllegalArgumentException("Default notification in list !");
+            }
             /*case PUSH:
                 if (NotificationAdapter.accepted.get(notificationBaseLocal.getNotificationId())) {
                     NotificationAdapter.accepted.delete(notificationBaseLocal.getNotificationId());
                 } else return; //TODO fix this hack
                 break;*/
-            case LIKE:
-                YourProfileActivity.openProfile(hostID, getActivity());
+            case LIKE: {
+                //YourProfileActivity.openProfile(hostID, getActivity());
+                final Intent intent = new Intent(getActivity(),ReachActivity.class);
+                intent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+                intent.putExtra(StaticData.USER_ID_KEY, hostID);
+                FriendsFragment.DISPLAY_FRIEND = true;
+                FriendsFragment.FRIEND_ID = hostID;
+                //intent.putExtra(StaticData.CALL_POST_RESUME_KEY,false);
+                //ReachActivity.PROCESS_ONPOSTRESUME_INTENT = false;
+                intent.setAction(ReachActivity.OPEN_MY_FRIENDS);
+                startActivity(intent);
+                getActivity().finish();
                 break;
-            case BECAME_FRIENDS:
+            }
+            case BECAME_FRIENDS: {
                 //check validity
                 final Cursor cursor = view.getContext().getContentResolver().query(
                         Uri.parse(ReachFriendsProvider.CONTENT_URI + "/" + hostID),
@@ -145,7 +157,21 @@ public class NotificationFragment extends Fragment {
                 //TODO: Figure out how to open friend's profile
 
                 //YourProfileActivity.openProfile(hostID, getActivity());
+                //Opening reachActivity with YourProfile Fragment attached
+                final Intent intent = new Intent(getActivity(),ReachActivity.class);
+                intent.setAction(ReachActivity.OPEN_MY_FRIENDS);
+                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                FriendsFragment.DISPLAY_FRIEND = true;
+                FriendsFragment.FRIEND_ID = hostID;
+                //intent.putExtra(StaticData.USER_ID_KEY, hostID);
+                //intent.putExtra(StaticData.CALL_POST_RESUME_KEY,false);
+                //ReachActivity.PROCESS_ONPOSTRESUME_INTENT = false;
+                Log.d(TAG, "UserId passed in intent: " + hostID);
+                startActivity(intent);
+                getActivity().finish();
+
                 break;
+            }
             /*case PUSH_ACCEPTED:
                 final Intent foreGround = new Intent(getContext(), ReachActivity.class);
                 foreGround.setAction(ReachActivity.OPEN_MANAGER_SONGS_DOWNLOADING);
@@ -190,10 +216,11 @@ public class NotificationFragment extends Fragment {
                 final ArrayAdapter adapter = (ArrayAdapter) temp;
 
                 if (notificationBaseList == null || notificationBaseList.isEmpty()) {
-
+                    Log.d(TAG, "onPostExecute: Notifications are null or empty");
                     MiscUtils.setEmptyTextForListView(fragment.listView, "No notifications");
                     adapter.clear();
                 } else {
+                    Log.d(TAG, "onPostExecute: Notifications are present");
 
                     /**
                      * Clear all Notifications and add latest ones
@@ -239,6 +266,10 @@ public class NotificationFragment extends Fragment {
                         } else
                             throw new IllegalArgumentException("Wrong notification type received " + base.getTypes());
                     }
+                    if(fragment.notifications.size()==0){
+                        MiscUtils.setEmptyTextForListView(fragment.listView, "No notifications");
+                    }
+
                     adapter.notifyDataSetChanged();
                 }
 

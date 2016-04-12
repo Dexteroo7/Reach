@@ -31,8 +31,6 @@ import reach.project.R;
 import reach.project.core.ReachActivity;
 import reach.project.core.StaticData;
 import reach.project.coreViews.invite.InviteActivity;
-import reach.project.coreViews.yourProfile.ProfileActivity;
-import reach.project.coreViews.yourProfile.YourProfileActivity;
 import reach.project.utils.FireOnce;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
@@ -47,6 +45,8 @@ public class FriendsFragment extends Fragment implements
     private SearchView searchView;
     public static final View.OnClickListener INVITE_LISTENER =
             view -> view.getContext().startActivity(new Intent(view.getContext(), InviteActivity.class));
+    public static boolean DISPLAY_FRIEND = false;
+    public static long FRIEND_ID = 0;
 
     @Nullable
     private FriendsAdapter friendsAdapter = null;
@@ -73,6 +73,19 @@ public class FriendsFragment extends Fragment implements
         getLoaderManager().destroyLoader(StaticData.FRIENDS_HORIZONTAL_LOADER);
 
         super.onDestroyView();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        if(DISPLAY_FRIEND){
+            if(FRIEND_ID!=0) {
+                mListener.displayYourProfileFragment(FRIEND_ID);
+                DISPLAY_FRIEND = false;
+                FRIEND_ID = 0;
+            }
+
+        }
     }
 
     @Override

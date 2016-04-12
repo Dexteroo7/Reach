@@ -129,6 +129,8 @@ import reach.project.utils.viewHelpers.RetryHook;
 public enum MiscUtils {
     ;
 
+    private static final String TAG = MiscUtils.class.getSimpleName();
+
     @NonNull
     public static String combinationFormatter(final long millis) {
 
@@ -528,6 +530,31 @@ public enum MiscUtils {
         }
         return listView;
     }
+
+
+    /*public static ListView removeLoadingFromListView(ListView listView) {
+
+        if (listView.getContext() == null)
+            return listView;
+
+        final ViewParent parent = listView.getParent();
+        if (parent == null ||
+                parent.getClass() == null ||
+                TextUtils.isEmpty(parent.getClass().getName()))
+            return listView;
+        final String parentType = parent.getClass().getName();
+
+        if (parentType.equals("android.widget.FrameLayout")) {
+            Log.d(TAG, "removeLoadingFromListView: parent = FrameLayout");
+            final FrameLayout frameLayout = (FrameLayout) parent;
+            frameLayout.removeView(listView.getEmptyView());
+        } else if (parentType.equals("android.widget.RelativeLayout")) {
+            Log.d(TAG, "removeLoadingFromListView: parent = RelativeLayout");
+            final RelativeLayout relativeLayout = (RelativeLayout) parent;
+            relativeLayout.removeView(listView.getEmptyView());
+        }
+        return listView;
+    }*/
 
 //    public static GridView addLoadingToGridView(GridView gridView) {
 //

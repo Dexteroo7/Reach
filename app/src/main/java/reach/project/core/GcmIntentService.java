@@ -21,6 +21,7 @@ import com.google.common.base.Optional;
 import com.google.gson.Gson;
 
 import reach.project.R;
+import reach.project.coreViews.yourProfile.YourProfileActivity;
 import reach.project.music.ReachDatabase;
 import reach.project.music.SongHelper;
 import reach.project.music.SongProvider;
@@ -411,9 +412,38 @@ public class GcmIntentService extends IntentService {
                         } catch (ClassNotFoundException e) {
                             e.printStackTrace();
                         }
-                        mIntent = new Intent(this, mClass);
+                        if(activityName.contains(YourProfileActivity.class.getSimpleName())) {
+                            Log.d(TAG, "onHandleIntent: Activity name contains yourProfileActivity");
+                            mIntent = new Intent(this, ReachActivity.class);
+                            mIntent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+                            mIntent.setAction(ReachActivity.OPEN_FRIEND_PROFILE);
+                            if (!TextUtils.isEmpty(extras.getString("userId"))) {
+                                final long userId = Long.parseLong(extras.getString("userId"));
+                                if (userId > 0) {
+                                    mIntent.putExtra("userId", userId);
+                                    Log.d(TAG, "userid set and is equal to " + userId);
+                                }
+                            }
+                            final PendingIntent viewPendingIntent = PendingIntent.getActivity(
+                                    this,
+                                    NOTIFICATION_ID_CURATED,
+                                    mIntent,
+                                    PendingIntent.FLAG_CANCEL_CURRENT);
+                            notificationBuilder.setContentIntent(viewPendingIntent);
+
+                            notificationManager.notify(NOTIFICATION_ID_FRIEND, notificationBuilder.build());
+
+                            break;
+
+                        }
+                        else {
+                            Log.d(TAG, "creating intent in else case ");
+                            mIntent = new Intent(this, mClass);
+
+                        }
 
                         if (!TextUtils.isEmpty(extras.getString("userId"))) {
+                            Log.d(TAG, "Adding userId to intent ");
                             final long userId = Long.parseLong(extras.getString("userId"));
                             if (userId > 0)
                                 mIntent.putExtra("userId", userId);
@@ -426,6 +456,7 @@ public class GcmIntentService extends IntentService {
                     else
                         mIntent = ReachActivity.getIntent(this);
 
+                    Log.d(TAG, "before creating PendingIntent");
                     final PendingIntent viewPendingIntent = PendingIntent.getActivity(
                             this,
                             NOTIFICATION_ID_CURATED,
