@@ -32,13 +32,13 @@
             android:id="@+id/fb_share_btn"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:src="@drawable/fb_button_circle"
             android:layout_marginLeft="16dp"
             android:layout_alignRight="@+id/downBtn"
             android:layout_centerHorizontal="true"
-            android:layout_marginRight="6dp"
+            android:layout_marginRight="16dp"
             android:layout_alignTop="@+id/handle"
             android:layout_alignBottom="@+id/handle"
+            fresco:srcCompat="@drawable/ic_share_grey_24dp"
             />
 
         <LinearLayout

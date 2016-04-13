@@ -23,6 +23,7 @@ import reach.project.R;
 import reach.project.utils.AlbumArtUri;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.YouTubeDataModel;
+import reach.project.utils.viewHelpers.CustomDraweeView;
 import reach.project.utils.viewHelpers.HandOverMessage;
 
 import static reach.project.coreViews.explore.ExploreJSON.AppViewInfo;
