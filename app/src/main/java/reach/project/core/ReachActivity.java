@@ -564,8 +564,90 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface, 
                         try {
                             player.pause();
                         } catch (IllegalStateException e) {
-                            initializePlayer();
+                            initializePlayer(true);
+                            //player.pause();
+                        }
+                    });
+            }
+
+            @Override
+            public void onInitializationFailure(YouTubePlayer.Provider provider, YouTubeInitializationResult youTubeInitializationResult) {
+
+            }
+        });
+    }
+
+
+    private void initializePlayer(boolean close) {
+        final ImageView ytCloseBtn = (ImageView) findViewById(R.id.ytCloseBtn);
+        ytFragment.initialize("AIzaSyAYH8mcrHrqG7HJwjyGUuwxMeV7tZP6nmY", new YouTubePlayer.OnInitializedListener() {
+            @Override
+            public void onInitializationSuccess(YouTubePlayer.Provider provider, YouTubePlayer youTubePlayer, boolean b) {
+                Log.d("Ashish", "player created");
+                player = youTubePlayer;
+                player.setShowFullscreenButton(false);
+                if(close){
+                    player.pause();
+                }
+
+                player.setPlaybackEventListener(new YouTubePlayer.PlaybackEventListener() {
+                    @Override
+                    public void onPlaying() {
+                        ((ReachApplication) getApplication()).getTracker().send(new HitBuilders.EventBuilder()
+                                .setCategory("Play song")
+                                .setAction("User Name - " + SharedPrefUtils.getUserName(preferences))
+                                .setLabel("YOUTUBE - EXPLORE")
+                                .setValue(1)
+                                .build());
+                        final Intent intent = new Intent(ReachActivity.this, ProcessManager.class);
+                        intent.setAction(ProcessManager.ACTION_KILL);
+                        startService(intent);
+                    }
+
+                    @Override
+                    public void onPaused() {
+
+                    }
+
+                    @Override
+                    public void onStopped() {
+
+                    }
+
+                    @Override
+                    public void onBuffering(boolean b) {
+
+                    }
+
+                    @Override
+                    public void onSeekTo(int i) {
+
+                    }
+                });
+                //player.setPlayerStyle(YouTubePlayer.PlayerStyle.MINIMAL);
+                //player.cueVideo("CuH3tJPiP-U");
+
+                if (isFinishing())
+                    return;
+                try {
+                    getSupportFragmentManager().beginTransaction().hide(ytFragment).commit();
+                } catch (IllegalStateException ignored) {
+                }
+
+                if (ytCloseBtn != null)
+                    ytCloseBtn.setOnClickListener(v -> {
+                        ytLayout.setVisibility(View.GONE);
+                        if (isFinishing())
+                            return;
+                        try {
+                            getSupportFragmentManager().beginTransaction().hide(ytFragment).commit();
+                        } catch (IllegalStateException ignored) {
+                        }
+                        try {
                             player.pause();
+                        } catch (IllegalStateException e) {
+                            initializePlayer(true);
+                            //player.pause();
                         }
                     });
             }

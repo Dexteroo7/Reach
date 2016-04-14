@@ -307,4 +307,11 @@ public class FriendsFragment extends Fragment implements
         }
         super.onCreateOptionsMenu(menu, inflater);
     }*/
+
+    @Override
+    public void onStop() {
+        DISPLAY_FRIEND = false;
+        FRIEND_ID = 0;
+        super.onStop();
+    }
 }

@@ -8,6 +8,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
 import android.content.res.Resources;
 import android.database.Cursor;
 import android.graphics.Bitmap;
@@ -1526,6 +1527,32 @@ public enum MiscUtils {
         //TODO
 //        activity.finish();
     }
+
+    public static void shareTextUrl(Context context, String url) {
+        if(url == null){
+            Toast.makeText(context.getApplicationContext(), "Sorry, a problem occured!", Toast.LENGTH_LONG).show();
+        }
+
+        Intent share = new Intent(Intent.ACTION_SEND);
+        share.setType("text/plain");
+
+        // Add data to the intent, the receiving app will decide
+        // what to do with it.
+        share.putExtra(Intent.EXTRA_SUBJECT, "Sharing Song");
+        share.putExtra(Intent.EXTRA_TEXT, url);
+
+        ResolveInfo xx = context.getPackageManager().resolveActivity(share, 0);
+        if(xx!=null){
+            context.startActivity(Intent.createChooser(share, "Share link!"));
+        }
+        else{
+            Toast.makeText(context, "No application can perform this action!", Toast.LENGTH_SHORT).show();
+        }
+
+
+
+    }
+
 
     public static void navigateUpWithPlayer(final AppCompatActivity activity, int time, String ytId) {
 
