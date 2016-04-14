@@ -10,8 +10,8 @@ android {
         applicationId "reach.project"
         targetSdkVersion 23
         minSdkVersion 23
-        versionCode 100
-        versionName "1.2"
+        versionCode 101
+        versionName "1.2.1"
         multiDexEnabled true
         vectorDrawables.useSupportLibrary = true
     }
