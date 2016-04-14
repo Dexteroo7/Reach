@@ -74,13 +74,10 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.TimeUnit;
 
 import javax.annotation.Nonnull;
 
-import okhttp3.Interceptor;
 import okhttp3.MediaType;
-import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
@@ -299,30 +296,7 @@ public class  ExploreFragment extends Fragment implements ExploreAdapter.Explore
                 .url("http://52.74.175.56:8080/explore/getObjects")
                 .post(body)
                 .build();
-        final OkHttpClient client = new OkHttpClient.Builder()
-                .connectTimeout(5000, TimeUnit.MILLISECONDS)
-                .readTimeout(5000, TimeUnit.MILLISECONDS)
-                .writeTimeout(5000, TimeUnit.MILLISECONDS)
-                .addNetworkInterceptor(new Interceptor() {
-                    @Override
-                    public Response intercept(Chain chain) throws IOException {
-                        final Request req = chain.request();
-                        int tryCount = 0;
-                        while (tryCount < 3) {
-                            try {
-                                // try the request
-                                return chain.proceed(req);
-                            } catch (Exception e) {
-                                Log.d("intercept", "Request is not successful - " + tryCount);
-                                tryCount++;
-                            }
-                        }
-                        // otherwise just pass the original response on
-                        return null;
-                    }
-                })
-                .build();
-        final Response response = client.newCall(request).execute();
+        final Response response = ReachApplication.OK_HTTP_CLIENT.newCall(request).execute();
         if (response.code() != HttpStatusCodes.STATUS_CODE_OK)
             return Collections.emptyList();
 
@@ -350,7 +324,10 @@ public class  ExploreFragment extends Fragment implements ExploreAdapter.Explore
 
                 case MUSIC:
 
-                    image = "https://i.ytimg.com/vi/" + MiscUtils.get(object, ExploreJSON.YOUTUBE_ID).getAsString() + "/hqdefault.jpg";
+                    final JsonElement youtubeId = MiscUtils.get(object, ExploreJSON.YOUTUBE_ID);
+                    if (youtubeId == null)
+                        continue;
+                    image = "https://i.ytimg.com/vi/" + youtubeId.getAsString() + "/hqdefault.jpg";
                     imageRequest = ImageRequestBuilder.newBuilderWithSource(Uri.parse(image))
                             //.setResizeOptions(FULL_IMAGE_SIZE)
                             .build();
