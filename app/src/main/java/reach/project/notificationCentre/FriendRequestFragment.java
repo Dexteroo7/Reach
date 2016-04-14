@@ -1,6 +1,7 @@
 package reach.project.notificationCentre;
 
 import android.content.Context;
+import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -24,6 +25,7 @@ import java.util.concurrent.ExecutorService;
 
 import reach.backend.entities.userApi.model.ReceivedRequest;
 import reach.project.R;
+import reach.project.core.ReachActivity;
 import reach.project.core.StaticData;
 import reach.project.coreViews.friends.ReachFriendsHelper;
 import reach.project.coreViews.friends.ReachFriendsProvider;
@@ -74,7 +76,13 @@ public class FriendRequestFragment extends Fragment {
                 return;
             }
             cursor.close();
-            YourProfileActivity.openProfile(userId, getActivity());
+            final Intent intent = new Intent(getActivity(),ReachActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+            intent.putExtra(StaticData.USER_ID_KEY, userId);
+            intent.setAction(ReachActivity.OPEN_FRIEND_PROFILE);
+            startActivity(intent);
+            getActivity().finish();
+            //YourProfileActivity.openProfile(userId, getActivity());
             //mListener.onOpenLibrary(userId);
         }
     };

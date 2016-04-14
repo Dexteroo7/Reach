@@ -3,25 +3,34 @@ package reach.project.coreViews.yourProfile.music;
 import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v4.widget.NestedScrollView;
 import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ProgressBar;
+import android.widget.TextView;
 
 import com.appspot.able_door_616.userApi.UserApi;
 import com.appspot.able_door_616.userApi.model.SimpleSong;
 import com.github.florent37.materialviewpager.MaterialViewPagerHelper;
+import com.google.android.gms.analytics.HitBuilders;
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
+import com.google.api.client.http.HttpRequestInitializer;
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.jackson2.JacksonFactory;
+import com.google.api.services.youtube.YouTube;
+import com.google.api.services.youtube.model.SearchListResponse;
+import com.google.api.services.youtube.model.SearchResult;
 import com.google.common.base.Optional;
 import com.squareup.wire.Message;
 import com.squareup.wire.Wire;
@@ -39,8 +48,9 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 
 import reach.project.R;
+import reach.project.core.ReachActivity;
+import reach.project.core.ReachApplication;
 import reach.project.core.StaticData;
-import reach.project.coreViews.yourProfile.YourProfileActivity;
 import reach.project.coreViews.yourProfile.blobCache.Cache;
 import reach.project.coreViews.yourProfile.blobCache.CacheAdapterInterface;
 import reach.project.coreViews.yourProfile.blobCache.CacheInjectorCallbacks;
@@ -50,6 +60,7 @@ import reach.project.utils.CloudEndPointsUtils;
 import reach.project.utils.CloudStorageUtils;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
+import reach.project.utils.ancillaryClasses.SuperInterface;
 import reach.project.utils.viewHelpers.CustomLinearLayoutManager;
 
 /**
@@ -66,6 +77,11 @@ public class YourProfileMusicFragment extends Fragment implements CacheInjectorC
     private static long hostId = 0;
     private static long myId = 0;
     private RecyclerView mRecyclerView;
+    private ProgressBar loadingProgress;
+    private NestedScrollView emptyImageView;
+    private TextView emptyTextView;
+
+    private SuperInterface mListener = null;
     //private View emptyView;
 
     public static YourProfileMusicFragment newInstance(long hostId) {
@@ -129,12 +145,15 @@ public class YourProfileMusicFragment extends Fragment implements CacheInjectorC
         //emptyViewText.setText(StaticData.NO_SONGS_TEXT);
         final Activity activity = getActivity();
         //mRecyclerView.setHasFixedSize(true);
-
+        loadingProgress = (ProgressBar)rootView.findViewById(R.id.loadingProgress);
+        loadingProgress.setVisibility(View.VISIBLE);
         parentAdapter = new ParentAdapter<>(this);
         mRecyclerView.setLayoutManager(new CustomLinearLayoutManager(activity));
         mRecyclerView.setAdapter(parentAdapter);
+        emptyImageView = (NestedScrollView) rootView.findViewById(R.id.empty_imageView);
         MaterialViewPagerHelper.registerRecyclerView(activity, mRecyclerView, null);
-
+        emptyTextView = (TextView) rootView.findViewById(R.id.empty_textView);
+        emptyTextView.setText("No songs!");
         hostId = getArguments().getLong("hostId", 0L);
 
         //get the caches
@@ -225,12 +244,117 @@ public class YourProfileMusicFragment extends Fragment implements CacheInjectorC
         return musicData.get(position);
     }
 
+
+    private static class YTTest extends AsyncTask<String, Void, SearchResult> {
+        @Override
+        protected SearchResult doInBackground(String... params) {
+            try {
+                final HttpTransport transport = new NetHttpTransport();
+                final JsonFactory factory = new JacksonFactory();
+                final HttpRequestInitializer initialize = request -> {
+                    request.setConnectTimeout(request.getConnectTimeout() * 2);
+                    request.setReadTimeout(request.getReadTimeout() * 2);
+                };
+                final YouTube youTube = new YouTube.Builder(transport, factory, initialize).build();
+                // Define the API request for retrieving search results.
+                final YouTube.Search.List search = youTube.search().list("id");
+
+                // Set your developer key from the Google Developers Console for
+                // non-authenticated requests. See:
+                // https://console.developers.google.com/
+                final String apiKey = "AIzaSyAYH8mcrHrqG7HJwjyGUuwxMeV7tZP6nmY";
+                search.setKey(apiKey);
+
+                search.setQ(params[0]);
+
+                // Restrict the search results to only include videos. See:
+                // https://developers.google.com/youtube/v3/docs/search/list#type
+                search.setType("video");
+
+                search.setVideoCategoryId("10");
+
+                // To increase efficiency, only retrieve the fields that the
+                // application uses.
+                search.setFields("items/id/videoId");
+                search.setMaxResults(1L);
+
+                // Call the API and print results.
+                final SearchListResponse searchResponse = search.execute();
+                final List<SearchResult> searchResultList = searchResponse.getItems();
+                /*final StringBuilder stringBuilder = new StringBuilder();
+                for (SearchResult searchResult : searchResultList)
+                    stringBuilder.append(searchResult.getSnippet().getTitle()).append("\n\n");
+                return stringBuilder.toString();*/
+                if (searchResultList == null || searchResultList.isEmpty())
+                    return null;
+                return searchResultList.get(0);
+            } catch (IOException e) {
+                e.printStackTrace();
+                return null;
+            }
+        }
+
+        @Override
+        protected void onPostExecute(SearchResult searchResult) {
+            super.onPostExecute(searchResult);
+            /*MiscUtils.useContextFromFragment(reference, activity -> {
+                new AlertDialog.Builder(activity).setMessage(s).setTitle("Youtube").create().show();
+            });*/
+
+
+            if (searchResult == null)
+                return;
+
+            MiscUtils.useFragment(reference, activity -> {
+
+                final ReachActivity reachActRef = (ReachActivity)activity.getActivity();
+                if (reachActRef.ytLayout.getVisibility() != View.VISIBLE)
+                    reachActRef.ytLayout.setVisibility(View.VISIBLE);
+                if (reachActRef.ytFragment.isHidden())
+                    reachActRef.getSupportFragmentManager().beginTransaction().show(reachActRef.ytFragment).commit();
+                reachActRef.currentYTId = searchResult.getId().getVideoId();
+                reachActRef.player.loadVideo(reachActRef.currentYTId);
+            });
+        }
+    }
+
+    @Override
+    public void onAttach(Context context) {
+
+        super.onAttach(context);
+        try {
+            mListener = (SuperInterface) context;
+        } catch (ClassCastException e) {
+            throw new ClassCastException(context.toString()
+                    + " must implement SplashInterface");
+        }
+    }
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        Log.d("Ayush", "YourProfileMusicFragment - onDetach");
+        mListener = null;
+    }
+
     @Override
     public void handOverMessage(@NonNull Song song) {
+        if(song == null){
+            throw new IllegalArgumentException("song clicked in yourProfile is null");
+        }
 
-        final YourProfileActivity activity = (YourProfileActivity) getActivity();
+        final ReachActivity activity = (ReachActivity) getActivity();
+        ((ReachApplication) getActivity().getApplication()).getTracker().send(new HitBuilders.EventBuilder()
+                .setCategory("Transaction - Add SongBrainz")
+                .setAction("User Name - " + SharedPrefUtils.getUserName(activity.getSharedPreferences("Reach", Context.MODE_PRIVATE)))
+                .setLabel("YOUTUBE - FRIEND PROFILE")
+                .setValue(1)
+                .build());
 
-        activity.showYTVideo(song.getDisplayName());
+        new YTTest().execute(activity.fastSanitize(song.getDisplayName()));
+
+        //mListener.showYTVideo(song.getDisplayName());
+
         /*final Cursor senderCursor = activity.getContentResolver().query(
                 Uri.parse(ReachFriendsProvider.CONTENT_URI + "/" + hostId),
                 new String[]{ReachFriendsHelper.COLUMN_USER_NAME,
@@ -311,8 +435,17 @@ public class YourProfileMusicFragment extends Fragment implements CacheInjectorC
         if (!elements.isEmpty())
             painter(elements, typeChecker);
 
+        loadingProgress.setVisibility(View.GONE);
         //notify
         Log.i("Ayush", "Reloading list " + musicData.size());
+
+        if(musicData!=null && musicData.size()<=1){
+            emptyImageView.setVisibility(View.VISIBLE);
+        }
+        else if(musicData!=null && musicData.size()>1){
+            emptyImageView.setVisibility(View.GONE);
+        }
+
         if (parentAdapter != null)
             parentAdapter.notifyDataSetChanged();
 

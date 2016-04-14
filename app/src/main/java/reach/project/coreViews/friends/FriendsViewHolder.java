@@ -29,7 +29,7 @@ import reach.project.utils.viewHelpers.SingleItemViewHolder;
 
 final class FriendsViewHolder extends SingleItemViewHolder {
 
-    final TextView userNameList, telephoneNumberList, appCount, lockText, newSongs;
+    final TextView userNameList, telephoneNumberList/*, appCount*/, lockText, newSongs;
     final ImageView lockIcon;
     final ImageView optionsIcon;
     final SimpleDraweeView profilePhotoList, coverPic;
@@ -47,7 +47,7 @@ final class FriendsViewHolder extends SingleItemViewHolder {
 
         this.userNameList = (TextView) itemView.findViewById(R.id.userNameList);
         this.telephoneNumberList = (TextView) itemView.findViewById(R.id.telephoneNumberList);
-        this.appCount = (TextView) itemView.findViewById(R.id.appCount);
+        //this.appCount = (TextView) itemView.findViewById(R.id.appCount);
         this.profilePhotoList = (SimpleDraweeView) itemView.findViewById(R.id.profilePhotoList);
         this.coverPic = (SimpleDraweeView) itemView.findViewById(R.id.coverPic);
         this.lockIcon = (ImageView) itemView.findViewById(R.id.lockIcon);
@@ -100,7 +100,7 @@ final class FriendsViewHolder extends SingleItemViewHolder {
 
         this.userNameList = (TextView) itemView.findViewById(R.id.userNameList);
         this.telephoneNumberList = (TextView) itemView.findViewById(R.id.telephoneNumberList);
-        this.appCount = (TextView) itemView.findViewById(R.id.appCount);
+        //this.appCount = (TextView) itemView.findViewById(R.id.appCount);
         this.profilePhotoList = (SimpleDraweeView) itemView.findViewById(R.id.profilePhotoList);
         this.coverPic = (SimpleDraweeView) itemView.findViewById(R.id.coverPic);
         this.lockIcon = (ImageView) itemView.findViewById(R.id.lockIcon);

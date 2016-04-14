@@ -41,4 +41,10 @@
         <item name="android:overlapAnchor">false</item>
     </style>
 
+
+    <!--<style name="AppTheme.SearchView" parent="Widget.AppCompat.SearchView">
+        <item name="searchIcon">@drawable/ic_action_search</item>
+        <item name="closeIcon">@drawable/ic_action_close</item>
+    </style>-->
+
 </resources>

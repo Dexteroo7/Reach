@@ -116,11 +116,15 @@ public class FriendRequestAdapter extends ArrayAdapter<ReceivedRequest> {
                             ReachFriendsHelper.contentValuesCreator(friend));
 
                     accepted.put(receivedRequest.getId(), true);
-                    expand(linearLayout, b, a);
-                    linearLayout.setClickable(false);
-                    actionBlock.setVisibility(View.GONE);
-                    libraryBtn.setVisibility(View.VISIBLE);
-                    notificationType.setText("added to your friends");
+                    //delete entry
+                    remove(receivedRequest);
+                    opened.delete(receivedRequest.getId());
+                    notifyDataSetChanged();
+//                    expand(linearLayout, b, a);
+//                    linearLayout.setClickable(false);
+//                    actionBlock.setVisibility(View.GONE);
+//                    libraryBtn.setVisibility(View.VISIBLE);
+//                    notificationType.setText("added to your friends");
                 }
 
             }});

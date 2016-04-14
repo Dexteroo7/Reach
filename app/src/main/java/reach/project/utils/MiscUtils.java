@@ -8,6 +8,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
 import android.content.res.Resources;
 import android.database.Cursor;
 import android.graphics.Bitmap;
@@ -128,6 +129,8 @@ import reach.project.utils.viewHelpers.RetryHook;
 
 public enum MiscUtils {
     ;
+
+    private static final String TAG = MiscUtils.class.getSimpleName();
 
     @NonNull
     public static String combinationFormatter(final long millis) {
@@ -490,6 +493,13 @@ public enum MiscUtils {
 //        return listView;
 //    }
 
+    // For generating "%searchfilter%" for finding rows in database like that name
+    public static String getFilterLikeString(String filter){
+
+        return StaticData.PERCENTAGE_STRING + filter + StaticData.PERCENTAGE_STRING;
+
+    }
+
     public static ListView addLoadingToListView(ListView listView) {
 
         if (listView.getContext() == null)
@@ -521,6 +531,31 @@ public enum MiscUtils {
         }
         return listView;
     }
+
+
+    /*public static ListView removeLoadingFromListView(ListView listView) {
+
+        if (listView.getContext() == null)
+            return listView;
+
+        final ViewParent parent = listView.getParent();
+        if (parent == null ||
+                parent.getClass() == null ||
+                TextUtils.isEmpty(parent.getClass().getName()))
+            return listView;
+        final String parentType = parent.getClass().getName();
+
+        if (parentType.equals("android.widget.FrameLayout")) {
+            Log.d(TAG, "removeLoadingFromListView: parent = FrameLayout");
+            final FrameLayout frameLayout = (FrameLayout) parent;
+            frameLayout.removeView(listView.getEmptyView());
+        } else if (parentType.equals("android.widget.RelativeLayout")) {
+            Log.d(TAG, "removeLoadingFromListView: parent = RelativeLayout");
+            final RelativeLayout relativeLayout = (RelativeLayout) parent;
+            relativeLayout.removeView(listView.getEmptyView());
+        }
+        return listView;
+    }*/
 
 //    public static GridView addLoadingToGridView(GridView gridView) {
 //
@@ -1492,6 +1527,32 @@ public enum MiscUtils {
         //TODO
 //        activity.finish();
     }
+
+    public static void shareTextUrl(Context context, String url) {
+        if(url == null){
+            Toast.makeText(context.getApplicationContext(), "Sorry, a problem occured!", Toast.LENGTH_LONG).show();
+        }
+
+        Intent share = new Intent(Intent.ACTION_SEND);
+        share.setType("text/plain");
+
+        // Add data to the intent, the receiving app will decide
+        // what to do with it.
+        share.putExtra(Intent.EXTRA_SUBJECT, "Sharing Song");
+        share.putExtra(Intent.EXTRA_TEXT, url);
+
+        ResolveInfo xx = context.getPackageManager().resolveActivity(share, 0);
+        if(xx!=null){
+            context.startActivity(Intent.createChooser(share, "Share link!"));
+        }
+        else{
+            Toast.makeText(context, "No application can perform this action!", Toast.LENGTH_SHORT).show();
+        }
+
+
+
+    }
+
 
     public static void navigateUpWithPlayer(final AppCompatActivity activity, int time, String ytId) {
 

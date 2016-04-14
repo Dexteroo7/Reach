@@ -83,22 +83,21 @@ import okhttp3.RequestBody;
 import okhttp3.Response;
 import reach.backend.entities.messaging.model.MyString;
 import reach.project.R;
-import reach.project.core.ReachActivity;
 import reach.project.core.ReachApplication;
 import reach.project.core.StaticData;
 import reach.project.coreViews.friends.ReachFriendsHelper;
 import reach.project.coreViews.friends.ReachFriendsProvider;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
+import reach.project.utils.YouTubeDataModel;
 import reach.project.utils.ancillaryClasses.SuperInterface;
 import reach.project.utils.ancillaryClasses.UseActivityWithResult;
 import reach.project.utils.ancillaryClasses.UseContext;
 import reach.project.utils.viewHelpers.HandOverMessage;
 
 import static reach.project.coreViews.explore.ExploreJSON.MiscMetaInfo;
-import static reach.project.coreViews.explore.ExploreJSON.MusicMetaInfo;
 
-public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
+public class  ExploreFragment extends Fragment implements ExploreAdapter.Explore,
         ExploreBuffer.ExplorationCallbacks<JsonObject>, HandOverMessage<Object>, LoaderManager.LoaderCallbacks<Cursor> {
 
     private static final String TAG = ExploreFragment.class.getSimpleName();
@@ -326,7 +325,10 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
 
                 case MUSIC:
 
-                    image = "https://i.ytimg.com/vi/" + MiscUtils.get(object, ExploreJSON.YOUTUBE_ID).getAsString() + "/hqdefault.jpg";
+                    final JsonElement youtubeId = MiscUtils.get(object, ExploreJSON.YOUTUBE_ID);
+                    if (youtubeId == null)
+                        continue;
+                    image = "https://i.ytimg.com/vi/" + youtubeId.getAsString() + "/hqdefault.jpg";
                     imageRequest = ImageRequestBuilder.newBuilderWithSource(Uri.parse(image))
                             //.setResizeOptions(FULL_IMAGE_SIZE)
                             .build();
@@ -885,17 +887,31 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
             }
         }
         else if (object instanceof String) {
-            final ReachActivity activity = (ReachActivity) getActivity();
-            activity.showYTVideo((String) object);
+            mListener.showYTVideo((String) object);
+        }
+        else if(object instanceof YouTubeDataModel){
+
+            final YouTubeDataModel data = (YouTubeDataModel) object;
+            Log.d(TAG, "handOverMessage: fb_share_button, id = " + data.getId());
+            MiscUtils.shareTextUrl(getActivity(),
+                    "Hey! Checkout this song I found on the Reach App\nhttp://youtu.be/"+data.getId());
+            /*ShareLinkContent.Builder content = new ShareLinkContent.Builder();
+                    content.setContentUrl(Uri.parse("http://www.youtube.com/watch?v="+data.getId()));
+                    content.setShareHashtag(new ShareHashtag.Builder()
+                            .setHashtag("#IamReachable")
+                            .build());
+                    content.setQuote("Enjoying Reach");
+                            if(data.getImageUrl() != null)
+                    content.setImageUrl(Uri.parse(data.getImageUrl()));
+
+            ShareDialog.show(getActivity(),content.build());*/
+
+
         }
 
     }
 
     public void addToDownload(JsonObject exploreJSON) {
-
-        final ReachActivity activity = (ReachActivity) getActivity();
-
-        activity.showYTVideo(MiscUtils.get(exploreJSON.get(ExploreJSON.META_INFO.getName()).getAsJsonObject(), MusicMetaInfo.DISPLAY_NAME).getAsString());
         /*final ContentResolver contentResolver = activity.getContentResolver();
 
         //extract meta info to process current click request

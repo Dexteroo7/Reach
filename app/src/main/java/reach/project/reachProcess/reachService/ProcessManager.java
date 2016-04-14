@@ -867,6 +867,7 @@ public class ProcessManager extends Service implements
         musicStack.pop();//ignore current song !
         final String currentSongHash = musicStack.pop();
 
+        //TODO not done meta
         final Cursor cursor = getContentResolver().query(
                 SongProvider.CONTENT_URI,
                 SongCursorHelper.SONG_HELPER.getProjection(),
@@ -887,6 +888,7 @@ public class ProcessManager extends Service implements
 
     private Optional<Song> shuffleNext(String fileHash) {
 
+        //TODO not done meta
         final Cursor myLibraryCursor = getContentResolver().query(
                 SongProvider.CONTENT_URI,
                 SongCursorHelper.SONG_HELPER.getProjection(),

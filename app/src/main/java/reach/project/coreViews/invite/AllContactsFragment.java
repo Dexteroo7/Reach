@@ -40,6 +40,7 @@ public class AllContactsFragment extends Fragment implements
         LoaderManager.LoaderCallbacks<Cursor>,HandOverMessage<Cursor> {
 
     private AllContactsAdapter inviteAdapter;
+    private Bundle constraintArguments;
     public static AllContactsFragment newInstance() {
         return new AllContactsFragment();
     }
@@ -130,27 +131,67 @@ public class AllContactsFragment extends Fragment implements
     }
 
     @Override
+    public void onResume() {
+        super.onResume();
+        if(constraintArguments == null){
+            constraintArguments = new Bundle();
+        }
+    }
+
+    @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
 
         if (id == StaticData.ALL_CONTACTS_LOADER) {
 
-            final String selection = ContactsContract.CommonDataKinds.Phone.IN_VISIBLE_GROUP + " = '"
-                    + ("1") + "'" + " AND " + ContactsContract.Contacts.HAS_PHONE_NUMBER + "=1";
-            final String sortOrder = ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME
-                    + " COLLATE LOCALIZED ASC";
+            if(args == null) {
 
-            final String[] projection = new String[]{
-                    ContactsContract.CommonDataKinds.Phone.NUMBER,
-                    ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME,
-                    ContactsContract.CommonDataKinds.Phone.CONTACT_ID};
+                final String selection = ContactsContract.CommonDataKinds.Phone.IN_VISIBLE_GROUP + " = '"
+                        + ("1") + "'" + " AND " + ContactsContract.Contacts.HAS_PHONE_NUMBER + "=1";
+                final String sortOrder = ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME
+                        + " COLLATE LOCALIZED ASC";
 
-            return new CursorLoader(getActivity(),
-                    ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
-                    projection,
-                    selection, null,
-                    sortOrder);
+                final String[] projection = new String[]{
+                        ContactsContract.CommonDataKinds.Phone.NUMBER,
+                        ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME,
+                        ContactsContract.CommonDataKinds.Phone.CONTACT_ID};
+
+                return new CursorLoader(getActivity(),
+                        ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+                        projection,
+                        selection, null,
+                        sortOrder);
+            }
+            else{
+                final String constraint = args.getString(StaticData.FILTER_STRING_KEY);
+                if(constraint == null){
+                    throw new IllegalArgumentException("filter string can not be null");
+                }
+
+                final String selection = ContactsContract.CommonDataKinds.Phone.IN_VISIBLE_GROUP + " = '"
+                        + ("1") + "'" + " AND " + ContactsContract.Contacts.HAS_PHONE_NUMBER + "=1" +  " AND "
+                        +ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME
+                        +" LIKE ?"
+
+                        ;
+                final String sortOrder = ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME
+                        + " COLLATE LOCALIZED ASC";
+
+                final String[] projection = new String[]{
+                        ContactsContract.CommonDataKinds.Phone.NUMBER,
+                        ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME,
+                        ContactsContract.CommonDataKinds.Phone.CONTACT_ID
+                };
+
+                return new CursorLoader(getActivity(),
+                        ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+                        projection,
+                        selection, new String[]{constraint},
+                        sortOrder);
+
+            }
         } else
             return null;
+
     }
 
     @Override
@@ -160,6 +201,12 @@ public class AllContactsFragment extends Fragment implements
             return;
 
         inviteAdapter.setCursor(data);
+    }
+
+    public void filter (String constraint){
+        final String likeConstraintString = MiscUtils.getFilterLikeString(constraint);
+        constraintArguments.putString(StaticData.FILTER_STRING_KEY,likeConstraintString);
+        getLoaderManager().restartLoader(StaticData.ALL_CONTACTS_LOADER,constraintArguments,this);
     }
 
     @Override

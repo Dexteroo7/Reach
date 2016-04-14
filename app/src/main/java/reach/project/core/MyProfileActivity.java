@@ -166,7 +166,7 @@ public class MyProfileActivity extends AppCompatActivity implements View.OnClick
                 ReachActivity.openActivityOnParticularTab(this, 2);
                 break;
             }
-            case R.id.apps_manage_privacy: {
+            /*case R.id.apps_manage_privacy: {
                 if(appPrivacyAlertDialog!=null){
                     appPrivacyAlertDialog.show();
                 }
@@ -183,7 +183,7 @@ public class MyProfileActivity extends AppCompatActivity implements View.OnClick
                 }
 
                 break;
-            }
+            }*/
             case R.id.songs_manage_privacy: {
                 Log.d(TAG, "Show songs privacy");
                 if(songPrivacyAlertDialog!=null){
@@ -270,8 +270,9 @@ public class MyProfileActivity extends AppCompatActivity implements View.OnClick
             final ContentResolver contentResolver = params[0].getContentResolver();
             final PackageManager packageManager = params[0].getPackageManager();
 
+            //TODO done meta 1
             final Cursor cursor = contentResolver.query(SongProvider.CONTENT_URI,
-                    new String[]{SongHelper.COLUMN_ID}, null, null, null);
+                    new String[]{SongHelper.COLUMN_ID}, SongHelper.COLUMN_META_HASH + " != ?", new String []{StaticData.NULL_STRING}, null);
             final int songCount, friendsCount;
             if (cursor != null) {
                 songCount = cursor.getCount();

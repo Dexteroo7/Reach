@@ -165,7 +165,8 @@ final class ParentAdapter extends RecyclerViewMaterialAdapter<RecyclerView.ViewH
                         R.layout.list_with_more_button_padding, //Main resource id
                         R.id.headerText, //id for header text
                         R.id.listOfItems, //id for list (recycler view)
-                        R.id.moreButton); //id of more button
+                        R.id.moreButton,
+                        true); //id of more button
                 //horizontalViewHolder.itemView.setBackgroundResource(R.drawable.border_shadow2);
                 horizontalViewHolder.headerText.setText("Recently Installed");
                 if (horizontalViewHolder.listOfItems.getLayoutManager() == null)

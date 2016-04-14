@@ -6,25 +6,47 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/reach_grey_bg"
-    tools:context=".coreViews.yourProfile.YourProfileActivity">
+    tools:context=".coreViews.yourProfile.YourProfileActivity"
+    android:fitsSystemWindows="false"
+    >
 
-    <com.github.florent37.materialviewpager.MaterialViewPager
-        android:id="@+id/materialViewPager"
+    <android.support.design.widget.AppBarLayout
+        android:id="@+id/app_bar"
+        android:layout_width="match_parent"
+        android:layout_height="200dp"
+        android:fitsSystemWindows="false"
+        android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
+        >
+
+        <android.support.design.widget.CollapsingToolbarLayout
+            android:id="@+id/toolbar_layout"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:fitsSystemWindows="false"
+            app:contentScrim="?attr/colorPrimary"
+            app:expandedTitleMarginEnd="64dp"
+            app:expandedTitleMarginStart="48dp"
+            app:layout_scrollFlags="scroll|exitUntilCollapsed|enterAlways"
+            app:titleEnabled="false">
+
+
+            <include layout="@layout/header_yourprofile" />
+
+            <android.support.v7.widget.Toolbar
+                android:id="@+id/toolbar"
+                android:layout_width="match_parent"
+                android:layout_height="?attr/actionBarSize"
+                app:layout_collapseMode="pin"
+                app:popupTheme="@style/AppTheme.PopupOverlay" />
+
+        </android.support.design.widget.CollapsingToolbarLayout>
+    </android.support.design.widget.AppBarLayout>
+
+    <RelativeLayout
+        android:id="@+id/music_privacy_frag_container"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        app:viewpager_animatedHeaderImage="false"
-        app:viewpager_color="@color/colorPrimary"
-        app:viewpager_displayToolbarWhenSwipe="true"
-        app:viewpager_enableToolbarElevation="true"
-        app:viewpager_header="@layout/header_yourprofile"
-        app:viewpager_headerAdditionalHeight="20dp"
-        app:viewpager_headerAlpha="1.0"
-        app:viewpager_headerHeight="220dp"
-        app:viewpager_hideToolbarAndTitle="true"
-        app:viewpager_imageHeaderDarkLayerAlpha="0.2"
-        app:viewpager_pagerTitleStrip="@layout/tabstrip"
-        app:viewpager_parallaxHeaderFactor="1.5" />
-
-
+        app:layout_behavior="@string/appbar_scrolling_view_behavior"
+        />
 
 </android.support.design.widget.CoordinatorLayout>

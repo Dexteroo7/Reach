@@ -34,6 +34,7 @@
                 android:id="@+id/useMobileData"
                 android:checkable="true"
                 android:checked="false"
+                android:visible="false"
                 android:title="Enable Sharing On Mobile Data" />
             <item
                 android:id="@+id/conditions"

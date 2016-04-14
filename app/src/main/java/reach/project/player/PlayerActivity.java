@@ -479,16 +479,22 @@ public class PlayerActivity extends AppCompatActivity implements LoaderManager.L
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
 
+        // TODO: Done meta 1
         if (id == StaticData.PLAYER_LOADER)
             return new CursorLoader(this,
                     SongProvider.CONTENT_URI,
                     SongCursorHelper.SONG_HELPER.getProjection(),
-                    "(" + SongHelper.COLUMN_OPERATION_KIND + " = ? and " + SongHelper.COLUMN_STATUS + " = ?) or " +
-                            SongHelper.COLUMN_OPERATION_KIND + " = ?",
+                    "(" + SongHelper.COLUMN_OPERATION_KIND + " = ? and " + SongHelper.COLUMN_STATUS + " = ? and " +
+                            SongHelper.COLUMN_META_HASH + " != ? ) or ("
+                            +
+                            SongHelper.COLUMN_OPERATION_KIND + " = ? and " + SongHelper.COLUMN_META_HASH + " != ?)",
                     new String[]{
                             ReachDatabase.OperationKind.DOWNLOAD_OP.getString(),
                             ReachDatabase.Status.FINISHED.getString(),
-                            ReachDatabase.OperationKind.OWN.getString()},
+                            StaticData.NULL_STRING,
+                            ReachDatabase.OperationKind.OWN.getString(),
+                            StaticData.NULL_STRING
+                    },
                     SongHelper.COLUMN_DISPLAY_NAME + " COLLATE NOCASE");
         return null;
     }
@@ -644,15 +650,18 @@ public class PlayerActivity extends AppCompatActivity implements LoaderManager.L
             if (hashToFind == null)
                 return 0;
 
+            //TODO done meta 1
             final Cursor cursor = MiscUtils.useActivityWithResult(reference, activity -> activity.getContentResolver().query(
                     SongProvider.CONTENT_URI,
                     new String[]{SongHelper.COLUMN_META_HASH},
-                    "(" + SongHelper.COLUMN_OPERATION_KIND + " = ? and " + SongHelper.COLUMN_STATUS + " = ?) or " +
-                            SongHelper.COLUMN_OPERATION_KIND + " = ?",
+                    "((" + SongHelper.COLUMN_OPERATION_KIND + " = ? and " + SongHelper.COLUMN_STATUS + " = ?) or " +
+                            SongHelper.COLUMN_OPERATION_KIND + " = ?) and " + SongHelper.COLUMN_META_HASH + " != ?",
                     new String[]{
                             ReachDatabase.OperationKind.DOWNLOAD_OP.getString(),
                             ReachDatabase.Status.FINISHED.getString(),
-                            ReachDatabase.OperationKind.OWN.getString()},
+                            ReachDatabase.OperationKind.OWN.getString(),
+                            StaticData.NULL_STRING
+                    },
                     SongHelper.COLUMN_DISPLAY_NAME + " COLLATE NOCASE")).orNull();
 
             if (cursor == null)

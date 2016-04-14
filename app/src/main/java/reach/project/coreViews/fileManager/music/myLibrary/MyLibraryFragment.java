@@ -153,12 +153,14 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage, Pare
             return new CursorLoader(getActivity(),
                     SongProvider.CONTENT_URI,
                     SongCursorHelper.SONG_HELPER.getProjection(),
-                    "(" + SongHelper.COLUMN_OPERATION_KIND + " = ? and " + SongHelper.COLUMN_STATUS + " = ?) or " +
-                            SongHelper.COLUMN_OPERATION_KIND + " = ?",
+                    "((" + SongHelper.COLUMN_OPERATION_KIND + " = ? and " + SongHelper.COLUMN_STATUS + " = ?) or " +
+                            SongHelper.COLUMN_OPERATION_KIND + " = ?) and " + SongHelper.COLUMN_META_HASH + " != ?",
                     new String[]{
                             ReachDatabase.OperationKind.DOWNLOAD_OP.getString(),
                             ReachDatabase.Status.FINISHED.getString(),
-                            ReachDatabase.OperationKind.OWN.getString()},
+                            ReachDatabase.OperationKind.OWN.getString(),
+                            "NULL"
+                    },
                     SongHelper.COLUMN_DISPLAY_NAME + " COLLATE NOCASE");
         return null;
     }
@@ -198,17 +200,22 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage, Pare
     @NonNull
     private List<Song> getRecentMyLibrary() {
 
+        //TODO done meta 1
         final Cursor cursor = getContext().getContentResolver().query(
                 SongProvider.CONTENT_URI,
                 SongCursorHelper.SONG_HELPER.getProjection(),
-                "(" + SongHelper.COLUMN_OPERATION_KIND + " = ? and " + SongHelper.COLUMN_STATUS + " = ?) or " +
-                        SongHelper.COLUMN_OPERATION_KIND + " = ?",
+                "((" + SongHelper.COLUMN_OPERATION_KIND + " = ? and " + SongHelper.COLUMN_STATUS + " = ?) or " +
+                        SongHelper.COLUMN_OPERATION_KIND + " = ?) and " + SongHelper.COLUMN_META_HASH
+                + " != ?",
                 new String[]{
                         ReachDatabase.OperationKind.DOWNLOAD_OP.getString(),
                         ReachDatabase.Status.FINISHED.getString(),
-                        ReachDatabase.OperationKind.OWN.getString()}, //all songs
+                        ReachDatabase.OperationKind.OWN.getString(),
+                        StaticData.NULL_STRING
+                }, //all songs
                 SongHelper.COLUMN_DATE_ADDED + " DESC, " +
                         SongHelper.COLUMN_DISPLAY_NAME + " COLLATE NOCASE ASC LIMIT 20");
+
 
         if (cursor == null)
             return Collections.emptyList();

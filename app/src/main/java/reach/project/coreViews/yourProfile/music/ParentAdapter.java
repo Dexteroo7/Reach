@@ -82,12 +82,18 @@ class ParentAdapter<T extends Message> extends RecyclerViewMaterialAdapter<Recyc
 
         } else if (message instanceof RecentSong && holder instanceof MoreListHolder) {
 
+
             final RecentSong recentSong = (RecentSong) message;
             final MoreListHolder simpleListHolder = (MoreListHolder) holder;
+            if(recentSong.songList!=null && recentSong.songList.size()==0){
+                simpleListHolder.itemView.setVisibility(View.GONE);
+                return;
+            }
             simpleListHolder.headerText.setText(recentSong.title);
+            simpleListHolder.itemView.setBackgroundResource(R.drawable.border_shadow1);
             if (simpleListHolder.listOfItems.getLayoutManager() == null)
-                simpleListHolder.listOfItems.setLayoutManager(new CustomGridLayoutManager(simpleListHolder.listOfItems.getContext(), 2));
-            simpleListHolder.listOfItems.setAdapter(new MoreAdapter(recentSong.songList, cacheAdapterInterface, R.layout.song_grid_item));
+                simpleListHolder.listOfItems.setLayoutManager(new CustomLinearLayoutManager(simpleListHolder.listOfItems.getContext()));
+            simpleListHolder.listOfItems.setAdapter(new MoreAdapter(recentSong.songList, cacheAdapterInterface, R.layout.song_list_item));
 
         } else if (message instanceof SmartSong && holder instanceof MoreListHolder) {
 
@@ -125,10 +131,11 @@ class ParentAdapter<T extends Message> extends RecyclerViewMaterialAdapter<Recyc
                         R.layout.list_with_more_button_padding, //Main resource id
                         R.id.headerText, //id for header text
                         R.id.listOfItems, //id for list (recycler view)
-                        R.id.moreButton); //id of more button
+                        R.id.moreButton,
+                        true); //id of more button
 
             case SMART_LIST_TYPE:
-                return new MoreListHolder(parent);
+                return new MoreListHolder(parent,true);
 
             default:
                 throw new IllegalArgumentException("Unknown view type found");

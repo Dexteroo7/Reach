@@ -50,11 +50,12 @@ class MoreAdapter extends SimpleRecyclerAdapter<Song, SongItemHolder> implements
     public void onBindViewHolder(SongItemHolder holder, Song item) {
 
         holder.songName.setText(item.displayName);
-        holder.likeButton.setVisibility(View.INVISIBLE);
+        holder.itemView.setBackgroundResource(0);
+        //holder.likeButton.setVisibility(View.INVISIBLE);
         //TODO: Figure Out the error
         //holder.downButton.setImageResource(R.drawable.icon_download_gray);
         holder.artistName.setText(item.artist);
-        holder.extraButton.setVisibility(View.INVISIBLE);
+        //holder.extraButton.setVisibility(View.INVISIBLE);
         final Optional<Uri> uriOptional = AlbumArtUri.getUri(item.album, item.artist, item.displayName, false);
 
         if (uriOptional.isPresent()) {

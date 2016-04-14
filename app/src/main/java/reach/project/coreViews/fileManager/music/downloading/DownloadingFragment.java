@@ -92,14 +92,19 @@ public class DownloadingFragment extends Fragment implements HandOverMessage<Cur
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
 
+        //TODO done meta 1
         if (id == StaticData.DOWNLOADING_LOADER)
             return new CursorLoader(getActivity(),
                     SongProvider.CONTENT_URI,
                     SongCursorHelper.DOWNLOADING_HELPER.getProjection(),
-                    SongHelper.COLUMN_STATUS + " != ? and " + //show only non finished
-                            SongHelper.COLUMN_OPERATION_KIND + " = ?", //show only downloads
+                    "( "+SongHelper.COLUMN_STATUS + " != ? and " + //show only non finished
+                            SongHelper.COLUMN_OPERATION_KIND + " = ? ) and " +
+                    SongHelper.COLUMN_META_HASH + " != ?"
+                    , //show only downloads
                     new String[]{ReachDatabase.Status.FINISHED.getString(),
-                            ReachDatabase.OperationKind.DOWNLOAD_OP.getString()},
+                            ReachDatabase.OperationKind.DOWNLOAD_OP.getString(),
+                    StaticData.NULL_STRING
+                    },
                     SongHelper.COLUMN_DATE_ADDED + " DESC");
 
         return null;
