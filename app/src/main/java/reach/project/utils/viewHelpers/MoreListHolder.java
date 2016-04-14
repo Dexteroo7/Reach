@@ -49,6 +49,7 @@ public class MoreListHolder extends RecyclerView.ViewHolder implements View.OnCl
         moreButton = (TextView) itemView.findViewById(moreButtonId);
         moreButton.setTag(linear);
         moreButton.setOnClickListener(this);
+
         //headerText.setPadding(MiscUtils.dpToPx(8),MiscUtils.dpToPx(16), MiscUtils.dpToPx(8),0 );
         //itemView.setBackgroundResource(R.drawable.border_shadow1);
     }

@@ -28,7 +28,9 @@ import com.github.florent37.materialviewpager.MaterialViewPagerHelper;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -231,14 +233,17 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage, Load
             return Collections.emptyList();
 
         /*final List<MusicData> latestMyLibrary = new ArrayList<>(cursor.getCount());*/
+        final Set <Song> latestMyLibrarySet = new LinkedHashSet<>(cursor.getCount());
         final List<Song> latestMyLibrary = new ArrayList<>(cursor.getCount());
         while (cursor.moveToNext()) {
-            if (TextUtils.isEmpty(cursor.getString(2)))
+            if (TextUtils.isEmpty(cursor.getString(2))) {
                 continue;
+                //latestMyLibrarySet.add(SongCursorHelper.SONG_HELPER.parse(cursor));
+            }
             /*latestMyLibrary.add(MySongsHelper.getMusicData(cursor, userId));*/
             latestMyLibrary.add(SongCursorHelper.SONG_HELPER.parse(cursor));
         }
-
+        //latestMyLibrary.addAll(latestMyLibrarySet);
         cursor.close();
 
         return latestMyLibrary;

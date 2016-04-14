@@ -73,8 +73,9 @@ public class SongProvider extends ContentProvider {
         //TODO: Check whether it should be readable database
 
         final SQLiteDatabase db = songHelper.getWritableDatabase();
+        //  Changed groupby according to filehash for all by default
         final Cursor cursor = queryBuilder.query(db, projection, selection,
-                selectionArgs, null, null, sortOrder);
+                selectionArgs, SongHelper.COLUMN_META_HASH, null, sortOrder);
         // make sure that potential listeners are getting notified
         cursor.setNotificationUri(getContext().getContentResolver(), uri);
         return cursor;

@@ -241,7 +241,7 @@ class ParentAdapter extends RecyclerViewMaterialAdapter<RecyclerView.ViewHolder>
                         R.id.headerText,
                         R.id.listOfItems,
                         R.id.moreButton,
-                        true
+                        false
                         );
             }
 
