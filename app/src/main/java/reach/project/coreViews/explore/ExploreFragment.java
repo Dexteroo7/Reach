@@ -40,8 +40,6 @@ import com.facebook.imagepipeline.common.ResizeOptions;
 import com.facebook.imagepipeline.core.ImagePipeline;
 import com.facebook.imagepipeline.request.ImageRequest;
 import com.facebook.imagepipeline.request.ImageRequestBuilder;
-import com.facebook.share.model.ShareHashtag;
-import com.facebook.share.model.ShareLinkContent;
 import com.facebook.share.model.SharePhoto;
 import com.facebook.share.model.SharePhotoContent;
 import com.facebook.share.widget.ShareDialog;
@@ -895,7 +893,8 @@ public class  ExploreFragment extends Fragment implements ExploreAdapter.Explore
 
             final YouTubeDataModel data = (YouTubeDataModel) object;
             Log.d(TAG, "handOverMessage: fb_share_button, id = " + data.getId());
-            MiscUtils.shareTextUrl(getActivity(),("http://www.youtube.com/watch?v="+data.getId()));
+            MiscUtils.shareTextUrl(getActivity(),
+                    "Hey! Checkout this song I found on the Reach App\nhttp://youtu.be/"+data.getId());
             /*ShareLinkContent.Builder content = new ShareLinkContent.Builder();
                     content.setContentUrl(Uri.parse("http://www.youtube.com/watch?v="+data.getId()));
                     content.setShareHashtag(new ShareHashtag.Builder()
