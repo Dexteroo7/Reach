@@ -58,6 +58,7 @@ import reach.project.coreViews.yourProfile.blobCache.CacheType;
 import reach.project.music.Song;
 import reach.project.utils.CloudEndPointsUtils;
 import reach.project.utils.CloudStorageUtils;
+import reach.project.utils.DividerItemDecoration;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
 import reach.project.utils.ancillaryClasses.SuperInterface;
@@ -139,7 +140,8 @@ public class YourProfileMusicFragment extends Fragment implements CacheInjectorC
                              Bundle savedInstanceState) {
 
         rootView = inflater.inflate(R.layout.fragment_simple_recycler, container, false);
-         mRecyclerView = (RecyclerView) rootView.findViewById(R.id.recyclerView);
+        mRecyclerView = (RecyclerView) rootView.findViewById(R.id.recyclerView);
+        mRecyclerView.addItemDecoration(new DividerItemDecoration(getActivity()));
         //emptyView = rootView.findViewById(R.id.empty_imageView);
         //final TextView emptyViewText = (TextView) rootView.findViewById(R.id.empty_textView);
         //emptyViewText.setText(StaticData.NO_SONGS_TEXT);
