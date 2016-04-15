@@ -111,7 +111,7 @@ class RecentAdapter extends SimpleRecyclerAdapter<Song, SongItemHolder> implemen
 
     @Override
     public long getItemId(Song item) {
-        //TODO: Resolve Null pointer error here
+        //TODO: App crashes because filehash for two same files being equal makes stableids of two viewholders same
         return item.fileHash.hashCode();
     }
 

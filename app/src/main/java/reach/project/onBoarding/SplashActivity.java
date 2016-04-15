@@ -74,8 +74,8 @@ public class SplashActivity extends AppCompatActivity implements SplashInterface
         display.getSize(size);
         int width = size.x;
         int height = size.y;
-        StaticData.deviceHeight = height;
-        StaticData.deviceWidth = width;
+        //StaticData.deviceHeight = height;
+        //StaticData.deviceWidth = width;
 
         // Checking if the user has given permission to read contacts on API 23(marshmallow) or greater
         if (Build.VERSION.SDK_INT >= 23) {
