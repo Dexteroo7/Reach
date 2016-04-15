@@ -908,6 +908,10 @@ public class  ExploreFragment extends Fragment implements ExploreAdapter.Explore
 
 
         }
+        else if(object instanceof Long){
+            final long userId =  (long) object;
+            mListener.displayYourProfileFragment(userId);
+        }
 
     }
 

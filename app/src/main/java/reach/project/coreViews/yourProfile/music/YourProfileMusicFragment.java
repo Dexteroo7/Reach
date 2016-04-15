@@ -437,7 +437,6 @@ public class YourProfileMusicFragment extends Fragment implements CacheInjectorC
         if (!elements.isEmpty())
             painter(elements, typeChecker);
 
-        loadingProgress.setVisibility(View.GONE);
         //notify
         Log.i("Ayush", "Reloading list " + musicData.size());
 
@@ -450,6 +449,8 @@ public class YourProfileMusicFragment extends Fragment implements CacheInjectorC
 
         if (parentAdapter != null)
             parentAdapter.notifyDataSetChanged();
+
+        loadingProgress.setVisibility(View.GONE);
 
         /**
          * If loading has finished request a full injection of smart lists

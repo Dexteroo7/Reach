@@ -87,6 +87,8 @@ class ExploreAdapter extends PagerAdapter implements View.OnClickListener {
                 case MUSIC: {
                     downBtn.setOnClickListener(this);
                     fb_share_btn.setOnClickListener(this);
+                    userHandle.setOnClickListener(this);
+                    userImage.setOnClickListener(this);
                     final YouTubeDataModel ytbData = new YouTubeDataModel();
 
                     final JsonElement ytElement = MiscUtils.get(exploreJSON, ExploreJSON.YOUTUBE_ID);
@@ -109,8 +111,9 @@ class ExploreAdapter extends PagerAdapter implements View.OnClickListener {
                     }
 
                     fb_share_btn.setTag(ytbData);
-
                     final long userId = MiscUtils.get(exploreJSON, ExploreJSON.ID).getAsLong();
+                    userHandle.setTag(userId);
+                    userImage.setTag(userId);
                     /*final Cursor cursor = collection.getContext().getContentResolver().query(
                             Uri.parse(ReachFriendsProvider.CONTENT_URI + "/" + userId),
                             new String[]{ReachFriendsHelper.COLUMN_STATUS},

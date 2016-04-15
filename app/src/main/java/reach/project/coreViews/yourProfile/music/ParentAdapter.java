@@ -58,6 +58,7 @@ class ParentAdapter<T extends Message> extends RecyclerViewMaterialAdapter<Recyc
             songSongItemHolder.likeButton.setVisibility(View.INVISIBLE);
             songSongItemHolder.songName.setText(song.displayName);
             songSongItemHolder.artistName.setText(song.artist);
+
             //TODO: Figure Out The Error
             //songSongItemHolder.downButton.setImageResource(R.drawable.icon_download_gray);
 
@@ -90,7 +91,7 @@ class ParentAdapter<T extends Message> extends RecyclerViewMaterialAdapter<Recyc
                 return;
             }
             simpleListHolder.headerText.setText(recentSong.title);
-            simpleListHolder.itemView.setBackgroundResource(R.drawable.border_shadow1);
+            //simpleListHolder.itemView.setBackgroundResource(R.drawable.border_shadow1);
             if (simpleListHolder.listOfItems.getLayoutManager() == null)
                 simpleListHolder.listOfItems.setLayoutManager(new CustomLinearLayoutManager(simpleListHolder.listOfItems.getContext()));
             simpleListHolder.listOfItems.setAdapter(new MoreAdapter(recentSong.songList, cacheAdapterInterface, R.layout.song_list_item));

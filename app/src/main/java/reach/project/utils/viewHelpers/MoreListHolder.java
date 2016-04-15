@@ -21,6 +21,7 @@ import javax.annotation.Nonnull;
 
 import reach.project.R;
 import reach.project.core.ReachApplication;
+import reach.project.utils.DividerItemDecoration;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.ReachCursorAdapter;
 import reach.project.utils.SharedPrefUtils;
@@ -154,10 +155,12 @@ public class MoreListHolder extends RecyclerView.ViewHolder implements View.OnCl
             throw new IllegalArgumentException("More button invalid adapter type");
 
         final RecyclerView recyclerView = new RecyclerView(context);
+
         //TODO: Add bottom margin to recyclerview
         //recyclerView.setPadding(0, MiscUtils.dpToPx(10), 0, 0);
         if(linearTag) {
             recyclerView.setLayoutManager(new LinearLayoutManager(context));
+            recyclerView.addItemDecoration(new DividerItemDecoration(context));
         }
         else {
             recyclerView.setLayoutManager(new GridLayoutManager(context,2));

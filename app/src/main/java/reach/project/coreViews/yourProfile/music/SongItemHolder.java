@@ -22,6 +22,7 @@ class SongItemHolder extends SingleItemViewHolder {
     public final SimpleDraweeView albumArt;
     public final ImageView extraButton;
     public final ImageView likeButton;
+    //public final View divider;
 
     protected SongItemHolder(View itemView, HandOverMessage<Integer> handOverMessage) {
 
@@ -33,6 +34,7 @@ class SongItemHolder extends SingleItemViewHolder {
         this.albumArt = (SimpleDraweeView) itemView.findViewById(R.id.albumArt);
         this.extraButton = (ImageView) itemView.findViewById(R.id.extraButton);
         this.likeButton = (ImageView) itemView.findViewById(R.id.likeButton);
-        itemView.setPadding(MiscUtils.dpToPx(8),MiscUtils.dpToPx(16), MiscUtils.dpToPx(8),0 );
+        //this.divider = itemView.findViewById(R.id.divider);
+        //itemView.setPadding(MiscUtils.dpToPx(8),MiscUtils.dpToPx(16), MiscUtils.dpToPx(8),0 );
     }
 }
