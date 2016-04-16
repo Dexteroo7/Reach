@@ -381,7 +381,7 @@ public class GcmIntentService extends IntentService {
 //                Log.i("Downloader", "Received unexpected GCM " + message);
         } else {
             switch (type) {
-                //Promotional messages from Devika
+                //Promotional messages from Devika, has added new songs
                 case "CURATED":
 
                     final String heading = extras.getString("heading");
@@ -415,6 +415,7 @@ public class GcmIntentService extends IntentService {
                         if(activityName.contains(YourProfileActivity.class.getSimpleName())) {
                             Log.d(TAG, "onHandleIntent: Activity name contains yourProfileActivity");
                             mIntent = new Intent(this, ReachActivity.class);
+                            //TODO: See if there is a need to clear all the other activities and create a new instance of ReachActivity
                             mIntent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
                             mIntent.setAction(ReachActivity.OPEN_FRIEND_PROFILE);
                             if (!TextUtils.isEmpty(extras.getString("userId"))) {

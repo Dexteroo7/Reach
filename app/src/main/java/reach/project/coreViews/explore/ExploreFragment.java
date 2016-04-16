@@ -1,5 +1,6 @@
 package reach.project.coreViews.explore;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.ContentValues;
 import android.content.Context;
@@ -26,11 +27,14 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.Toolbar;
 import android.text.Html;
 import android.text.TextUtils;
+import android.util.AttributeSet;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.Interpolator;
 import android.widget.Button;
+import android.widget.Scroller;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -67,6 +71,7 @@ import com.google.gson.JsonParser;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.lang.ref.WeakReference;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -94,10 +99,11 @@ import reach.project.utils.ancillaryClasses.SuperInterface;
 import reach.project.utils.ancillaryClasses.UseActivityWithResult;
 import reach.project.utils.ancillaryClasses.UseContext;
 import reach.project.utils.viewHelpers.HandOverMessage;
+import reach.project.utils.viewHelpers.ViewPagerCustomDuration;
 
 import static reach.project.coreViews.explore.ExploreJSON.MiscMetaInfo;
 
-public class  ExploreFragment extends Fragment implements ExploreAdapter.Explore,
+public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
         ExploreBuffer.ExplorationCallbacks<JsonObject>, HandOverMessage<Object>, LoaderManager.LoaderCallbacks<Cursor> {
 
     private static final String TAG = ExploreFragment.class.getSimpleName();
@@ -125,7 +131,7 @@ public class  ExploreFragment extends Fragment implements ExploreAdapter.Explore
     @Override
     public void onResume() {
         Log.d(TAG, "onResume: ");
-        if(reference == null){
+        if (reference == null) {
             Log.d(TAG, "onResume: Initializing static reference");
             reference = new WeakReference<ExploreFragment>(this);
         }
@@ -392,7 +398,7 @@ public class  ExploreFragment extends Fragment implements ExploreAdapter.Explore
     @Nullable
     private View rootView = null;
     @Nullable
-    private ViewPager explorePager = null;
+    private ViewPagerCustomDuration explorePager = null;
     @Nullable
     private ExploreAdapter exploreAdapter = null;
 
@@ -418,10 +424,13 @@ public class  ExploreFragment extends Fragment implements ExploreAdapter.Explore
         toolbar.setTitle("Discover");
         toolbar.inflateMenu(R.menu.explore_menu);
         toolbar.setOnMenuItemClickListener(mListener != null ? mListener.getMenuClickListener() : null);
-        explorePager = (ViewPager) rootView.findViewById(R.id.explorer);
+        explorePager = (ViewPagerCustomDuration) rootView.findViewById(R.id.explorer);
+        // For changing the speed of page transition
+        explorePager.setScrollDurationFactor(0.4);
         explorePager.setClipToPadding(false);
         final int size = MiscUtils.dpToPx(16);
         explorePager.setPadding(size, 0, size, (size * -1));
+        //explorePager.setPageTransformer(false, new FlipHorizontalTransformer());
         //explorePager.setPageMargin(-1 * (MiscUtils.dpToPx(25)));
         explorePager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
             @Override
@@ -436,9 +445,9 @@ public class  ExploreFragment extends Fragment implements ExploreAdapter.Explore
                         .setValue(1)
                         .build());
 
-                if(SharedPrefUtils.getShowFacebookShareOrNot(preferences)) {
+                if (SharedPrefUtils.getShowFacebookShareOrNot(preferences)) {
                     if (position == 10) {
-                        if(preferences == null){
+                        if (preferences == null) {
                             preferences = SharedPrefUtils.getPreferences(getContext());
                         }
 
@@ -584,7 +593,7 @@ public class  ExploreFragment extends Fragment implements ExploreAdapter.Explore
         }
     }
 
-    private void showFbDialog(){
+    private void showFbDialog() {
 
         if (fbShareDialog != null) {
             Log.d(TAG, "Invite Dialog is already showing");
@@ -598,7 +607,7 @@ public class  ExploreFragment extends Fragment implements ExploreAdapter.Explore
         LayoutInflater inflater = (LayoutInflater) getActivity().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 
         View vv = inflater.inflate(R.layout.fb_share_dialog_layout, null, false);
-        ((TextView)vv.findViewById(R.id.inviteText)).setText(Html.fromHtml("Enjoying <b>Reach</b>? Share your love!"));
+        ((TextView) vv.findViewById(R.id.inviteText)).setText(Html.fromHtml("Enjoying <b>Reach</b>? Share your love!"));
         vv.findViewById(R.id.shareButton).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -610,7 +619,7 @@ public class  ExploreFragment extends Fragment implements ExploreAdapter.Explore
                         .setValue(1)
                         .build());
                 sharePostOnFb();
-                if(fbShareDialog!=null)
+                if (fbShareDialog != null)
                     fbShareDialog.dismiss();
             }
         });
@@ -618,7 +627,7 @@ public class  ExploreFragment extends Fragment implements ExploreAdapter.Explore
         vv.findViewById(R.id.cancelButton).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(fbShareDialog!=null)
+                if (fbShareDialog != null)
                     fbShareDialog.dismiss();
             }
         });
@@ -638,27 +647,27 @@ public class  ExploreFragment extends Fragment implements ExploreAdapter.Explore
 
     private void sharePostOnFb() {
 
-        try{
+        try {
             ApplicationInfo info = getActivity().getPackageManager().
-                    getApplicationInfo("com.facebook.katana", 0 );
+                    getApplicationInfo("com.facebook.katana", 0);
 
-        } catch( PackageManager.NameNotFoundException e ){
+        } catch (PackageManager.NameNotFoundException e) {
             Toast.makeText(getActivity().getApplicationContext(), "Please install the facebook application first!", Toast.LENGTH_SHORT).show();
-            SharedPrefUtils.storeFacebookShareButtonVisibleOrNot(preferences,false);
+            SharedPrefUtils.storeFacebookShareButtonVisibleOrNot(preferences, false);
             return;
         }
 
         final LayoutInflater inflater = (LayoutInflater) getActivity().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 
-        final View vv = inflater.inflate(R.layout.fb_share_layout,null);
-        final TextView username = (TextView)vv.findViewById(R.id.username);
+        final View vv = inflater.inflate(R.layout.fb_share_layout, null);
+        final TextView username = (TextView) vv.findViewById(R.id.username);
         username.setTypeface(Typeface.createFromAsset(getActivity().getAssets(),
                 "permanentmarker.ttf")
         );
-        username.setText("- "+SharedPrefUtils.getUserName(preferences==null?SharedPrefUtils.getPreferences(getActivity()):preferences));
+        username.setText("- " + SharedPrefUtils.getUserName(preferences == null ? SharedPrefUtils.getPreferences(getActivity()) : preferences));
         vv.measure(View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED),
                 View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED));
-        vv.layout(0, 0, vv.getMeasuredWidth(),vv.getMeasuredHeight());
+        vv.layout(0, 0, vv.getMeasuredWidth(), vv.getMeasuredHeight());
 
         final Bitmap vBitmap = Bitmap.createBitmap(vv.getMeasuredWidth(),
                 vv.getMeasuredHeight(), Bitmap.Config.ARGB_8888);
@@ -674,12 +683,12 @@ public class  ExploreFragment extends Fragment implements ExploreAdapter.Explore
                 .build();
 
         Toast.makeText(getActivity().getApplicationContext(), "Sharing On Facebook", Toast.LENGTH_SHORT).show();
-        SharedPrefUtils.storeFacebookShareButtonVisibleOrNot(preferences,false);
-        ShareDialog.show(getActivity(),content);
+        SharedPrefUtils.storeFacebookShareButtonVisibleOrNot(preferences, false);
+        ShareDialog.show(getActivity(), content);
 
     }
 
-    private void showDiscoverAdapter(){
+    private void showDiscoverAdapter() {
 
         if (explorePager == null || exploreAdapter != null || explorePager.getAdapter() != null)
             return;
@@ -885,16 +894,14 @@ public class  ExploreFragment extends Fragment implements ExploreAdapter.Explore
                     startActivity(intent);
                     break;
             }
-        }
-        else if (object instanceof String) {
+        } else if (object instanceof String) {
             mListener.showYTVideo((String) object);
-        }
-        else if(object instanceof YouTubeDataModel){
+        } else if (object instanceof YouTubeDataModel) {
 
             final YouTubeDataModel data = (YouTubeDataModel) object;
             Log.d(TAG, "handOverMessage: fb_share_button, id = " + data.getId());
             MiscUtils.shareTextUrl(getActivity(),
-                    "Hey! Checkout this song I found on the Reach App\nhttp://youtu.be/"+data.getId());
+                    "Hey! Checkout this song I found on the Reach App\nhttp://youtu.be/" + data.getId());
             /*ShareLinkContent.Builder content = new ShareLinkContent.Builder();
                     content.setContentUrl(Uri.parse("http://www.youtube.com/watch?v="+data.getId()));
                     content.setShareHashtag(new ShareHashtag.Builder()
@@ -907,9 +914,8 @@ public class  ExploreFragment extends Fragment implements ExploreAdapter.Explore
             ShareDialog.show(getActivity(),content.build());*/
 
 
-        }
-        else if(object instanceof Long){
-            final long userId =  (long) object;
+        } else if (object instanceof Long) {
+            final long userId = (long) object;
             mListener.displayYourProfileFragment(userId);
         }
 
@@ -1106,5 +1112,12 @@ public class  ExploreFragment extends Fragment implements ExploreAdapter.Explore
 
         }
     }
+
+
+
+
+
+
+
 
 }
