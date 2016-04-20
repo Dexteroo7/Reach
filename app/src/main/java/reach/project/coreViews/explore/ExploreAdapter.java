@@ -20,6 +20,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
 import reach.project.R;
+import reach.project.coreViews.saved_songs.SavedSongsDataModel;
 import reach.project.utils.AlbumArtUri;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.YouTubeDataModel;
@@ -97,7 +98,7 @@ class ExploreAdapter extends PagerAdapter implements View.OnClickListener {
                         ytID = "";
                     else
                         ytID = ytElement.getAsString();
-                    downBtn.setTag(ytID);
+                    //downBtn.setTag(ytID);
                     ytbData.setId(ytID);
 
                     final String albumArt = "https://i.ytimg.com/vi/" + ytID + "/hqdefault.jpg";
@@ -109,6 +110,7 @@ class ExploreAdapter extends PagerAdapter implements View.OnClickListener {
                                 .build());
                         ytbData.setImageUrl(albumArt);
                     }
+
 
                     fb_share_btn.setTag(ytbData);
                     final long userId = MiscUtils.get(exploreJSON, ExploreJSON.ID).getAsLong();
@@ -139,7 +141,9 @@ class ExploreAdapter extends PagerAdapter implements View.OnClickListener {
                         webView.setVisibility(View.VISIBLE);*//*
 
                     });*/
-                    subTitle.setText(MiscUtils.get(musicViewInfo, MusicViewInfo.SUB_TITLE).getAsString());
+
+                    final String subtitle = MiscUtils.get(musicViewInfo, MusicViewInfo.SUB_TITLE).getAsString();
+                    subTitle.setText(subtitle);
                     final String originalUserName = MiscUtils.get(musicViewInfo, MusicViewInfo.SENDER_NAME, "").getAsString();
                     if (TextUtils.isEmpty(originalUserName))
                         userHandle.setText(userNameAndImageId.first);
@@ -154,6 +158,17 @@ class ExploreAdapter extends PagerAdapter implements View.OnClickListener {
                             true,
                             100,
                             100));
+
+                    SavedSongsDataModel savedSongsDataModel = new SavedSongsDataModel.Builder()
+                            .withYoutube_Id(ytID)
+                            .withDate_Added(System.currentTimeMillis())
+                            .withSenderId(userId)
+                            .withType(2)
+                            .withArtistAlbumName(subtitle)
+                            .withSongName(musicTitle).build();
+
+                    downBtn.setTag(savedSongsDataModel);
+
 
                     //final String albumArt = MiscUtils.get(musicViewInfo, MusicViewInfo.LARGE_IMAGE_URL, "").getAsString();
 

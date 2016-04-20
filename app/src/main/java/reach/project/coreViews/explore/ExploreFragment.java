@@ -92,6 +92,8 @@ import reach.project.core.ReachApplication;
 import reach.project.core.StaticData;
 import reach.project.coreViews.friends.ReachFriendsHelper;
 import reach.project.coreViews.friends.ReachFriendsProvider;
+import reach.project.coreViews.saved_songs.SaveSongInDatabaseTask;
+import reach.project.coreViews.saved_songs.SavedSongsDataModel;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
 import reach.project.utils.YouTubeDataModel;
@@ -894,8 +896,12 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
                     startActivity(intent);
                     break;
             }
-        } else if (object instanceof String) {
-            mListener.showYTVideo((String) object);
+        } else if (object instanceof SavedSongsDataModel) {
+            final SavedSongsDataModel data = (SavedSongsDataModel) object;
+            mListener.showYTVideo(data.getYoutube_id());
+            new SaveSongInDatabaseTask(getActivity(),data).execute();
+
+
         } else if (object instanceof YouTubeDataModel) {
 
             final YouTubeDataModel data = (YouTubeDataModel) object;

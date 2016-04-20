@@ -45,7 +45,7 @@ import reach.project.coreViews.friends.ReachFriendsProvider;
 import reach.project.coreViews.yourProfile.apps.YourProfileAppFragment;
 import reach.project.coreViews.yourProfile.music.YourProfileMusicFragment;
 import reach.project.notificationCentre.NotificationActivity;
-import reach.project.player.PlayerActivity;
+//import reach.project.player.PlayerActivity;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
 import reach.project.utils.ancillaryClasses.SuperInterface;

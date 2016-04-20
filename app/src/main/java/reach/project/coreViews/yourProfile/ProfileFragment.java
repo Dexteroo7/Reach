@@ -35,7 +35,7 @@ import reach.project.core.StaticData;
 import reach.project.coreViews.friends.ReachFriendsHelper;
 import reach.project.coreViews.friends.ReachFriendsProvider;
 import reach.project.notificationCentre.NotificationActivity;
-import reach.project.player.PlayerActivity;
+//import reach.project.player.PlayerActivity;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
 import reach.project.utils.ancillaryClasses.SuperInterface;
@@ -64,9 +64,9 @@ public class ProfileFragment extends Fragment {
         mToolbar.inflateMenu(R.menu.yourprofile_menu);
         mToolbar.setOnMenuItemClickListener(item -> {
             switch (item.getItemId()) {
-                case R.id.player_button:
-                    PlayerActivity.openActivity(getActivity());
-                    return true;
+//                case R.id.player_button:
+//                    PlayerActivity.openActivity(getActivity());
+//                    return true;
                 case R.id.notif_button:
                     NotificationActivity.openActivity(getActivity(), NotificationActivity.OPEN_NOTIFICATIONS);
                     return true;

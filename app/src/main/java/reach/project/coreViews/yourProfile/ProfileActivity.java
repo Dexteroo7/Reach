@@ -33,7 +33,7 @@ import reach.project.core.StaticData;
 import reach.project.coreViews.friends.ReachFriendsHelper;
 import reach.project.coreViews.friends.ReachFriendsProvider;
 import reach.project.notificationCentre.NotificationActivity;
-import reach.project.player.PlayerActivity;
+//import reach.project.player.PlayerActivity;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
 
@@ -137,9 +137,9 @@ public class ProfileActivity extends AppCompatActivity {
         mToolbar.inflateMenu(R.menu.yourprofile_menu);
         mToolbar.setOnMenuItemClickListener(item -> {
             switch (item.getItemId()) {
-                case R.id.player_button:
-                    PlayerActivity.openActivity(this);
-                    return true;
+//                case R.id.player_button:
+//                    PlayerActivity.openActivity(this);
+//                    return true;
                 case R.id.notif_button:
                     NotificationActivity.openActivity(this, NotificationActivity.OPEN_NOTIFICATIONS);
                     return true;

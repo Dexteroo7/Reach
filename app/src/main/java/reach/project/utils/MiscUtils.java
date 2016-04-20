@@ -104,9 +104,9 @@ import reach.project.music.Song;
 import reach.project.music.SongCursorHelper;
 import reach.project.music.SongHelper;
 import reach.project.music.SongProvider;
-import reach.project.player.PlayerActivity;
+//import reach.project.player.PlayerActivity;
 import reach.project.reachProcess.auxiliaryClasses.Connection;
-import reach.project.reachProcess.reachService.ProcessManager;
+//import reach.project.reachProcess.reachService.ProcessManager;
 import reach.project.usageTracking.AppMetadata;
 import reach.project.usageTracking.PostParams;
 import reach.project.usageTracking.SongMetadata;
@@ -415,31 +415,31 @@ public enum MiscUtils {
         }
     }
 
-    public static boolean playSong(Song song, Context context) {
-
-        if (song.size == 0 || song.duration == 0 || TextUtils.isEmpty(song.path)) {
-            Toast.makeText(context, "Bad song", Toast.LENGTH_SHORT).show();
-            return false;
-        }
-
-        if (song.getProcessed() == 0) {
-            Toast.makeText(context, "Streaming will start in a few seconds", Toast.LENGTH_SHORT).show();
-            return false;
-        }
-
-        //store the last played song
-        SharedPrefUtils.storeLastPlayed(context, song);
-
-        //submit the music request
-        ProcessManager.submitMusicRequest(context,
-                Optional.of(song),
-                ProcessManager.ACTION_NEW_SONG);
-
-        //open player activity
-        PlayerActivity.openActivity(context);
-        ////////////////////////////////////////
-        return true;
-    }
+//    public static boolean playSong(Song song, Context context) {
+//
+//        if (song.size == 0 || song.duration == 0 || TextUtils.isEmpty(song.path)) {
+//            Toast.makeText(context, "Bad song", Toast.LENGTH_SHORT).show();
+//            return false;
+//        }
+//
+//        if (song.getProcessed() == 0) {
+//            Toast.makeText(context, "Streaming will start in a few seconds", Toast.LENGTH_SHORT).show();
+//            return false;
+//        }
+//
+//        //store the last played song
+//        SharedPrefUtils.storeLastPlayed(context, song);
+//
+//        //submit the music request
+//        ProcessManager.submitMusicRequest(context,
+//                Optional.of(song),
+//                ProcessManager.ACTION_NEW_SONG);
+//
+//        //open player activity
+//        PlayerActivity.openActivity(context);
+//        ////////////////////////////////////////
+//        return true;
+//    }
 
 //    public static void setEmptyTextforGridView(GridView gridView, String emptyText) {
 //
@@ -1017,13 +1017,13 @@ public enum MiscUtils {
         return "hello_world";
     }
 
-    public synchronized static StartDownloadOperation startDownloadOperation(Context context,
-                                                                             ReachDatabase reachDatabase,
-                                                                             long receiverId,
-                                                                             long senderId,
-                                                                             long databaseId) {
-        return new StartDownloadOperation(context, reachDatabase, receiverId, senderId, databaseId);
-    }
+//    public synchronized static StartDownloadOperation startDownloadOperation(Context context,
+//                                                                             ReachDatabase reachDatabase,
+//                                                                             long receiverId,
+//                                                                             long senderId,
+//                                                                             long databaseId) {
+//        return new StartDownloadOperation(context, reachDatabase, receiverId, senderId, databaseId);
+//    }
 
     public static List<ApplicationInfo> fastGetApps(PackageManager packageManager) {
 
@@ -1154,118 +1154,118 @@ public enum MiscUtils {
         }
     }
 
-    private static class StartDownloadOperation implements Runnable {
-
-        private final ReachDatabase reachDatabase;
-        private final long receiverId, senderId, databaseId;
-        private final WeakReference<Context> contextReference;
-
-        private StartDownloadOperation(Context context,
-                                       ReachDatabase reachDatabase,
-                                       long receiverId,
-                                       long senderId,
-                                       long databaseId) {
-
-            this.contextReference = new WeakReference<>(context);
-            this.reachDatabase = reachDatabase;
-            this.receiverId = receiverId;
-            this.senderId = senderId;
-            this.databaseId = databaseId;
-        }
-
-        private String generateRequest(ReachDatabase reachDatabase) {
-
-            final Connection connection = new Connection.Builder()
-                    .setSongId(reachDatabase.getSongId())
-                    .setMetaHash(reachDatabase.getMetaHash())
-                    .setSenderId(reachDatabase.getSenderId())
-                    .setReceiverId(reachDatabase.getReceiverId())
-                    .setUniqueIdReceiver(ThreadLocalRandom.current().nextLong(Long.MAX_VALUE))
-                    .setUniqueIdSender(ThreadLocalRandom.current().nextLong(Long.MAX_VALUE))
-                    .setLogicalClock(reachDatabase.getLogicalClock())
-                    .setOffset(reachDatabase.getProcessed())
-                    .setLength(reachDatabase.getLength())
-                    .setUrl("")
-                    .setSenderIp("")
-                    .setMessageType("REQ").build();
-
-            return "CONNECT" + new Gson().toJson(connection);
-        }
-
-        private String fakeResponse(ReachDatabase reachDatabase) {
-
-            final Connection connection = new Connection.Builder()
-                    .setSongId(reachDatabase.getSongId())
-                    .setMetaHash(reachDatabase.getMetaHash())
-                    .setSenderId(reachDatabase.getSenderId())
-                    .setReceiverId(reachDatabase.getReceiverId())
-                    .setUniqueIdReceiver(ThreadLocalRandom.current().nextLong(Long.MAX_VALUE))
-                    .setUniqueIdSender(ThreadLocalRandom.current().nextLong(Long.MAX_VALUE))
-                    .setLogicalClock(reachDatabase.getLogicalClock())
-                    .setOffset(reachDatabase.getProcessed())
-                    .setLength(reachDatabase.getLength())
-                    .setUrl("")
-                    .setSenderIp("")
-                    .setMessageType("RELAY").build();
-
-            return new Gson().toJson(connection);
-        }
-
-        @Override
-        public void run() {
-
-            final MyBoolean myBoolean;
-            if (reachDatabase.getSenderId() == StaticData.DEVIKA) {
-
-                //hit cloud
-                ProcessManager.submitNetworkRequest(contextReference.get(), fakeResponse(reachDatabase));
-                myBoolean = new MyBoolean();
-                myBoolean.setGcmexpired(false);
-                myBoolean.setOtherGCMExpired(false);
-            } else {
-                //sending REQ to senderId
-                myBoolean = sendGCM(generateRequest(reachDatabase), senderId, receiverId);
-            }
-
-            final ReachDatabase.Status status;
-
-            if (myBoolean == null) {
-                Log.i("Ayush", "GCM sending resulted in shit");
-                status = ReachDatabase.Status.GCM_FAILED;
-            } else if (myBoolean.getGcmexpired()) {
-
-                //TODO test
-//                final Context context = contextReference.get();
-//                if(context == null)
-//                    return;
-//                final SharedPreferences preferences = context.getSharedPreferences("Reach", Context.MODE_PRIVATE);
-//                MiscUtils.updateGCM(SharedPrefUtils.getServerId(preferences), contextReference);
-                Log.i("Ayush", "GCM re-registry needed");
-                status = ReachDatabase.Status.GCM_FAILED;
-            } else if (myBoolean.getOtherGCMExpired()) {
-                Log.i("Downloader", "SENDING GCM FAILED " + senderId);
-                status = ReachDatabase.Status.GCM_FAILED;
-            } else {
-                Log.i("Downloader", "GCM SENT " + senderId);
-                status = ReachDatabase.Status.NOT_WORKING;
-            }
-
-            final String condition = SongHelper.COLUMN_ID + " = ? and " +
-                    SongHelper.COLUMN_STATUS + " != ?"; //operation should not be paused !
-            final String[] arguments = new String[]{databaseId + "", ReachDatabase.Status.PAUSED_BY_USER.getString()};
-            final ContentValues values = new ContentValues();
-            values.put(SongHelper.COLUMN_STATUS, status.getValue());
-
-            MiscUtils.useContextFromContext(contextReference, context -> {
-
-                Log.i("Downloader", "Updating DB on GCM sent " + (context.getContentResolver().update(
-                        Uri.parse(SongProvider.CONTENT_URI + "/" + databaseId),
-                        values, condition, arguments) > 0));
-                return null;
-            });
-        }
-        ////////
-    }
+//    private static class StartDownloadOperation implements Runnable {
+//
+//        private final ReachDatabase reachDatabase;
+//        private final long receiverId, senderId, databaseId;
+//        private final WeakReference<Context> contextReference;
+//
+//        private StartDownloadOperation(Context context,
+//                                       ReachDatabase reachDatabase,
+//                                       long receiverId,
+//                                       long senderId,
+//                                       long databaseId) {
+//
+//            this.contextReference = new WeakReference<>(context);
+//            this.reachDatabase = reachDatabase;
+//            this.receiverId = receiverId;
+//            this.senderId = senderId;
+//            this.databaseId = databaseId;
+//        }
+//
+//        private String generateRequest(ReachDatabase reachDatabase) {
+//
+//            final Connection connection = new Connection.Builder()
+//                    .setSongId(reachDatabase.getSongId())
+//                    .setMetaHash(reachDatabase.getMetaHash())
+//                    .setSenderId(reachDatabase.getSenderId())
+//                    .setReceiverId(reachDatabase.getReceiverId())
+//                    .setUniqueIdReceiver(ThreadLocalRandom.current().nextLong(Long.MAX_VALUE))
+//                    .setUniqueIdSender(ThreadLocalRandom.current().nextLong(Long.MAX_VALUE))
+//                    .setLogicalClock(reachDatabase.getLogicalClock())
+//                    .setOffset(reachDatabase.getProcessed())
+//                    .setLength(reachDatabase.getLength())
+//                    .setUrl("")
+//                    .setSenderIp("")
+//                    .setMessageType("REQ").build();
+//
+//            return "CONNECT" + new Gson().toJson(connection);
+//        }
+//
+//        private String fakeResponse(ReachDatabase reachDatabase) {
+//
+//            final Connection connection = new Connection.Builder()
+//                    .setSongId(reachDatabase.getSongId())
+//                    .setMetaHash(reachDatabase.getMetaHash())
+//                    .setSenderId(reachDatabase.getSenderId())
+//                    .setReceiverId(reachDatabase.getReceiverId())
+//                    .setUniqueIdReceiver(ThreadLocalRandom.current().nextLong(Long.MAX_VALUE))
+//                    .setUniqueIdSender(ThreadLocalRandom.current().nextLong(Long.MAX_VALUE))
+//                    .setLogicalClock(reachDatabase.getLogicalClock())
+//                    .setOffset(reachDatabase.getProcessed())
+//                    .setLength(reachDatabase.getLength())
+//                    .setUrl("")
+//                    .setSenderIp("")
+//                    .setMessageType("RELAY").build();
+//
+//            return new Gson().toJson(connection);
+//        }
+//
+//        @Override
+//        public void run() {
+//
+//            final MyBoolean myBoolean;
+//            if (reachDatabase.getSenderId() == StaticData.DEVIKA) {
+//
+//                //hit cloud
+//                ProcessManager.submitNetworkRequest(contextReference.get(), fakeResponse(reachDatabase));
+//                myBoolean = new MyBoolean();
+//                myBoolean.setGcmexpired(false);
+//                myBoolean.setOtherGCMExpired(false);
+//            } else {
+//                //sending REQ to senderId
+//                myBoolean = sendGCM(generateRequest(reachDatabase), senderId, receiverId);
+//            }
+//
+//            final ReachDatabase.Status status;
+//
+//            if (myBoolean == null) {
+//                Log.i("Ayush", "GCM sending resulted in shit");
+//                status = ReachDatabase.Status.GCM_FAILED;
+//            } else if (myBoolean.getGcmexpired()) {
+//
+//                //TODO test
+////                final Context context = contextReference.get();
+////                if(context == null)
+////                    return;
+////                final SharedPreferences preferences = context.getSharedPreferences("Reach", Context.MODE_PRIVATE);
+////                MiscUtils.updateGCM(SharedPrefUtils.getServerId(preferences), contextReference);
+//                Log.i("Ayush", "GCM re-registry needed");
+//                status = ReachDatabase.Status.GCM_FAILED;
+//            } else if (myBoolean.getOtherGCMExpired()) {
+//                Log.i("Downloader", "SENDING GCM FAILED " + senderId);
+//                status = ReachDatabase.Status.GCM_FAILED;
+//            } else {
+//                Log.i("Downloader", "GCM SENT " + senderId);
+//                status = ReachDatabase.Status.NOT_WORKING;
+//            }
+//
+//            final String condition = SongHelper.COLUMN_ID + " = ? and " +
+//                    SongHelper.COLUMN_STATUS + " != ?"; //operation should not be paused !
+//            final String[] arguments = new String[]{databaseId + "", ReachDatabase.Status.PAUSED_BY_USER.getString()};
+//            final ContentValues values = new ContentValues();
+//            values.put(SongHelper.COLUMN_STATUS, status.getValue());
+//
+//            MiscUtils.useContextFromContext(contextReference, context -> {
+//
+//                Log.i("Downloader", "Updating DB on GCM sent " + (context.getContentResolver().update(
+//                        Uri.parse(SongProvider.CONTENT_URI + "/" + databaseId),
+//                        values, condition, arguments) > 0));
+//                return null;
+//            });
+//        }
+//        ////////
+//    }
 
     /*public synchronized static void checkChatToken(WeakReference<SharedPreferences> preferencesWeakReference,
                                                    WeakReference<Firebase> firebaseWeakReference,
@@ -1345,135 +1345,135 @@ public enum MiscUtils {
         }
     }*/
 
-    public static void startDownload(@Nonnull ReachDatabase reachDatabase, Activity activity, View snackView, String page) {
-
-//        final Activity activity = getActivity();
-
-        final ContentResolver contentResolver = activity.getContentResolver();
-
-        if (contentResolver == null)
-            return;
-
-        /**
-         * DISPLAY_NAME, ACTUAL_NAME, SIZE & DURATION all can not be same, effectively its a hash
-         */
-
-        final Cursor cursor = contentResolver.query(
-                SongProvider.CONTENT_URI,
-                SongCursorHelper.SONG_HELPER.getProjection(),
-                SongHelper.COLUMN_DISPLAY_NAME + " = ? and " +
-                        SongHelper.COLUMN_ACTUAL_NAME + " = ? and " +
-                        SongHelper.COLUMN_SIZE + " = ? and " +
-                        SongHelper.COLUMN_DURATION + " = ?",
-                new String[]{
-                        reachDatabase.getDisplayName(),
-                        reachDatabase.getActualName(),
-                        reachDatabase.getLength() + "",
-                        reachDatabase.getDuration() + ""},
-                null);
-
-        if (cursor != null) {
-
-            if (cursor.moveToFirst()) {
-
-                final Song song = SongCursorHelper.SONG_HELPER.parse(cursor);
-                playSong(song, activity);
-                //in both cases close and continue
-                cursor.close();
-                return;
-            }
-            cursor.close();
-        }
-
-        final SharedPreferences sharedPreferences = activity.getSharedPreferences("Reach", Context.MODE_PRIVATE);
-        final String clientName = SharedPrefUtils.getUserName(sharedPreferences);
-
-        //new song
-        //We call bulk starter always
-        final Uri uri = contentResolver.insert(SongProvider.CONTENT_URI,
-                SongHelper.contentValuesCreator(reachDatabase));
-        if (uri == null) {
-
-            ((ReachApplication) activity.getApplication()).getTracker().send(new HitBuilders.EventBuilder()
-                    .setCategory("Add song failed")
-                    .setAction("User Name - " + clientName)
-                    .setLabel("Song - " + reachDatabase.getDisplayName() + ", From - " + reachDatabase.getSenderId())
-                    .setValue(1)
-                    .build());
-            return;
-        }
-
-        final String[] splitter = uri.toString().split("/");
-        if (splitter.length == 0)
-            return;
-
-        final long dbId = Long.parseLong(splitter[splitter.length - 1].trim());
-        //start this operation
-        new Thread(MiscUtils.startDownloadOperation(
-                activity,
-                reachDatabase,
-                reachDatabase.getReceiverId(), //myID
-                reachDatabase.getSenderId(),   //the uploaded
-                dbId)).start();
-
-        ((ReachApplication) activity.getApplication()).getTracker().send(new HitBuilders.EventBuilder()
-                .setCategory("Transaction - Add SongBrainz")
-                .setAction("User Name - " + clientName)
-                .setLabel(page)
-                .setValue(1)
-                .build());
-
-        //usage tracking
-        final Map<PostParams, String> simpleParams = MiscUtils.getMap(6);
-        simpleParams.put(PostParams.USER_ID, reachDatabase.getReceiverId() + "");
-        simpleParams.put(PostParams.DEVICE_ID, MiscUtils.getDeviceId(activity));
-        simpleParams.put(PostParams.OS, MiscUtils.getOsName());
-        simpleParams.put(PostParams.OS_VERSION, Build.VERSION.SDK_INT + "");
-        try {
-            simpleParams.put(PostParams.APP_VERSION,
-                    activity.getPackageManager().getPackageInfo(activity.getPackageName(), 0).versionCode + "");
-        } catch (PackageManager.NameNotFoundException e) {
-            e.printStackTrace();
-        }
-        simpleParams.put(PostParams.SCREEN_NAME, "unknown");
-
-        final Map<SongMetadata, String> complexParams = MiscUtils.getMap(9);
-        complexParams.put(SongMetadata.SONG_ID, reachDatabase.getSongId() + "");
-        complexParams.put(SongMetadata.META_HASH, reachDatabase.getMetaHash());
-        complexParams.put(SongMetadata.ARTIST, reachDatabase.getArtistName());
-        complexParams.put(SongMetadata.TITLE, reachDatabase.getDisplayName());
-        complexParams.put(SongMetadata.DURATION, reachDatabase.getDuration() + "");
-        complexParams.put(SongMetadata.SIZE, reachDatabase.getLength() + "");
-        complexParams.put(SongMetadata.UPLOADER_ID, reachDatabase.getSenderId() + "");
-        complexParams.put(SongMetadata.ALBUM, reachDatabase.getAlbumName());
-
-        try {
-            UsageTracker.trackSong(simpleParams, complexParams, UsageTracker.DOWNLOAD_SONG);
-        } catch (JSONException ignored) {
-        }
-
-        if (SharedPrefUtils.isItFirstTimeDownload(sharedPreferences)) {
-            final Intent foreGround = new Intent(activity, ReachActivity.class);
-            foreGround.setAction(ReachActivity.OPEN_MANAGER_SONGS_DOWNLOADING);
-            foreGround.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
-            activity.startActivity(foreGround);
-            SharedPrefUtils.putFirstTimeDownload(sharedPreferences, false);
-        } else {
-            if (snackView != null) {
-                final Snackbar snack_bar = Snackbar.make(snackView, "Song added to queue", Snackbar.LENGTH_INDEFINITE);
-
-                snack_bar.getView().setOnClickListener(v -> {
-                    snack_bar.dismiss();
-                });
-                snack_bar.setAction("Open manager", v -> {
-                    final Intent foreGround = new Intent(activity, ReachActivity.class);
-                    foreGround.setAction(ReachActivity.OPEN_MANAGER_SONGS_DOWNLOADING);
-                    foreGround.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
-                    activity.startActivity(foreGround);
-                }).show();
-            }
-        }
-    }
+//    public static void startDownload(@Nonnull ReachDatabase reachDatabase, Activity activity, View snackView, String page) {
+//
+////        final Activity activity = getActivity();
+//
+//        final ContentResolver contentResolver = activity.getContentResolver();
+//
+//        if (contentResolver == null)
+//            return;
+//
+//        /**
+//         * DISPLAY_NAME, ACTUAL_NAME, SIZE & DURATION all can not be same, effectively its a hash
+//         */
+//
+//        final Cursor cursor = contentResolver.query(
+//                SongProvider.CONTENT_URI,
+//                SongCursorHelper.SONG_HELPER.getProjection(),
+//                SongHelper.COLUMN_DISPLAY_NAME + " = ? and " +
+//                        SongHelper.COLUMN_ACTUAL_NAME + " = ? and " +
+//                        SongHelper.COLUMN_SIZE + " = ? and " +
+//                        SongHelper.COLUMN_DURATION + " = ?",
+//                new String[]{
+//                        reachDatabase.getDisplayName(),
+//                        reachDatabase.getActualName(),
+//                        reachDatabase.getLength() + "",
+//                        reachDatabase.getDuration() + ""},
+//                null);
+//
+//        if (cursor != null) {
+//
+//            if (cursor.moveToFirst()) {
+//
+//                final Song song = SongCursorHelper.SONG_HELPER.parse(cursor);
+//                playSong(song, activity);
+//                //in both cases close and continue
+//                cursor.close();
+//                return;
+//            }
+//            cursor.close();
+//        }
+//
+//        final SharedPreferences sharedPreferences = activity.getSharedPreferences("Reach", Context.MODE_PRIVATE);
+//        final String clientName = SharedPrefUtils.getUserName(sharedPreferences);
+//
+//        //new song
+//        //We call bulk starter always
+//        final Uri uri = contentResolver.insert(SongProvider.CONTENT_URI,
+//                SongHelper.contentValuesCreator(reachDatabase));
+//        if (uri == null) {
+//
+//            ((ReachApplication) activity.getApplication()).getTracker().send(new HitBuilders.EventBuilder()
+//                    .setCategory("Add song failed")
+//                    .setAction("User Name - " + clientName)
+//                    .setLabel("Song - " + reachDatabase.getDisplayName() + ", From - " + reachDatabase.getSenderId())
+//                    .setValue(1)
+//                    .build());
+//            return;
+//        }
+//
+//        final String[] splitter = uri.toString().split("/");
+//        if (splitter.length == 0)
+//            return;
+//
+//        final long dbId = Long.parseLong(splitter[splitter.length - 1].trim());
+//        //start this operation
+//        new Thread(MiscUtils.startDownloadOperation(
+//                activity,
+//                reachDatabase,
+//                reachDatabase.getReceiverId(), //myID
+//                reachDatabase.getSenderId(),   //the uploaded
+//                dbId)).start();
+//
+//        ((ReachApplication) activity.getApplication()).getTracker().send(new HitBuilders.EventBuilder()
+//                .setCategory("Transaction - Add SongBrainz")
+//                .setAction("User Name - " + clientName)
+//                .setLabel(page)
+//                .setValue(1)
+//                .build());
+//
+//        //usage tracking
+//        final Map<PostParams, String> simpleParams = MiscUtils.getMap(6);
+//        simpleParams.put(PostParams.USER_ID, reachDatabase.getReceiverId() + "");
+//        simpleParams.put(PostParams.DEVICE_ID, MiscUtils.getDeviceId(activity));
+//        simpleParams.put(PostParams.OS, MiscUtils.getOsName());
+//        simpleParams.put(PostParams.OS_VERSION, Build.VERSION.SDK_INT + "");
+//        try {
+//            simpleParams.put(PostParams.APP_VERSION,
+//                    activity.getPackageManager().getPackageInfo(activity.getPackageName(), 0).versionCode + "");
+//        } catch (PackageManager.NameNotFoundException e) {
+//            e.printStackTrace();
+//        }
+//        simpleParams.put(PostParams.SCREEN_NAME, "unknown");
+//
+//        final Map<SongMetadata, String> complexParams = MiscUtils.getMap(9);
+//        complexParams.put(SongMetadata.SONG_ID, reachDatabase.getSongId() + "");
+//        complexParams.put(SongMetadata.META_HASH, reachDatabase.getMetaHash());
+//        complexParams.put(SongMetadata.ARTIST, reachDatabase.getArtistName());
+//        complexParams.put(SongMetadata.TITLE, reachDatabase.getDisplayName());
+//        complexParams.put(SongMetadata.DURATION, reachDatabase.getDuration() + "");
+//        complexParams.put(SongMetadata.SIZE, reachDatabase.getLength() + "");
+//        complexParams.put(SongMetadata.UPLOADER_ID, reachDatabase.getSenderId() + "");
+//        complexParams.put(SongMetadata.ALBUM, reachDatabase.getAlbumName());
+//
+//        try {
+//            UsageTracker.trackSong(simpleParams, complexParams, UsageTracker.DOWNLOAD_SONG);
+//        } catch (JSONException ignored) {
+//        }
+//
+//        if (SharedPrefUtils.isItFirstTimeDownload(sharedPreferences)) {
+//            final Intent foreGround = new Intent(activity, ReachActivity.class);
+//            foreGround.setAction(ReachActivity.OPEN_MANAGER_SONGS_DOWNLOADING);
+//            foreGround.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+//            activity.startActivity(foreGround);
+//            SharedPrefUtils.putFirstTimeDownload(sharedPreferences, false);
+//        } else {
+//            if (snackView != null) {
+//                final Snackbar snack_bar = Snackbar.make(snackView, "Song added to queue", Snackbar.LENGTH_INDEFINITE);
+//
+//                snack_bar.getView().setOnClickListener(v -> {
+//                    snack_bar.dismiss();
+//                });
+//                snack_bar.setAction("Open manager", v -> {
+//                    final Intent foreGround = new Intent(activity, ReachActivity.class);
+//                    foreGround.setAction(ReachActivity.OPEN_MANAGER_SONGS_DOWNLOADING);
+//                    foreGround.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+//                    activity.startActivity(foreGround);
+//                }).show();
+//            }
+//        }
+//    }
 
     @NonNull
     public static JsonElement get(JsonObject jsonObject, EnumHelper<String> enumHelper, String defaultValue) {

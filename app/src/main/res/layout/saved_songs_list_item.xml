@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <com.facebook.drawee.view.SimpleDraweeView
+        android:id="@+id/songThumbnail"
+        android:layout_width="125dp"
+        android:layout_height="75dp"
+        tools:background="#555555"
+        android:layout_margin="8dp"
+        />
+
+    <TextView
+        android:id="@+id/songName"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_toRightOf="@id/songThumbnail"
+        tools:text="Song Name"
+        android:layout_alignTop="@id/songThumbnail"
+        android:textColor="@color/primary_text"
+        android:layout_marginTop="4dp"
+        />
+
+    <TextView
+        android:id="@+id/senderName"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_toRightOf="@id/songThumbnail"
+        tools:text="Sender Name"
+        android:layout_below="@id/songName"
+        android:textColor="@color/secondary_text"
+        android:layout_marginTop="2dp"
+        />
+
+
+    <TextView
+        android:id="@+id/added"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_toRightOf="@id/songThumbnail"
+        tools:text="2 days ago"
+        android:textColor="@color/tertiary_text"
+        android:layout_below="@id/senderName"
+        android:layout_marginTop="2dp"
+        />
+
+
+
+
+</RelativeLayout>

@@ -92,7 +92,7 @@ class DownloadingItemHolder extends SingleItemViewHolder implements View.OnClick
                         return true;
                     case R.id.downloading_menu_1:
                         //pause
-                        pause_unpause(reachDatabase, context);
+                        //pause_unpause(reachDatabase, context);
                         return true;
                     default:
                         return false;
@@ -109,48 +109,48 @@ class DownloadingItemHolder extends SingleItemViewHolder implements View.OnClick
      * Pause / Unpause transaction
      */
 
-    private static boolean pause_unpause(ReachDatabase reachDatabase, Context context) {
-
-        final ContentResolver resolver = context.getContentResolver();
-        final Uri uri = Uri.parse(SongProvider.CONTENT_URI + "/" + reachDatabase.getId());
-        final boolean paused;
-
-        ///////////////
-
-        if (reachDatabase.getStatus() != ReachDatabase.Status.PAUSED_BY_USER) {
-
-            //pause operation (both upload/download case)
-            final ContentValues values = new ContentValues();
-            values.put(SongHelper.COLUMN_STATUS, ReachDatabase.Status.PAUSED_BY_USER.getValue());
-            paused = context.getContentResolver().update(
-                    uri,
-                    values,
-                    SongHelper.COLUMN_ID + " = ?",
-                    new String[]{reachDatabase.getId() + ""}) > 0;
-        } else if (reachDatabase.getOperationKind() == ReachDatabase.OperationKind.UPLOAD_OP) {
-
-            //un-paused upload operation
-            paused = context.getContentResolver().delete(
-                    uri,
-                    SongHelper.COLUMN_ID + " = ?",
-                    new String[]{reachDatabase.getId() + ""}) > 0;
-        } else {
-
-            //un-paused download operation
-            final Optional<Runnable> optional = reset(reachDatabase, resolver, context, uri);
-            if (optional.isPresent()) {
-                AsyncTask.SERIAL_EXECUTOR.execute(optional.get());
-                paused = false;
-            } else { //should never happen
-                Toast.makeText(context, "Failed", Toast.LENGTH_SHORT).show();
-                paused = true;
-            }
-            Log.i("Ayush", "Un-pausing");
-        }
-
-        Log.i("Ayush", "Pause status " + paused);
-        return paused;
-    }
+//    private static boolean pause_unpause(ReachDatabase reachDatabase, Context context) {
+//
+//        final ContentResolver resolver = context.getContentResolver();
+//        final Uri uri = Uri.parse(SongProvider.CONTENT_URI + "/" + reachDatabase.getId());
+//        final boolean paused;
+//
+//        ///////////////
+//
+//        if (reachDatabase.getStatus() != ReachDatabase.Status.PAUSED_BY_USER) {
+//
+//            //pause operation (both upload/download case)
+//            final ContentValues values = new ContentValues();
+//            values.put(SongHelper.COLUMN_STATUS, ReachDatabase.Status.PAUSED_BY_USER.getValue());
+//            paused = context.getContentResolver().update(
+//                    uri,
+//                    values,
+//                    SongHelper.COLUMN_ID + " = ?",
+//                    new String[]{reachDatabase.getId() + ""}) > 0;
+//        } else if (reachDatabase.getOperationKind() == ReachDatabase.OperationKind.UPLOAD_OP) {
+//
+//            //un-paused upload operation
+//            paused = context.getContentResolver().delete(
+//                    uri,
+//                    SongHelper.COLUMN_ID + " = ?",
+//                    new String[]{reachDatabase.getId() + ""}) > 0;
+//        } else {
+//
+//            //un-paused download operation
+//            final Optional<Runnable> optional = reset(reachDatabase, resolver, context, uri);
+//            if (optional.isPresent()) {
+//                AsyncTask.SERIAL_EXECUTOR.execute(optional.get());
+//                paused = false;
+//            } else { //should never happen
+//                Toast.makeText(context, "Failed", Toast.LENGTH_SHORT).show();
+//                paused = true;
+//            }
+//            Log.i("Ayush", "Un-pausing");
+//        }
+//
+//        Log.i("Ayush", "Pause status " + paused);
+//        return paused;
+//    }
 
     /**
      * Resets the transaction, reset download only. Updates memory cache and disk table both.
@@ -158,35 +158,35 @@ class DownloadingItemHolder extends SingleItemViewHolder implements View.OnClick
      *
      * @param reachDatabase the transaction to reset
      */
-    private static Optional<Runnable> reset(ReachDatabase reachDatabase,
-                                            ContentResolver resolver,
-                                            Context context,
-                                            Uri uri) {
-
-        reachDatabase.setLogicalClock((short) (reachDatabase.getLogicalClock() + 1));
-        reachDatabase.setStatus(ReachDatabase.Status.NOT_WORKING);
-
-        final ContentValues values = new ContentValues();
-        values.put(SongHelper.COLUMN_STATUS, ReachDatabase.Status.NOT_WORKING.getValue());
-        values.put(SongHelper.COLUMN_LOGICAL_CLOCK, reachDatabase.getLogicalClock());
-
-        final boolean updateSuccess = resolver.update(
-                uri,
-                values,
-                SongHelper.COLUMN_ID + " = ?",
-                new String[]{reachDatabase.getId() + ""}) > 0;
-
-        if (updateSuccess)
-            //send REQ gcm
-            return Optional.of((Runnable) MiscUtils.startDownloadOperation(
-                    context,
-                    reachDatabase,
-                    reachDatabase.getReceiverId(), //myID
-                    reachDatabase.getSenderId(),   //the uploaded
-                    reachDatabase.getId()));
-
-        return Optional.absent(); //update failed !
-    }
+//    private static Optional<Runnable> reset(ReachDatabase reachDatabase,
+//                                            ContentResolver resolver,
+//                                            Context context,
+//                                            Uri uri) {
+//
+//        reachDatabase.setLogicalClock((short) (reachDatabase.getLogicalClock() + 1));
+//        reachDatabase.setStatus(ReachDatabase.Status.NOT_WORKING);
+//
+//        final ContentValues values = new ContentValues();
+//        values.put(SongHelper.COLUMN_STATUS, ReachDatabase.Status.NOT_WORKING.getValue());
+//        values.put(SongHelper.COLUMN_LOGICAL_CLOCK, reachDatabase.getLogicalClock());
+//
+//        final boolean updateSuccess = resolver.update(
+//                uri,
+//                values,
+//                SongHelper.COLUMN_ID + " = ?",
+//                new String[]{reachDatabase.getId() + ""}) > 0;
+//
+//        if (updateSuccess)
+//            //send REQ gcm
+//            return Optional.of((Runnable) MiscUtils.startDownloadOperation(
+//                    context,
+//                    reachDatabase,
+//                    reachDatabase.getReceiverId(), //myID
+//                    reachDatabase.getSenderId(),   //the uploaded
+//                    reachDatabase.getId()));
+//
+//        return Optional.absent(); //update failed !
+//    }
 
     private static final DialogInterface.OnClickListener handleClick = (dialog, which) -> {
 

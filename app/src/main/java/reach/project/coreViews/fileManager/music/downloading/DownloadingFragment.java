@@ -86,7 +86,7 @@ public class DownloadingFragment extends Fragment implements HandOverMessage<Cur
                 " name = " + song.displayName
                 + " processed =  " + song.getProcessed()
         );
-        MiscUtils.playSong(song, getContext());
+        //MiscUtils.playSong(song, getContext());
     }
 
     @Override

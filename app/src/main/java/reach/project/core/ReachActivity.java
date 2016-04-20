@@ -66,6 +66,7 @@ import reach.project.coreViews.friends.ReachFriendsHelper;
 import reach.project.coreViews.invite.InviteActivity;
 import reach.project.coreViews.push.PushActivity;
 import reach.project.coreViews.push.PushContainer;
+import reach.project.coreViews.saved_songs.SavedSongsFragment;
 import reach.project.coreViews.yourProfile.ProfileFragment;
 import reach.project.coreViews.yourProfile.YourProfileFragment;
 import reach.project.music.ReachDatabase;
@@ -73,8 +74,8 @@ import reach.project.music.Song;
 import reach.project.music.SongHelper;
 import reach.project.music.SongProvider;
 import reach.project.notificationCentre.NotificationActivity;
-import reach.project.player.PlayerActivity;
-import reach.project.reachProcess.reachService.ProcessManager;
+//import reach.project.player.PlayerActivity;
+//import reach.project.reachProcess.reachService.ProcessManager;
 import reach.project.usageTracking.PostParams;
 import reach.project.usageTracking.UsageTracker;
 import reach.project.utils.FireOnce;
@@ -205,15 +206,15 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface, 
                 return true;
             }
 
-            case R.id.player_button:
-                ((ReachApplication) getApplication()).getTracker().send(new HitBuilders.EventBuilder()
-                        .setCategory("Player button on action bar clicked")
-                        .setAction("Username = " + SharedPrefUtils.getUserName(preferences))
-                        .setAction("User id = " + SharedPrefUtils.getServerId(preferences))
-                        .setValue(1)
-                        .build());
-                PlayerActivity.openActivity(this);
-                return true;
+//            case R.id.player_button:
+//                ((ReachApplication) getApplication()).getTracker().send(new HitBuilders.EventBuilder()
+//                        .setCategory("Player button on action bar clicked")
+//                        .setAction("Username = " + SharedPrefUtils.getUserName(preferences))
+//                        .setAction("User id = " + SharedPrefUtils.getServerId(preferences))
+//                        .setValue(1)
+//                        .build());
+//                PlayerActivity.openActivity(this);
+//                return true;
             case R.id.notif_button:
                 NotificationActivity.openActivity(this, NotificationActivity.OPEN_NOTIFICATIONS);
                 return true;
@@ -410,6 +411,15 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface, 
                 ))
                 , FriendsFragment.class, null);
 
+        mTabHost.addTab(mTabHost.newTabSpec("saved_songs").setIndicator(setUpTabView(
+                inflater,
+                "Saved",
+                android.R.drawable.ic_menu_save
+                ))
+                , SavedSongsFragment.class, null);
+
+
+
 
 
         /*mTabHost.addTab(
@@ -517,9 +527,9 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface, 
                                 .setLabel("YOUTUBE - EXPLORE")
                                 .setValue(1)
                                 .build());
-                        final Intent intent = new Intent(ReachActivity.this, ProcessManager.class);
+                        /*final Intent intent = new Intent(ReachActivity.this, ProcessManager.class);
                         intent.setAction(ProcessManager.ACTION_KILL);
-                        startService(intent);
+                        startService(intent);*/
                     }
 
                     @Override
@@ -599,9 +609,9 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface, 
                                 .setLabel("YOUTUBE - EXPLORE")
                                 .setValue(1)
                                 .build());
-                        final Intent intent = new Intent(ReachActivity.this, ProcessManager.class);
+                        /*final Intent intent = new Intent(ReachActivity.this, ProcessManager.class);
                         intent.setAction(ProcessManager.ACTION_KILL);
-                        startService(intent);
+                        startService(intent);*/
                     }
 
                     @Override
@@ -1061,68 +1071,68 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface, 
                 case ADD_PUSH_SONG:
                     Log.i("Ayush", "FOUND PUSH DATA");
 
-                    final String compressed = intent.getStringExtra("data");
-                    if (compressed == null)
-                        return;
-
-                    byte[] unCompressed;
-                    try {
-                        unCompressed = StringCompress.deCompressStringToBytes(compressed);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                        unCompressed = null;
-                    }
-
-                    if (unCompressed != null && unCompressed.length > 0) {
-
-                        PushContainer pushContainer;
-                        try {
-                            pushContainer = new Wire(PushContainer.class).parseFrom(unCompressed, PushContainer.class);
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                            pushContainer = null;
-                        }
-
-                        if (pushContainer != null && pushContainer.song != null && !pushContainer.song.isEmpty()) {
-
-                            for (Song song : pushContainer.song) {
-
-                                if (song == null)
-                                    continue;
-
-                                addSongToQueue(song.songId,
-                                        pushContainer.senderId,
-                                        song.size,
-                                        song.displayName,
-                                        song.actualName,
-                                        true,
-                                        pushContainer.userName,
-                                        ReachFriendsHelper.Status.ONLINE_REQUEST_GRANTED,
-                                        "0",
-                                        song.artist,
-                                        song.duration,
-                                        song.album,
-                                        song.genre);
-                            }
-                            FireOnce.refreshOperations(reference);
-                            if (mTabHost != null) {
-                                mTabHost.postDelayed(() -> {
-                                    if (mTabHost == null || isFinishing())
-                                        return;
-                                    mTabHost.setCurrentTab(1);
-                                    mTabHost.postDelayed(() -> {
-                                        final PagerFragment fragment = (PagerFragment) getSupportFragmentManager()
-                                                .findFragmentByTag("manager_page");
-                                        if (fragment == null)
-                                            return;
-                                        fragment.setItem(0);
-                                        fragment.setInnerItem(0, 1);
-                                    }, 500L);
-                                }, 1000L);
-                            }
-                        }
-                    }
-                    break;
+//                    final String compressed = intent.getStringExtra("data");
+//                    if (compressed == null)
+//                        return;
+//
+//                    byte[] unCompressed;
+//                    try {
+//                        unCompressed = StringCompress.deCompressStringToBytes(compressed);
+//                    } catch (IOException e) {
+//                        e.printStackTrace();
+//                        unCompressed = null;
+//                    }
+//
+//                    if (unCompressed != null && unCompressed.length > 0) {
+//
+//                        PushContainer pushContainer;
+//                        try {
+//                            pushContainer = new Wire(PushContainer.class).parseFrom(unCompressed, PushContainer.class);
+//                        } catch (IOException e) {
+//                            e.printStackTrace();
+//                            pushContainer = null;
+//                        }
+//
+//                        if (pushContainer != null && pushContainer.song != null && !pushContainer.song.isEmpty()) {
+//
+//                            for (Song song : pushContainer.song) {
+//
+//                                if (song == null)
+//                                    continue;
+//
+//                                addSongToQueue(song.songId,
+//                                        pushContainer.senderId,
+//                                        song.size,
+//                                        song.displayName,
+//                                        song.actualName,
+//                                        true,
+//                                        pushContainer.userName,
+//                                        ReachFriendsHelper.Status.ONLINE_REQUEST_GRANTED,
+//                                        "0",
+//                                        song.artist,
+//                                        song.duration,
+//                                        song.album,
+//                                        song.genre);
+//                            }
+//                            FireOnce.refreshOperations(reference);
+//                            if (mTabHost != null) {
+//                                mTabHost.postDelayed(() -> {
+//                                    if (mTabHost == null || isFinishing())
+//                                        return;
+//                                    mTabHost.setCurrentTab(1);
+//                                    mTabHost.postDelayed(() -> {
+//                                        final PagerFragment fragment = (PagerFragment) getSupportFragmentManager()
+//                                                .findFragmentByTag("manager_page");
+//                                        if (fragment == null)
+//                                            return;
+//                                        fragment.setItem(0);
+//                                        fragment.setInnerItem(0, 1);
+//                                    }, 500L);
+//                                }, 1000L);
+//                            }
+//                        }
+//                    }
+//                    break;
                 case OPEN_MANAGER_APPS:
                     if (mTabHost != null) {
                         mTabHost.postDelayed(() -> {
@@ -1230,151 +1240,151 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface, 
         return menuClickListener;
     }
 
-    public void addSongToQueue(long songId, long senderId, long size,
-                               String displayName, String actualName,
-                               boolean multiple, String userName, ReachFriendsHelper.Status onlineStatus,
-                               String networkType, String artistName, long duration,
-                               String albumName, String genre) {
-
-        final ContentResolver contentResolver = getContentResolver();
-        if (contentResolver == null)
-            return;
-
-        /**
-         * DISPLAY_NAME, ACTUAL_NAME, SIZE & DURATION all can not be same, effectively its a hash
-         */
-
-        //TODO done meta 1
-        final Cursor cursor;
-        if (multiple)
-            cursor = contentResolver.query(
-                    SongProvider.CONTENT_URI,
-                    new String[]{SongHelper.COLUMN_ID},
-                    "( "+SongHelper.COLUMN_DISPLAY_NAME + " = ? and " +
-                            SongHelper.COLUMN_ACTUAL_NAME + " = ? and " +
-                            SongHelper.COLUMN_SIZE + " = ? and " +
-                            SongHelper.COLUMN_DURATION + " = ? ) and " + SongHelper.COLUMN_META_HASH
-                    + " != ?"
-                    ,
-                    new String[]{displayName, actualName, size + "", duration + "", StaticData.NULL_STRING},
-                    null);
-        else
-            //this cursor can be used to play if entry exists
-            //TODO done meta 1
-            cursor = contentResolver.query(
-                    SongProvider.CONTENT_URI,
-                    new String[]{
-
-                            SongHelper.COLUMN_ID, //0
-                            SongHelper.COLUMN_PROCESSED, //1
-                            SongHelper.COLUMN_PATH, //2
-
-                            SongHelper.COLUMN_IS_LIKED, //3
-                            SongHelper.COLUMN_SENDER_ID, //4
-                            SongHelper.COLUMN_RECEIVER_ID, //5
-                            SongHelper.COLUMN_SIZE, //6
-                            SongHelper.COLUMN_META_HASH //7
-
-                    },
-
-                    /*SongHelper.COLUMN_DISPLAY_NAME + " = ? and " +
-                            SongHelper.COLUMN_ACTUAL_NAME + " = ? and " +
-                            SongHelper.COLUMN_SIZE + " = ? and " +
-                            SongHelper.COLUMN_DURATION + " = ?"*/
-                    "( "+SongHelper.COLUMN_DISPLAY_NAME + " = ? and " +
-                            SongHelper.COLUMN_ACTUAL_NAME + " = ? and " +
-                            SongHelper.COLUMN_SIZE + " = ? and " +
-                            SongHelper.COLUMN_DURATION + " = ? ) and " + SongHelper.COLUMN_META_HASH
-                            + " != ?"
-                    ,
-                    new String[]{displayName, actualName, size + "", duration + "", StaticData.NULL_STRING},
-                    null);
-
-        if (cursor != null) {
-
-            if (cursor.moveToFirst()) {
-
-                //song already found
-                if (!multiple) {
-
-                    //if not multiple addition, play the song
-                    final boolean liked;
-                    final String temp = cursor.getString(3);
-                    liked = !TextUtils.isEmpty(temp) && temp.equals("1");
-
-                    final Song song = new Song.Builder()
-                            .actualName(actualName)
-                            .album(albumName)
-                            .artist(artistName)
-                            .dateAdded(0L)
-                            .displayName(displayName)
-                            .duration(duration)
-                            .fileHash(cursor.getString(7))
-                            .path(cursor.getString(2))
-                            .isLiked(liked)
-                            .build();
-
-                    song.setProcessed(cursor.getLong(1));
-                    song.setType(Song.Type.DOWNLOADED);
-                    song.setSenderId(senderId);
-
-                    /*final MusicData musicData = new MusicData(
-                            cursor.getLong(0), //id
-                            cursor.getString(7), //meta-hash
-                            size,
-                            senderId,
-                            cursor.getLong(1),
-                            0,
-                            cursor.getString(2),
-                            displayName,
-                            artistName,
-                            "",
-                            liked,
-                            duration,
-                            MusicData.Type.DOWNLOADED);*/
-                    MiscUtils.playSong(song, this);
-                }
-                //in both cases close and continue
-                cursor.close();
-                return;
-            }
-            cursor.close();
-        }
-
-        //new song
-
-        final ReachDatabase reachDatabase = new ReachDatabase.Builder()
-                .setId(-1)
-                .setSongId(songId)
-                .setReceiverId(serverId)
-                .setSenderId(senderId)
-                .setOnlineStatus(ReachFriendsHelper.Status.OFFLINE_REQUEST_GRANTED)
-                .setOperationKind(ReachDatabase.OperationKind.DOWNLOAD_OP)
-                .setUserName(userName)
-                .setArtistName(artistName)
-                .setDisplayName(displayName)
-                .setActualName(actualName)
-                .setLength(size)
-                .setDateAdded(DateTime.now())
-                .setUniqueId(ThreadLocalRandom.current().nextLong(Long.MAX_VALUE))
-                .setDuration(duration)
-                .setAlbumName(albumName)
-                .setAlbumArtData(new byte[0])
-                .setGenre(genre)
-                .setLiked(false)
-                .setOnlineStatus(onlineStatus)
-                .setVisibility(true)
-                .setPath("hello_world")
-                .setProcessed(0)
-                .setLogicalClock((short) 0)
-                .setStatus(ReachDatabase.Status.NOT_WORKING).build();
-
-        reachDatabase.setLastActive(0);
-        reachDatabase.setReference(0);
-
-        //We call bulk starter always
-        MiscUtils.startDownload(reachDatabase, this, null, "PUSH");
-    }
+//    public void addSongToQueue(long songId, long senderId, long size,
+//                               String displayName, String actualName,
+//                               boolean multiple, String userName, ReachFriendsHelper.Status onlineStatus,
+//                               String networkType, String artistName, long duration,
+//                               String albumName, String genre) {
+//
+//        final ContentResolver contentResolver = getContentResolver();
+//        if (contentResolver == null)
+//            return;
+//
+//        /**
+//         * DISPLAY_NAME, ACTUAL_NAME, SIZE & DURATION all can not be same, effectively its a hash
+//         */
+//
+//        //TODO done meta 1
+//        final Cursor cursor;
+//        if (multiple)
+//            cursor = contentResolver.query(
+//                    SongProvider.CONTENT_URI,
+//                    new String[]{SongHelper.COLUMN_ID},
+//                    "( "+SongHelper.COLUMN_DISPLAY_NAME + " = ? and " +
+//                            SongHelper.COLUMN_ACTUAL_NAME + " = ? and " +
+//                            SongHelper.COLUMN_SIZE + " = ? and " +
+//                            SongHelper.COLUMN_DURATION + " = ? ) and " + SongHelper.COLUMN_META_HASH
+//                    + " != ?"
+//                    ,
+//                    new String[]{displayName, actualName, size + "", duration + "", StaticData.NULL_STRING},
+//                    null);
+//        else
+//            //this cursor can be used to play if entry exists
+//            //TODO done meta 1
+//            cursor = contentResolver.query(
+//                    SongProvider.CONTENT_URI,
+//                    new String[]{
+//
+//                            SongHelper.COLUMN_ID, //0
+//                            SongHelper.COLUMN_PROCESSED, //1
+//                            SongHelper.COLUMN_PATH, //2
+//
+//                            SongHelper.COLUMN_IS_LIKED, //3
+//                            SongHelper.COLUMN_SENDER_ID, //4
+//                            SongHelper.COLUMN_RECEIVER_ID, //5
+//                            SongHelper.COLUMN_SIZE, //6
+//                            SongHelper.COLUMN_META_HASH //7
+//
+//                    },
+//
+//                    /*SongHelper.COLUMN_DISPLAY_NAME + " = ? and " +
+//                            SongHelper.COLUMN_ACTUAL_NAME + " = ? and " +
+//                            SongHelper.COLUMN_SIZE + " = ? and " +
+//                            SongHelper.COLUMN_DURATION + " = ?"*/
+//                    "( "+SongHelper.COLUMN_DISPLAY_NAME + " = ? and " +
+//                            SongHelper.COLUMN_ACTUAL_NAME + " = ? and " +
+//                            SongHelper.COLUMN_SIZE + " = ? and " +
+//                            SongHelper.COLUMN_DURATION + " = ? ) and " + SongHelper.COLUMN_META_HASH
+//                            + " != ?"
+//                    ,
+//                    new String[]{displayName, actualName, size + "", duration + "", StaticData.NULL_STRING},
+//                    null);
+//
+//        if (cursor != null) {
+//
+//            if (cursor.moveToFirst()) {
+//
+//                //song already found
+//                if (!multiple) {
+//
+//                    //if not multiple addition, play the song
+//                    final boolean liked;
+//                    final String temp = cursor.getString(3);
+//                    liked = !TextUtils.isEmpty(temp) && temp.equals("1");
+//
+//                    final Song song = new Song.Builder()
+//                            .actualName(actualName)
+//                            .album(albumName)
+//                            .artist(artistName)
+//                            .dateAdded(0L)
+//                            .displayName(displayName)
+//                            .duration(duration)
+//                            .fileHash(cursor.getString(7))
+//                            .path(cursor.getString(2))
+//                            .isLiked(liked)
+//                            .build();
+//
+//                    song.setProcessed(cursor.getLong(1));
+//                    song.setType(Song.Type.DOWNLOADED);
+//                    song.setSenderId(senderId);
+//
+//                    /*final MusicData musicData = new MusicData(
+//                            cursor.getLong(0), //id
+//                            cursor.getString(7), //meta-hash
+//                            size,
+//                            senderId,
+//                            cursor.getLong(1),
+//                            0,
+//                            cursor.getString(2),
+//                            displayName,
+//                            artistName,
+//                            "",
+//                            liked,
+//                            duration,
+//                            MusicData.Type.DOWNLOADED);*/
+//                    MiscUtils.playSong(song, this);
+//                }
+//                //in both cases close and continue
+//                cursor.close();
+//                return;
+//            }
+//            cursor.close();
+//        }
+//
+//        //new song
+//
+//        final ReachDatabase reachDatabase = new ReachDatabase.Builder()
+//                .setId(-1)
+//                .setSongId(songId)
+//                .setReceiverId(serverId)
+//                .setSenderId(senderId)
+//                .setOnlineStatus(ReachFriendsHelper.Status.OFFLINE_REQUEST_GRANTED)
+//                .setOperationKind(ReachDatabase.OperationKind.DOWNLOAD_OP)
+//                .setUserName(userName)
+//                .setArtistName(artistName)
+//                .setDisplayName(displayName)
+//                .setActualName(actualName)
+//                .setLength(size)
+//                .setDateAdded(DateTime.now())
+//                .setUniqueId(ThreadLocalRandom.current().nextLong(Long.MAX_VALUE))
+//                .setDuration(duration)
+//                .setAlbumName(albumName)
+//                .setAlbumArtData(new byte[0])
+//                .setGenre(genre)
+//                .setLiked(false)
+//                .setOnlineStatus(onlineStatus)
+//                .setVisibility(true)
+//                .setPath("hello_world")
+//                .setProcessed(0)
+//                .setLogicalClock((short) 0)
+//                .setStatus(ReachDatabase.Status.NOT_WORKING).build();
+//
+//        reachDatabase.setLastActive(0);
+//        reachDatabase.setReference(0);
+//
+//        //We call bulk starter always
+//        MiscUtils.startDownload(reachDatabase, this, null, "PUSH");
+//    }
 
     @Override
     public void showSwipeCoach() {
