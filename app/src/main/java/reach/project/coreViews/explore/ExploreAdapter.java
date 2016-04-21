@@ -77,7 +77,7 @@ class ExploreAdapter extends PagerAdapter implements View.OnClickListener {
             final TextView title = (TextView) layout.findViewById(R.id.title);
             final TextView subTitle = (TextView) layout.findViewById(R.id.subtitle);
             final TextView userHandle = (TextView) layout.findViewById(R.id.userHandle);
-            //final ImageView saveBtn = (ImageView) layout.findViewById(R.id.saveBtn);
+            final ImageView saveBtn = (ImageView) layout.findViewById(R.id.saveSong);
             final SimpleDraweeView image = (SimpleDraweeView) layout.findViewById(R.id.image);
             final SimpleDraweeView userImage = (SimpleDraweeView) layout.findViewById(R.id.userImage);
             final ImageView fb_share_btn = (ImageView) layout.findViewById(R.id.fb_share_btn);
@@ -90,6 +90,7 @@ class ExploreAdapter extends PagerAdapter implements View.OnClickListener {
                     fb_share_btn.setOnClickListener(this);
                     userHandle.setOnClickListener(this);
                     userImage.setOnClickListener(this);
+                    saveBtn.setOnClickListener(this);
                     final YouTubeDataModel ytbData = new YouTubeDataModel();
 
                     final JsonElement ytElement = MiscUtils.get(exploreJSON, ExploreJSON.YOUTUBE_ID);
@@ -159,15 +160,16 @@ class ExploreAdapter extends PagerAdapter implements View.OnClickListener {
                             100,
                             100));
 
-                    SavedSongsDataModel savedSongsDataModel = new SavedSongsDataModel.Builder()
+                    SavedSongsDataModel.Builder savedSongsDataModelBuilder = new SavedSongsDataModel.Builder()
                             .withYoutube_Id(ytID)
                             .withDate_Added(System.currentTimeMillis())
                             .withSenderId(userId)
-                            .withType(2)
                             .withArtistAlbumName(subtitle)
-                            .withSongName(musicTitle).build();
+                            .withSongName(musicTitle);
 
-                    downBtn.setTag(savedSongsDataModel);
+
+                    downBtn.setTag(savedSongsDataModelBuilder.withType(2).build());
+                    saveBtn.setTag(savedSongsDataModelBuilder.withType(1).build());
 
 
                     //final String albumArt = MiscUtils.get(musicViewInfo, MusicViewInfo.LARGE_IMAGE_URL, "").getAsString();

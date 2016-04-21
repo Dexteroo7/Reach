@@ -414,7 +414,7 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface, 
         mTabHost.addTab(mTabHost.newTabSpec("saved_songs").setIndicator(setUpTabView(
                 inflater,
                 "Saved",
-                android.R.drawable.ic_menu_save
+                R.drawable.saved_tab_selector
                 ))
                 , SavedSongsFragment.class, null);
 

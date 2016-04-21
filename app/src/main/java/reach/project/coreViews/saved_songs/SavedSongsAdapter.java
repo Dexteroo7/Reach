@@ -6,12 +6,14 @@ import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.util.Pair;
 import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.facebook.drawee.backends.pipeline.Fresco;
@@ -33,6 +35,8 @@ import reach.project.music.SongCursorHelper;
 import reach.project.utils.AlbumArtUri;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.ThreadLocalRandom;
+import reach.project.utils.TimeAgo;
+import reach.project.utils.YouTubeDataModel;
 import reach.project.utils.viewHelpers.CustomGridLayoutManager;
 import reach.project.utils.viewHelpers.HandOverMessage;
 import reach.project.utils.viewHelpers.MoreListHolder;
@@ -40,17 +44,20 @@ import reach.project.utils.viewHelpers.MoreListHolder;
 /**
  * Created by gauravsobti on 20/04/16.
  */
-class SavedSongsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implements Closeable {
+class SavedSongsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implements Closeable, View.OnClickListener {
 
     private static final String TAG = SavedSongsAdapter.class.getSimpleName();
 
     private static final byte VIEW_TYPE_HISTORY = 0;
+    private static final byte VIEW_TYPE_SAVED_SONG = 1;
+    private static final byte VIEW_TYPE_SAVED_TEXT = 2;
+    private static final byte VIEW_TYPE_HISTORY_TEXT = 3;
     //private final HandOverMessage<Cursor> handOverCursor;
     private final ResizeOptions resizeOptions = new ResizeOptions(150, 150);
-    private final HandOverMessage<Cursor> handOverCursor;
+    private final HandOverMessage<Object> handOverCursor;
 
 
-    public SavedSongsAdapter(HandOverMessage<Cursor> handOverCursor) {
+    public SavedSongsAdapter(HandOverMessage<Object> handOverCursor) {
         this.handOverCursor = handOverCursor;
         setHasStableIds(true);
     }
@@ -90,7 +97,7 @@ class SavedSongsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> im
             case VIEW_TYPE_HISTORY: {
 
                 return new SavedSongsViewHolder(LayoutInflater.from(parent.getContext())
-                        .inflate(R.layout.saved_songs_list_item, parent, false),handOverCursor);
+                        .inflate(R.layout.saved_songs_list_item, parent, false));
             }
 
             default:
@@ -109,8 +116,9 @@ class SavedSongsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> im
             final Cursor cursorExactType = (Cursor) saved_song;
             final SavedSongsViewHolder savedSongHolder = (SavedSongsViewHolder) holder;
 
+            final String youtube_id = cursorExactType.getString(0);
 
-            final String albumArt = "https://i.ytimg.com/vi/" + cursorExactType.getString(0) + "/hqdefault.jpg";
+            final String albumArt = MiscUtils.getYoutubeThumbnailUrl(youtube_id);
             if (!TextUtils.isEmpty(albumArt)) {
                 savedSongHolder.songThumbnail.setController(Fresco.newDraweeControllerBuilder()
                         .setOldController(savedSongHolder.songThumbnail.getController())
@@ -119,8 +127,28 @@ class SavedSongsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> im
                         .build());
             }
             savedSongHolder.songName.setText(cursorExactType.getString(5));
-            savedSongHolder.senderName.setText(cursorExactType.getString(2));
-            savedSongHolder.added.setText(Long.toString(cursorExactType.getLong(1)));
+            final String sender_name = cursorExactType.getString(2);
+            Log.d(TAG, "onBindViewHolder: senderName = " + sender_name);
+            savedSongHolder.senderName.setText(sender_name);
+            final long milliseconds = cursorExactType.getLong(1);
+            savedSongHolder.added.setText(TimeAgo.toDuration(System.currentTimeMillis() - milliseconds));
+            savedSongHolder.itemView.setTag(new Pair<>(position,0));
+            savedSongHolder.remove.setTag(new Pair<>(position,1));
+
+            savedSongHolder.itemView.setOnClickListener(this);
+            savedSongHolder.remove.setOnClickListener(this);
+            savedSongHolder.senderName.setVisibility(View.GONE);
+
+            /*final int type = cursorExactType.getInt(4);
+            switch (type) {
+                case 1:
+                    savedSongHolder.senderName.setText("Saved");
+                    break;
+
+                case 2:
+                    savedSongHolder.senderName.setText("History");
+                    break;
+            }*/
 
 
 
@@ -136,17 +164,20 @@ class SavedSongsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> im
      */
     @Nonnull
     private Object getItem(int position) {
+        /*if(mySavedSongsCursor!=null || !mySavedSongsCursor.isClosed()){
+            if(pos)
+        }*/
 
-            if (mySavedSongsCursor == null || mySavedSongsCursor.isClosed() || !mySavedSongsCursor.moveToPosition(position))
-                throw new IllegalStateException("Resource cursor has been corrupted");
-            return mySavedSongsCursor;
+        if (mySavedSongsCursor == null || mySavedSongsCursor.isClosed() || !mySavedSongsCursor.moveToPosition(position))
+            throw new IllegalStateException("Resource cursor has been corrupted, position = " + position);
+        return mySavedSongsCursor;
 
     }
 
     @Override
     public int getItemViewType(int position) {
 
-            return VIEW_TYPE_HISTORY;
+        return VIEW_TYPE_HISTORY;
 
     }
 
@@ -154,7 +185,7 @@ class SavedSongsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> im
     public long getItemId(int position) {
 
         final Object item = getItem(position);
-            return ((Cursor) item).getLong(8);
+        return ((Cursor) item).getLong(8);
 
     }
 
@@ -162,31 +193,37 @@ class SavedSongsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> im
     public int getItemCount() {
 
         if (mySavedSongsCursor != null && !mySavedSongsCursor.isClosed())
-            return mySavedSongsCursor.getCount() + 1;//adjust for recent list
+            return mySavedSongsCursor.getCount();//adjust for recent list
         return 0;
+    }
+
+    @Override
+    public void onClick(View v) {
+        Pair data = (Pair) v.getTag();
+
+        handOverCursor.handOverMessage(new Pair<>(getItem((int)data.first), data.second));
     }
 
     static class SavedSongsViewHolder extends RecyclerView.ViewHolder {
 
-
-        private final HandOverMessage<Cursor> handOverCursor;
         private SimpleDraweeView songThumbnail;
         private TextView songName;
         private TextView senderName;
         private TextView added;
+        private ImageView remove;
 
 
-        public SavedSongsViewHolder(View itemView, HandOverMessage<Cursor> handOverCursor) {
+        public SavedSongsViewHolder(View itemView) {
             super(itemView);
-            songThumbnail = (SimpleDraweeView) itemView.findViewById( R.id.songThumbnail );
-            songName = (TextView) itemView.findViewById( R.id.songName );
-            senderName = (TextView) itemView.findViewById( R.id.senderName );
-            added = (TextView) itemView.findViewById( R.id.added );
-            this.handOverCursor = handOverCursor;
-            itemView.setOnClickListener(this);
+            songThumbnail = (SimpleDraweeView) itemView.findViewById(R.id.songThumbnail);
+            songName = (TextView) itemView.findViewById(R.id.songName);
+            senderName = (TextView) itemView.findViewById(R.id.senderName);
+            added = (TextView) itemView.findViewById(R.id.added);
+            remove = (ImageView) itemView.findViewById(R.id.remove_image);
         }
 
 
     }
+
 
 }

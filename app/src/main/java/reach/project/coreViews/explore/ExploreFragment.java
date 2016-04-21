@@ -898,7 +898,11 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
             }
         } else if (object instanceof SavedSongsDataModel) {
             final SavedSongsDataModel data = (SavedSongsDataModel) object;
-            mListener.showYTVideo(data.getYoutube_id());
+            //Type: 1 = Saved, 2 = History
+            if(data.getType() == 2) {
+                mListener.showYTVideo(data.getYoutube_id());
+                return;
+            }
             new SaveSongInDatabaseTask(getActivity(),data).execute();
 
 

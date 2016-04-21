@@ -1,37 +1,62 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    xmlns:tools="http://schemas.android.com/tools">
+    android:layout_height="wrap_content"
+    xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    >
 
     <com.facebook.drawee.view.SimpleDraweeView
         android:id="@+id/songThumbnail"
         android:layout_width="125dp"
         android:layout_height="75dp"
         tools:background="#555555"
-        android:layout_margin="8dp"
+        android:layout_marginLeft="16dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="8dp"
+        android:layout_marginRight="8dp"
         />
+
+    <ImageView
+        android:id="@+id/remove_image"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:layout_centerVertical="true"
+        app:srcCompat="@drawable/remove_button_selector"
+        android:layout_marginRight="12dp"
+        />
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_toRightOf="@id/songThumbnail"
+        android:layout_alignTop="@id/songThumbnail"
+        android:layout_alignBottom="@id/songThumbnail"
+        android:gravity="center_vertical"
+        android:layout_toLeftOf="@id/remove_image"
+        >
 
     <TextView
         android:id="@+id/songName"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_toRightOf="@id/songThumbnail"
         tools:text="Song Name"
-        android:layout_alignTop="@id/songThumbnail"
+        android:background="@null"
         android:textColor="@color/primary_text"
         android:layout_marginTop="4dp"
+        android:maxLines="2"
         />
 
     <TextView
         android:id="@+id/senderName"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_toRightOf="@id/songThumbnail"
         tools:text="Sender Name"
-        android:layout_below="@id/songName"
         android:textColor="@color/secondary_text"
         android:layout_marginTop="2dp"
+        android:background="@null"
         />
 
 
@@ -44,7 +69,12 @@
         android:textColor="@color/tertiary_text"
         android:layout_below="@id/senderName"
         android:layout_marginTop="2dp"
+        android:background="@null"
         />
+
+    </LinearLayout>
+
+
 
 
 

@@ -495,8 +495,11 @@ public enum MiscUtils {
 
     // For generating "%searchfilter%" for finding rows in database like that name
     public static String getFilterLikeString(String filter){
-
-        return StaticData.PERCENTAGE_STRING + filter + StaticData.PERCENTAGE_STRING;
+        StringBuilder sb = new StringBuilder();
+        sb.append(StaticData.PERCENTAGE_STRING);
+        sb.append(filter);
+        sb.append(StaticData.PERCENTAGE_STRING);
+        return sb.toString();
 
     }
 
@@ -1716,6 +1719,16 @@ public enum MiscUtils {
         }
 
         return byteArrayOutputStream.toByteArray();
+    }
+
+    public static String getYoutubeThumbnailUrl (String youtube_id){
+
+        StringBuilder sb = new StringBuilder();
+        sb.append(StaticData.youtube_thumbnail_prefix);
+        sb.append(youtube_id);
+        sb.append(StaticData.youtube_thumbnail_postfix);
+        return sb.toString();
+
     }
 
 //    final HttpTransport transport = new NetHttpTransport();

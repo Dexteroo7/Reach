@@ -3,8 +3,10 @@ package reach.project.coreViews.saved_songs;
 import android.app.Activity;
 import android.content.ContentValues;
 import android.content.Context;
+import android.database.Cursor;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.util.Log;
 import android.widget.Toast;
 
 import java.lang.ref.WeakReference;
@@ -16,7 +18,7 @@ public class SaveSongInDatabaseTask extends AsyncTask<Void, Void, Boolean> {
 
     private final SavedSongsDataModel data;
     private final WeakReference<Context> contextWeakReference;
-    //Context context;
+    private static final String TAG = SaveSongInDatabaseTask.class.getSimpleName();
 
     public SaveSongInDatabaseTask(Context context, SavedSongsDataModel data) {
         contextWeakReference = new WeakReference<Context>(context);
@@ -30,6 +32,26 @@ public class SaveSongInDatabaseTask extends AsyncTask<Void, Void, Boolean> {
         final Context context = contextWeakReference.get();
         if(context == null){
             return false;
+        }
+        final Cursor cursor = context.getContentResolver().query(SavedSongsContract.SavedSongsEntry.CONTENT_URI,
+                SavedSongsContract.SavedSongsEntry.projection,
+                SavedSongsContract.SavedSongsEntry.YOUTUBE_ID + " LIKE ? ",
+                new String[]{data.getYoutube_id()},
+                null
+                );
+        if(cursor !=null || !cursor.isClosed()){
+            Log.d(TAG, "Query of - if the song to be saved already exists returns null");
+            if (cursor.getCount() > 0 ){
+                Log.d(TAG, cursor.getCount() + " instance of song to be saved already exists");
+                //TODO: Check for the condition when contentvalues data is null
+                context.getContentResolver().update(
+                        SavedSongsContract.SavedSongsEntry.CONTENT_URI,
+                        getContentValuesData(),
+                        SavedSongsContract.SavedSongsEntry.YOUTUBE_ID + " LIKE ? ",
+                        new String[]{data.getYoutube_id()}
+                );
+                return true;
+            }
         }
 
         final ContentValues cv = getContentValuesData();
@@ -48,11 +70,11 @@ public class SaveSongInDatabaseTask extends AsyncTask<Void, Void, Boolean> {
     protected void onPostExecute(Boolean successful) {
         if(successful){
             if(contextWeakReference.get()!=null)
-            Toast.makeText(contextWeakReference.get(), "Song saved", Toast.LENGTH_SHORT).show();
+            Toast.makeText(contextWeakReference.get().getApplicationContext(), "Song saved", Toast.LENGTH_SHORT).show();
         }
         else{
             if(contextWeakReference.get()!=null)
-                Toast.makeText(contextWeakReference.get(), "Song couldn't be saved", Toast.LENGTH_SHORT).show();
+                Toast.makeText(contextWeakReference.get().getApplicationContext(), "Song couldn't be saved", Toast.LENGTH_SHORT).show();
         }
         super.onPostExecute(successful);
     }
