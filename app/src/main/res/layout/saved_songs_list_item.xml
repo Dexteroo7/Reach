@@ -24,7 +24,8 @@
         android:layout_alignParentRight="true"
         android:layout_centerVertical="true"
         app:srcCompat="@drawable/remove_button_selector"
-        android:layout_marginRight="12dp"
+        android:layout_marginRight="8dp"
+        android:padding="4dp"
         />
 
     <LinearLayout

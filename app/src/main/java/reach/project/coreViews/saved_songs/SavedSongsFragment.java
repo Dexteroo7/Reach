@@ -88,7 +88,7 @@ public class SavedSongsFragment extends Fragment implements LoaderManager.Loader
                     return true;
                 }
 
-                final String constraint = MiscUtils.getFilterLikeString(newText.toLowerCase());
+                final String constraint = MiscUtils.getFilterLikeString(newText);
                 bundle.putString(StaticData.FILTER_STRING_KEY,constraint );
                 getLoaderManager().restartLoader(SAVED_SONGS_LOADER, bundle, SavedSongsFragment.this);
                 return true;
@@ -148,8 +148,10 @@ public class SavedSongsFragment extends Fragment implements LoaderManager.Loader
             Toast.makeText(getActivity().getApplicationContext(), "No Saved Songs", Toast.LENGTH_SHORT).show();
             showEmptyView();
         }
+        else {
 
-        hideEmptyView();
+            hideEmptyView();
+        }
 
         Log.d(TAG, "onLoadFinished: Saved Songs Count = " + data.getCount());
 
@@ -176,8 +178,11 @@ public class SavedSongsFragment extends Fragment implements LoaderManager.Loader
 
     private void showEmptyView() {
         Log.d(TAG, "showEmptyView: Inside show emptyView");
-        if(emptyView == null || mSavedSongsList == null)
+        if(emptyView == null || mSavedSongsList == null) {
+            Log.d(TAG, "showEmptyView: view is null");
             return;
+        }
+        Log.d(TAG, "showing EmptyView");
         emptyView.setVisibility(View.VISIBLE);
         mSavedSongsList.setVisibility(View.GONE);
     }

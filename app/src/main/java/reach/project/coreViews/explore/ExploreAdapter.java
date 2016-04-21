@@ -165,7 +165,8 @@ class ExploreAdapter extends PagerAdapter implements View.OnClickListener {
                             .withDate_Added(System.currentTimeMillis())
                             .withSenderId(userId)
                             .withArtistAlbumName(subtitle)
-                            .withSongName(musicTitle);
+                            .withSongName(musicTitle)
+                            .withDisplayName(musicTitle);
 
 
                     downBtn.setTag(savedSongsDataModelBuilder.withType(2).build());
