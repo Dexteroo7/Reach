@@ -9,11 +9,11 @@ android {
     defaultConfig {
         applicationId "reach.project"
         targetSdkVersion 23
-        minSdkVersion 15
-        versionCode 100
-        versionName "1.2"
+        minSdkVersion 19
+        versionCode 102
+        versionName "1.2.2"
         multiDexEnabled true
-        vectorDrawables.useSupportLibrary = true
+        /*vectorDrawables.useSupportLibrary = true*/
     }
 
     compileOptions {

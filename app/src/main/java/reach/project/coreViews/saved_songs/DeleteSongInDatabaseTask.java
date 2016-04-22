@@ -49,7 +49,8 @@ public class DeleteSongInDatabaseTask extends AsyncTask<Void, Void, Boolean> {
     protected void onPostExecute(Boolean successful) {
         if(successful){
             if(contextWeakReference.get()!=null)
-                Toast.makeText(contextWeakReference.get(), "Song removed from " + type , Toast.LENGTH_SHORT).show();
+            /*    Toast.makeText(contextWeakReference.get(), "Song removed from " + type , Toast.LENGTH_SHORT).show();*/
+            Toast.makeText(contextWeakReference.get(), "Song removed" , Toast.LENGTH_SHORT).show();
         }
         else{
             if(contextWeakReference.get()!=null)

@@ -163,7 +163,7 @@ public class MoreListHolder extends RecyclerView.ViewHolder implements View.OnCl
         //recyclerView.setPadding(0, MiscUtils.dpToPx(10), 0, 0);
         if(linearTag) {
             recyclerView.setLayoutManager(new LinearLayoutManager(context));
-            recyclerView.addItemDecoration(new DividerItemDecoration(context));
+            //recyclerView.addItemDecoration(new DividerItemDecoration(context));
         }
         else {
             recyclerView.setLayoutManager(new GridLayoutManager(context,2));

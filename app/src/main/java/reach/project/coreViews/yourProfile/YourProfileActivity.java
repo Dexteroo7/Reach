@@ -42,7 +42,6 @@ import reach.project.core.ReachApplication;
 import reach.project.core.StaticData;
 import reach.project.coreViews.friends.ReachFriendsHelper;
 import reach.project.coreViews.friends.ReachFriendsProvider;
-import reach.project.coreViews.yourProfile.apps.YourProfileAppFragment;
 import reach.project.coreViews.yourProfile.music.YourProfileMusicFragment;
 import reach.project.notificationCentre.NotificationActivity;
 //import reach.project.player.PlayerActivity;

@@ -4,8 +4,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:card_view="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    tools:context="reach.project.player.PlayerActivity">
+    android:layout_height="match_parent">
     <include
         app:layout_heightPercent="40%"
         android:layout_width="match_parent"

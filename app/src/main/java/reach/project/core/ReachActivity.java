@@ -1477,7 +1477,7 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface, 
         }
         if(frag1 != null){
             Log.d(TAG, "onBackPressed: profilefragment is visible");
-            getSupportFragmentManager().beginTransaction().remove(frag).commit();
+            getSupportFragmentManager().beginTransaction().remove(frag1).commit();
             return;
         }
             super.onBackPressed();

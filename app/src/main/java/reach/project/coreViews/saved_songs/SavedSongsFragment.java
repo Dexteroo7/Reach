@@ -3,6 +3,7 @@ package reach.project.coreViews.saved_songs;
 
 import android.app.SearchManager;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -11,6 +12,7 @@ import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v4.util.Pair;
 import android.support.v4.view.MenuItemCompat;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SearchView;
@@ -23,8 +25,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 import android.widget.Toast;
-
-import org.joda.time.DateTimeUtils;
 
 import javax.annotation.Nonnull;
 import reach.project.R;
@@ -46,6 +46,8 @@ public class SavedSongsFragment extends Fragment implements LoaderManager.Loader
     private TextView emptyTextView;
     private SearchView searchView;
     final Bundle bundle = new Bundle();
+    public static final String YES = "YES";
+    public static final String NO = "NO";
 
     public SavedSongsFragment() {
         // Required empty public constructor
@@ -145,11 +147,10 @@ public class SavedSongsFragment extends Fragment implements LoaderManager.Loader
         }
 
         if(data.getCount()==0){
-            Toast.makeText(getActivity().getApplicationContext(), "No Saved Songs", Toast.LENGTH_SHORT).show();
+            //Toast.makeText(getActivity().getApplicationContext(), "No Saved Songs", Toast.LENGTH_SHORT).show();
             showEmptyView();
         }
         else {
-
             hideEmptyView();
         }
 
@@ -187,6 +188,8 @@ public class SavedSongsFragment extends Fragment implements LoaderManager.Loader
         mSavedSongsList.setVisibility(View.GONE);
     }
 
+
+
     @Override
     public void handOverMessage(@Nonnull Object message) {
         if(message == null) {
@@ -210,7 +213,30 @@ public class SavedSongsFragment extends Fragment implements LoaderManager.Loader
             if(yTid == null || TextUtils.isEmpty(yTid)){
                 throw new IllegalArgumentException("Ytid is null in SavedSongsFragment");
             }
-            new DeleteSongInDatabaseTask(getActivity(),yTid,"Saved").execute();
+
+            DialogInterface.OnClickListener positiveClickListener = new DialogInterface.OnClickListener() {
+
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    if(yTid == null || TextUtils.isEmpty(yTid))
+                        return;
+
+                    new DeleteSongInDatabaseTask(getActivity(),yTid,"Saved").execute();
+                }
+            };
+
+
+            AlertDialog removeSavedDataDialog = MiscUtils.getAlertDialogBox(getActivity(),
+                    "Are you sure you want to remove this song?",
+                    positiveClickListener,
+                    null,
+                    YES,
+                    NO
+            );
+
+            removeSavedDataDialog.show();
+
+
 
         }
 

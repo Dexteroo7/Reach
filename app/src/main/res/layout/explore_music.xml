@@ -36,7 +36,7 @@
             android:layout_height="wrap_content"
             android:layout_alignParentRight="true"
             android:layout_marginRight="12dp"
-            card_view:srcCompat="@drawable/ic_save_black_24dp"
+            card_view:srcCompat="@drawable/save_button_selector"
             android:layout_alignTop="@+id/handle"
             android:layout_alignBottom="@+id/handle"
             />

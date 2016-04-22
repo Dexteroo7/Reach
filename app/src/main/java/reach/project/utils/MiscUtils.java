@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
@@ -24,6 +25,7 @@ import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.util.ArrayMap;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
 import android.util.ArraySet;
@@ -1730,6 +1732,20 @@ public enum MiscUtils {
         return sb.toString();
 
     }
+
+    public static AlertDialog getAlertDialogBox(Context context, String message, DialogInterface.OnClickListener positiveClickListener  , DialogInterface.OnClickListener negativeClickListener, final String positiveText, final String negativeText){
+
+        AlertDialog alertDialog = new AlertDialog.Builder(context)
+                .setMessage(message)
+                .setPositiveButton(positiveText, positiveClickListener)
+                .setNegativeButton(negativeText, negativeClickListener)
+                .create();
+
+        return alertDialog;
+
+
+    }
+
 
 //    final HttpTransport transport = new NetHttpTransport();
 //    final JsonFactory factory = new JacksonFactory();

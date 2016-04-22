@@ -903,6 +903,9 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
                 mListener.showYTVideo(data.getYoutube_id());
                 return;
             }
+
+
+
             new SaveSongInDatabaseTask(getActivity(),data).execute();
 
 

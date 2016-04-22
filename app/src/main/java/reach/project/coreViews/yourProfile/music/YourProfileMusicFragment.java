@@ -148,7 +148,7 @@ public class YourProfileMusicFragment extends Fragment implements CacheInjectorC
 
         rootView = inflater.inflate(R.layout.fragment_simple_recycler, container, false);
         mRecyclerView = (RecyclerView) rootView.findViewById(R.id.recyclerView);
-        mRecyclerView.addItemDecoration(new DividerItemDecoration(getActivity()));
+        //mRecyclerView.addItemDecoration(new DividerItemDecoration(getActivity()));
         //emptyView = rootView.findViewById(R.id.empty_imageView);
         //final TextView emptyViewText = (TextView) rootView.findViewById(R.id.empty_textView);
         //emptyViewText.setText(StaticData.NO_SONGS_TEXT);
@@ -160,6 +160,7 @@ public class YourProfileMusicFragment extends Fragment implements CacheInjectorC
         mRecyclerView.setLayoutManager(new CustomLinearLayoutManager(activity));
         mRecyclerView.setAdapter(parentAdapter);
         emptyImageView = (NestedScrollView) rootView.findViewById(R.id.empty_imageView);
+        emptyImageView.setVisibility(View.GONE);
         MaterialViewPagerHelper.registerRecyclerView(activity, mRecyclerView, null);
         emptyTextView = (TextView) rootView.findViewById(R.id.empty_textView);
         emptyTextView.setText("No songs!");
@@ -256,9 +257,10 @@ public class YourProfileMusicFragment extends Fragment implements CacheInjectorC
     @Override
     public void performAction(int action, Song song) {
         if(song == null){
-            Toast.makeText(getActivity().getApplicationContext(), "Couldn't Save Song", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getActivity().getApplicationContext(), "Couldn't save song", Toast.LENGTH_SHORT).show();
         }
 
+        Toast.makeText(getActivity().getApplicationContext(), "Saving song...", Toast.LENGTH_SHORT).show();
         new YTTestSaveInDatabase(song,hostId).execute(song.getDisplayName());
     }
 
@@ -603,10 +605,10 @@ public class YourProfileMusicFragment extends Fragment implements CacheInjectorC
         Log.i("Ayush", "Reloading list " + musicData.size());
 
         if(musicData!=null && musicData.size()<=1){
-            emptyImageView.setVisibility(View.VISIBLE);
+            //emptyImageView.setVisibility(View.VISIBLE);
         }
         else if(musicData!=null && musicData.size()>1){
-            emptyImageView.setVisibility(View.GONE);
+            //emptyImageView.setVisibility(View.GONE);
         }
 
         if (parentAdapter != null)
