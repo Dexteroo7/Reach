@@ -97,7 +97,6 @@
             card_view:actualImageScaleType="fitXY"
             card_view:placeholderImageScaleType="center"
             fresco:placeholderImage="@drawable/explore_placeholder"
-            card_view:overlayImage="@color/overlay_image_color"
             />
 
         <View
@@ -114,7 +113,9 @@
             android:layout_alignRight="@id/title_container"
             android:layout_marginRight="12dp"
             android:layout_marginTop="-24dp"
-            android:src="@drawable/play_white_selector" />
+            android:src="@drawable/play_white_selector1"
+            android:scaleType="center"
+            />
 
 
 
@@ -124,7 +125,7 @@
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:layout_alignBottom="@id/image"
-            android:background="#77FFFFFF"
+            android:background="#44FFFFFF"
             >
 
 
