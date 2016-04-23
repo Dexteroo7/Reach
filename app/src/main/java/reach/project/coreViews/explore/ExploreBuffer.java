@@ -108,7 +108,7 @@ class ExploreBuffer<T> implements Closeable {
         final int currentSize = storyBuffer.size();
 
         //if reaching end of story and are not done yet
-        if (position == currentSize - 1)
+        if (position == currentSize - 2)
             new FetchNextBatch<>().executeOnExecutor(storyFetchingService, explorationCallbacks.fetchNextBatch());
 
         return storyBuffer.get(position);

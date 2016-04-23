@@ -24,6 +24,8 @@ import android.support.v4.content.Loader;
 import android.support.v4.util.Pair;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AlertDialog;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.text.Html;
 import android.text.TextUtils;
@@ -105,7 +107,7 @@ import reach.project.utils.viewHelpers.ViewPagerCustomDuration;
 
 import static reach.project.coreViews.explore.ExploreJSON.MiscMetaInfo;
 
-public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
+public class ExploreFragment extends Fragment implements ExploreRecyclerViewAdapter.Explore,
         ExploreBuffer.ExplorationCallbacks<JsonObject>, HandOverMessage<Object>, LoaderManager.LoaderCallbacks<Cursor> {
 
     private static final String TAG = ExploreFragment.class.getSimpleName();
@@ -116,6 +118,7 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
     private View noFriendsDiscoverLayoutContainer;
     private final ExecutorService requestSender = MiscUtils.getRejectionExecutor();
     private AlertDialog fbShareDialog;
+    private ExploreRecyclerViewAdapter exploreRecyclerViewAdapter;
 
     public ExploreFragment() {
         reference = new WeakReference<>(this);
@@ -399,10 +402,14 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
 
     @Nullable
     private View rootView = null;
+    /*@Nullable
+    private ViewPagerCustomDuration explorePager = null;*/
+
     @Nullable
-    private ViewPagerCustomDuration explorePager = null;
-    @Nullable
-    private ExploreAdapter exploreAdapter = null;
+    private RecyclerView exploreRecyclerView = null;
+
+    /*@Nullable
+    private ExploreAdapter exploreAdapter = null;*/
 
     @Nullable
     private ExploreBuffer<JsonObject> buffer = null;
@@ -426,15 +433,17 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
         toolbar.setTitle("Discover");
         toolbar.inflateMenu(R.menu.explore_menu);
         toolbar.setOnMenuItemClickListener(mListener != null ? mListener.getMenuClickListener() : null);
-        explorePager = (ViewPagerCustomDuration) rootView.findViewById(R.id.explorer);
+        exploreRecyclerView = (RecyclerView) rootView.findViewById(R.id.exploreRecyclerView);
+        exploreRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity(),LinearLayoutManager.VERTICAL,false));
+        //explorePager = (ViewPagerCustomDuration) rootView.findViewById(R.id.explorer);
         // For changing the speed of page transition
-        explorePager.setScrollDurationFactor(0.4);
-        explorePager.setClipToPadding(false);
+        //explorePager.setScrollDurationFactor(0.4);
+        //explorePager.setClipToPadding(false);
         final int size = MiscUtils.dpToPx(16);
-        explorePager.setPadding(size, 0, size, (size * -1));
+        //explorePager.setPadding(size, 0, size, (size * -1));
         //explorePager.setPageTransformer(false, new FlipHorizontalTransformer());
         //explorePager.setPageMargin(-1 * (MiscUtils.dpToPx(25)));
-        explorePager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
+        /*explorePager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
             @Override
             public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
             }
@@ -463,70 +472,13 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
             @Override
             public void onPageScrollStateChanged(int state) {
             }
-        });
+        });*/
         noFriendsDiscoverLayoutContainer = rootView.findViewById(R.id.exploreNoFriendsContainer);
         final Button sendRequestToDevikaButton = (Button) rootView.findViewById(R.id.sendRequestButton);
         sendRequestToDevikaButton.setOnClickListener(v ->
                 new SendRequest().executeOnExecutor(requestSender, StaticData.DEVIKA,
                         SharedPrefUtils.getServerId(getActivity().getSharedPreferences("Reach", Context.MODE_PRIVATE))));
         getLoaderManager().initLoader(StaticData.FRIENDS_VERTICAL_LOADER, null, this);
-
-        /*final LinearLayout exploreToolbarText = (LinearLayout) toolbar.findViewById(R.id.exploreToolbarText);
-        final PopupMenu popupMenu = new PopupMenu(getActivity(), exploreToolbarText);
-
-        popupMenu.inflate(R.menu.explore_popup_menu);
-        exploreToolbarText.setOnClickListener(v -> popupMenu.show());
-        popupMenu.setOnMenuItemClickListener(POP_MENU_CLICK);*/
-
-        /*exploreAdapter = new ExploreAdapter(this, this);
-        explorePager = (ViewPager) rootView.findViewById(R.id.explorer);
-        explorePager.setAdapter(exploreAdapter);
-
-//        explorePager.setOffscreenPageLimit(1);
-        explorePager.setPageMargin(-1 * (MiscUtils.dpToPx(25)));
-        explorePager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
-            @Override
-            public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
-            }
-
-            @Override
-            public void onPageSelected(int position) {
-                ((ReachApplication) getActivity().getApplication()).getTracker().send(new HitBuilders.EventBuilder()
-                        .setCategory("Explore - Page Swiped")
-                        .setAction("User Name - " + SharedPrefUtils.getUserName(preferences))
-                        .setValue(1)
-                        .build());
-            }
-
-            @Override
-            public void onPageScrollStateChanged(int state) {
-            }
-        });
-
-        if (!SharedPrefUtils.getExploreCoach1Seen(preferences)) {
-            mListener.showSwipeCoach();
-            SharedPrefUtils.setExploreCoach1Seen(preferences);
-        }*/
-
-        //new YTTest().execute();
-
-        //playerText = (TextView) rootView.findViewById(R.id.playerText);
-
-        /*final YouTubePlayerSupportFragment fragment = YouTubePlayerSupportFragment.newInstance();
-        fragment.initialize("AIzaSyAYH8mcrHrqG7HJwjyGUuwxMeV7tZP6nmY", new YouTubePlayer.OnInitializedListener() {
-            @Override
-            public void onInitializationSuccess(YouTubePlayer.Provider provider, YouTubePlayer youTubePlayer, boolean b) {
-                player = youTubePlayer;
-                player.setPlayerStyle(YouTubePlayer.PlayerStyle.MINIMAL);
-                //player.cueVideo("CuH3tJPiP-U");
-            }
-
-            @Override
-            public void onInitializationFailure(YouTubePlayer.Provider provider, YouTubeInitializationResult youTubeInitializationResult) {
-
-            }
-        });
-        getChildFragmentManager().beginTransaction().replace(R.id.ytFooter, fragment, "YouTubePlayerSupportFragment").commit();*/
 
         return rootView;
     }
@@ -692,13 +644,20 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
 
     private void showDiscoverAdapter() {
 
-        if (explorePager == null || exploreAdapter != null || explorePager.getAdapter() != null)
+        /*if (explorePager == null || exploreAdapter != null || explorePager.getAdapter() != null)
+            return;*/
+
+        if (exploreRecyclerView == null || exploreRecyclerViewAdapter != null || exploreRecyclerView.getAdapter() != null)
             return;
 
-        exploreAdapter = new ExploreAdapter(this, this);
-        explorePager.setAdapter(exploreAdapter);
-//        explorePager.setOffscreenPageLimit(1);
 
+        /*exploreAdapter = new ExploreAdapter(this, this);
+        explorePager.setAdapter(exploreAdapter);*/
+
+        exploreRecyclerViewAdapter = new ExploreRecyclerViewAdapter(getActivity(),this,this);
+
+        exploreRecyclerView.setAdapter(exploreRecyclerViewAdapter);
+//        explorePager.setOffscreenPageLimit(1);
 
         if (!SharedPrefUtils.getExploreCoach1Seen(preferences)) {
             if (mListener != null)
@@ -706,19 +665,20 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
             SharedPrefUtils.setExploreCoach1Seen(preferences);
         }
         noFriendsDiscoverLayoutContainer.setVisibility(View.GONE);
-        explorePager.setVisibility(View.VISIBLE);
+        /*explorePager.setVisibility(View.VISIBLE);*/
+        exploreRecyclerView.setVisibility(View.VISIBLE);
     }
 
     private void showNoFriendsDiscoverPage() {
 
         fetchDevikaDetails();
 
-        if (exploreAdapter != null)
-            exploreAdapter = null;
+        if (exploreRecyclerViewAdapter != null)
+            exploreRecyclerViewAdapter = null;
         noFriendsDiscoverLayoutContainer.setVisibility(View.VISIBLE);
-        if (explorePager != null) {
-            explorePager.setAdapter(null);
-            explorePager.setVisibility(View.GONE);
+        if (exploreRecyclerView != null) {
+            exploreRecyclerView.setAdapter(null);
+            exploreRecyclerView.setVisibility(View.GONE);
         }
     }
 
@@ -767,8 +727,10 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
         Log.d("Ayush", "ExploreFragment - onDestroyView");
 
         rootView = null;
-        explorePager = null;
-        exploreAdapter = null;
+        //explorePager = null;
+        exploreRecyclerView = null;
+        //exploreAdapter = null;
+        exploreRecyclerViewAdapter = null;
     }
 
     @Override
@@ -811,55 +773,20 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
 
         //This is UI thread !
         Log.i("Ayush", "Notifying data set changed on explore adapter");
-        if (exploreAdapter != null)
-            exploreAdapter.notifyDataSetChanged();
+        if (exploreRecyclerViewAdapter != null)
+            exploreRecyclerViewAdapter.notifyDataSetChanged();
     }
 
     @Override
     public void loadedFromCache(int count) {
 
         notifyDataAvailable();
-        if (explorePager != null)
-            explorePager.postDelayed(new ScrollToLast(count), 1500L);
+        /*if (explorePager != null)
+            explorePager.postDelayed(new ScrollToLast(count), 1500L);*/
     }
 
     @Override
     public void handOverMessage(@Nonnull Object object) {
-
-        //This is used for facebook share button
-        /*if(position == -11){
-            Log.d(TAG, "FB share clicked");
-            final LayoutInflater inflater = (LayoutInflater) getActivity().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-
-            final View vv = inflater.inflate(R.layout.fb_share_layout,null);
-            final TextView username = (TextView)vv.findViewById(R.id.username);
-            username.setTypeface(Typeface.createFromAsset(getActivity().getAssets(),
-                    "permanentmarker.ttf")
-            );
-            username.setText("- "+SharedPrefUtils.getUserName(SharedPrefUtils.getPreferences(getActivity())));
-            vv.measure(View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED),
-                    View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED));
-            vv.layout(0, 0, vv.getMeasuredWidth(),vv.getMeasuredHeight());
-
-            final Bitmap vBitmap = Bitmap.createBitmap(vv.getMeasuredWidth(),
-                    vv.getMeasuredHeight(), Bitmap.Config.ARGB_8888);
-
-            Canvas canvas = new Canvas(vBitmap);
-            vv.draw(canvas);
-
-            SharePhoto photo = new SharePhoto.Builder()
-                    .setBitmap(vBitmap)
-                    .build();
-            SharePhotoContent content = new SharePhotoContent.Builder()
-                    .addPhoto(photo)
-                    .build();
-
-            Toast.makeText(getActivity().getApplicationContext(), "Sharing On Facebook", Toast.LENGTH_SHORT).show();
-            SharedPrefUtils.storeFacebookShareButtonVisibleOrNot(preferences,false);
-            ShareDialog.show(getActivity(),content);
-            return;
-
-        }*/
 
         if (object instanceof Integer) {
             //retrieve full json
@@ -903,9 +830,6 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
                 mListener.showYTVideo(data.getYoutube_id());
                 return;
             }
-
-
-
             new SaveSongInDatabaseTask(getActivity(),data).execute();
 
 
@@ -925,7 +849,6 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
                     content.setImageUrl(Uri.parse(data.getImageUrl()));
 
             ShareDialog.show(getActivity(),content.build());*/
-
 
         } else if (object instanceof Long) {
             final long userId = (long) object;
@@ -1050,7 +973,7 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
 
     }
 
-    private final class ScrollToLast implements Runnable {
+    /*private final class ScrollToLast implements Runnable {
 
         private final int scrollTo;
 
@@ -1062,21 +985,21 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
         public void run() {
 
             //sanity check
-            if (explorePager == null || rootView == null)
+            if (exploreRecyclerView == null || rootView == null)
                 return;
 
             //magic scroll position should be available
             if (!(scrollTo > 1))
                 return;
 
-            final int currentItem = explorePager.getCurrentItem();
+            final int currentItem = exploreRecyclerView.getVi;
             //user has somehow started scrolling
             if (currentItem > 0)
                 return;
 
             explorePager.setCurrentItem(scrollTo - 2, true);
         }
-    }
+    }*/
 
     private static final class SendRequest extends AsyncTask<Long, Void, Long> {
 
