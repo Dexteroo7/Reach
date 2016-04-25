@@ -125,7 +125,7 @@
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:layout_alignBottom="@id/image"
-            android:background="#44FFFFFF"
+            android:background="#66000000"
             >
 
 

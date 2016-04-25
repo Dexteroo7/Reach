@@ -21,7 +21,6 @@ public class SaveSongInDatabaseTask extends AsyncTask<Void, Void, Boolean> {
     private static final String TAG = SaveSongInDatabaseTask.class.getSimpleName();
 
     public SaveSongInDatabaseTask(Context context, SavedSongsDataModel data) {
-        Toast.makeText(context.getApplicationContext(),"Saving song...",Toast.LENGTH_SHORT).show();
         contextWeakReference = new WeakReference<Context>(context);
         //this.context = context;
         this.data = data;
