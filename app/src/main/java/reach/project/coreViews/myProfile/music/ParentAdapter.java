@@ -5,6 +5,7 @@ import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -41,6 +42,7 @@ class ParentAdapter extends RecyclerViewMaterialAdapter<RecyclerView.ViewHolder>
 
     private static final byte VIEW_TYPE_RECENT = 0;
     private static final byte VIEW_TYPE_ALL = 1;
+    private static final String TAG = ParentAdapter.class.getSimpleName();
 
     private final RecentAdapter recentAdapter;
     private final HandOverMessage<Cursor> handOverCursor;
@@ -198,7 +200,7 @@ class ParentAdapter extends RecyclerViewMaterialAdapter<RecyclerView.ViewHolder>
 
             if (uriOptional.isPresent()) {
 
-//            Log.i("Ayush", "Url found = " + uriOptional.get().toString());
+            Log.i(TAG, "Url found = " + uriOptional.get().toString());
                 final ImageRequest request = ImageRequestBuilder.newBuilderWithSource(uriOptional.get())
                         .setResizeOptions(resizeOptions)
                         .build();

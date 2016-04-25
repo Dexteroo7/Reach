@@ -28,7 +28,7 @@
                     fresco:placeholderImage="@drawable/default_music_icon"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    card_view:overlayImage="@drawable/gradient_bg"
+                    card_view:overlayImage="@color/overlay_image_color"
                     />
                 <!--<View
                     android:background="@drawable/gradient_bg"

@@ -713,11 +713,11 @@ public class ExploreFragment extends Fragment implements ExploreRecyclerViewAdap
         exploreRecyclerView.setAdapter(exploreRecyclerViewAdapter);
 //        explorePager.setOffscreenPageLimit(1);
 
-        if (!SharedPrefUtils.getExploreCoach1Seen(preferences)) {
+        /*if (!SharedPrefUtils.getExploreCoach1Seen(preferences)) {
             if (mListener != null)
                 mListener.showSwipeCoach();
             SharedPrefUtils.setExploreCoach1Seen(preferences);
-        }
+        }*/
         noFriendsDiscoverLayoutContainer.setVisibility(View.GONE);
         /*explorePager.setVisibility(View.VISIBLE);*/
         exploreRecyclerView.setVisibility(View.VISIBLE);

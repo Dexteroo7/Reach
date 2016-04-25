@@ -50,7 +50,7 @@
             android:layout_centerHorizontal="true"
             android:layout_marginRight="12dp"
             android:layout_toLeftOf="@id/saveSong"
-            card_view:srcCompat="@drawable/ic_share_black_24dp" />
+            card_view:srcCompat="@drawable/ic_share_darkgrey_24dp" />
 
 
         <LinearLayout
@@ -81,7 +81,6 @@
                 android:text="handle"
                 android:textColor="@color/primary_text"
                 android:textSize="16sp"
-                android:textStyle="bold"
                 tools:text="this song is trending in your network" />
 
         </LinearLayout>
@@ -105,22 +104,8 @@
             android:layout_alignTop="@id/image"
             android:background="@drawable/shadow_bottom" />
 
-        <android.support.design.widget.FloatingActionButton
-            android:id="@+id/downBtn"
-            android:layout_width="42dp"
-            android:layout_height="42dp"
-            android:layout_alignTop="@+id/title_container"
-            android:layout_alignRight="@id/title_container"
-            android:layout_marginRight="12dp"
-            android:layout_marginTop="-24dp"
-            android:src="@drawable/play_white_selector1"
-            android:scaleType="center"
-            />
-
-
-
         <LinearLayout
-            android:id="@id/title_container"
+            android:id="@+id/title_container"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
@@ -160,6 +145,19 @@
 
 
         </LinearLayout>
+
+
+        <android.support.design.widget.FloatingActionButton
+            android:id="@+id/downBtn"
+            android:layout_width="42dp"
+            android:layout_height="42dp"
+            android:layout_alignTop="@+id/title_container"
+            android:layout_alignRight="@+id/title_container"
+            android:layout_marginRight="12dp"
+            android:layout_marginTop="-24dp"
+            android:src="@drawable/play_white_selector1"
+            android:scaleType="center"
+            />
 
 
     </RelativeLayout>

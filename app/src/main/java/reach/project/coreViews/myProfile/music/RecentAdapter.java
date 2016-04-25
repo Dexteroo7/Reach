@@ -3,6 +3,7 @@ package reach.project.coreViews.myProfile.music;
 import android.net.Uri;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.View;
 
 import com.facebook.drawee.backends.pipeline.Fresco;
@@ -44,6 +45,7 @@ class RecentAdapter extends SimpleRecyclerAdapter<Song, SongItemHolder> implemen
 
         return lhs.compareTo(rhs);
     };
+    private static final String TAG = RecentAdapter.class.getSimpleName();
 
     private final ResizeOptions resizeOptions = new ResizeOptions(150, 150);
 
@@ -139,7 +141,7 @@ class RecentAdapter extends SimpleRecyclerAdapter<Song, SongItemHolder> implemen
 
         if (uriOptional.isPresent()) {
 
-//            Log.i("Ayush", "Url found = " + uriOptional.get().toString());
+            Log.i(TAG, "Url found = " + uriOptional.get().toString());
             final ImageRequest request = ImageRequestBuilder.newBuilderWithSource(uriOptional.get())
                     .setResizeOptions(resizeOptions)
                     .build();
