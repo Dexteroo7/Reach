@@ -1,50 +1,38 @@
 package reach.project.coreViews.saved_songs;
 
-import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
-import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.v4.content.ContextCompat;
 import android.support.v4.util.Pair;
+import android.support.v7.widget.PopupMenu;
 import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.facebook.drawee.backends.pipeline.Fresco;
-import com.facebook.drawee.interfaces.DraweeController;
 import com.facebook.drawee.view.SimpleDraweeView;
 import com.facebook.imagepipeline.common.ResizeOptions;
-import com.facebook.imagepipeline.request.ImageRequest;
 import com.facebook.imagepipeline.request.ImageRequestBuilder;
-import com.google.common.base.Optional;
 
 import java.io.Closeable;
-import java.util.List;
 
 import javax.annotation.Nonnull;
 
 import reach.project.R;
-import reach.project.music.Song;
-import reach.project.music.SongCursorHelper;
-import reach.project.utils.AlbumArtUri;
 import reach.project.utils.MiscUtils;
-import reach.project.utils.ThreadLocalRandom;
 import reach.project.utils.TimeAgo;
-import reach.project.utils.YouTubeDataModel;
-import reach.project.utils.viewHelpers.CustomGridLayoutManager;
 import reach.project.utils.viewHelpers.HandOverMessage;
-import reach.project.utils.viewHelpers.MoreListHolder;
 
 /**
  * Created by gauravsobti on 20/04/16.
  */
-class SavedSongsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implements Closeable, View.OnClickListener {
+class SavedSongsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implements Closeable {
 
     private static final String TAG = SavedSongsAdapter.class.getSimpleName();
 
@@ -86,7 +74,6 @@ class SavedSongsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> im
         mySavedSongsCursor = null;
     }
     ///////////
-
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
 
@@ -97,7 +84,7 @@ class SavedSongsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> im
             case VIEW_TYPE_HISTORY: {
 
                 return new SavedSongsViewHolder(LayoutInflater.from(parent.getContext())
-                        .inflate(R.layout.saved_songs_list_item, parent, false));
+                        .inflate(R.layout.saved_songs_list_item, parent, false),handOverCursor);
             }
 
             default:
@@ -132,11 +119,7 @@ class SavedSongsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> im
             savedSongHolder.senderName.setText(sender_name);
             final long milliseconds = cursorExactType.getLong(1);
             savedSongHolder.added.setText(TimeAgo.toDuration(System.currentTimeMillis() - milliseconds));
-            savedSongHolder.itemView.setTag(new Pair<>(position,0));
-            savedSongHolder.remove.setTag(new Pair<>(position,1));
-
-            savedSongHolder.itemView.setOnClickListener(this);
-            savedSongHolder.remove.setOnClickListener(this);
+            //savedSongHolder.itemView.setOnClickListener(this);
             savedSongHolder.senderName.setVisibility(View.GONE);
 
             /*final int type = cursorExactType.getInt(4);
@@ -163,7 +146,7 @@ class SavedSongsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> im
      * @return object
      */
     @Nonnull
-    private Object getItem(int position) {
+    public Object getItem(int position) {
         /*if(mySavedSongsCursor!=null || !mySavedSongsCursor.isClosed()){
             if(pos)
         }*/
@@ -197,6 +180,8 @@ class SavedSongsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> im
 
     }
 
+
+
     @Override
     public int getItemCount() {
 
@@ -205,32 +190,82 @@ class SavedSongsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> im
         return 0;
     }
 
-    @Override
+    /*@Override
     public void onClick(View v) {
         Pair data = (Pair) v.getTag();
 
         handOverCursor.handOverMessage(new Pair<>(getItem((int)data.first), data.second));
-    }
+    }*/
 
-    static class SavedSongsViewHolder extends RecyclerView.ViewHolder {
 
+    static class SavedSongsViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener, PopupMenu.OnMenuItemClickListener {
+
+        private final HandOverMessage<Object> handOverMessage;
         private SimpleDraweeView songThumbnail;
         private TextView songName;
         private TextView senderName;
         private TextView added;
-        private ImageView remove;
+        private ImageView popUpMenu;
 
 
-        public SavedSongsViewHolder(View itemView) {
+        public SavedSongsViewHolder(View itemView, HandOverMessage<Object> handOverMessage) {
             super(itemView);
             songThumbnail = (SimpleDraweeView) itemView.findViewById(R.id.songThumbnail);
             songName = (TextView) itemView.findViewById(R.id.songName);
             senderName = (TextView) itemView.findViewById(R.id.senderName);
             added = (TextView) itemView.findViewById(R.id.added);
-            remove = (ImageView) itemView.findViewById(R.id.remove_image);
+            popUpMenu = (ImageView) itemView.findViewById(R.id.popup_menu);
+            this.handOverMessage = handOverMessage;
+            popUpMenu.setOnClickListener(this);
+            itemView.setOnClickListener(this);
         }
 
 
+        @Override
+        public void onClick(View v) {
+            final int id = v.getId();
+
+            switch (id){
+
+                case R.id.saved_song_container:
+                    handOverMessage.handOverMessage(new Pair<>(getAdapterPosition(),0));
+                    break;
+
+                case R.id.popup_menu:
+                    PopupMenu menu = new PopupMenu(itemView.getContext(), popUpMenu);
+                    menu.setOnMenuItemClickListener(this);
+                    menu.inflate(R.menu.saved_song_menu);
+                    menu.show();
+                    break;
+
+            }
+
+        }
+
+        @Override
+        public boolean onMenuItemClick(MenuItem item) {
+            final int id = item.getItemId();
+
+            switch (id){
+
+                case R.id.remove:
+                    handOverMessage.handOverMessage(new Pair<>(getAdapterPosition(),1));
+
+                    break;
+
+
+                case R.id.share:
+                    handOverMessage.handOverMessage(new Pair<>(getAdapterPosition(),2));
+
+                    break;
+
+
+
+
+            }
+            
+            return true;
+        }
     }
 
 

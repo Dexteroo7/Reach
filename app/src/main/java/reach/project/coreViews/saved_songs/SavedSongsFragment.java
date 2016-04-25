@@ -12,8 +12,10 @@ import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v4.util.Pair;
 import android.support.v4.view.MenuItemCompat;
+import android.support.v4.widget.PopupMenuCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.PopupMenu;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
@@ -197,48 +199,60 @@ public class SavedSongsFragment extends Fragment implements LoaderManager.Loader
             return;
         }
         final Pair data = (Pair)message;
-        final Cursor cursorData = (Cursor) data.first;
+        final int position = (int) data.first;
+        final Cursor cursorData = (Cursor) mListAdapter.getItem(position);
         final int action = (int) data.second;
 
         final String yTid = cursorData.getString(0);
 
-
-        if( action == 0 ){
-            if(yTid == null || TextUtils.isEmpty(yTid)){
-                throw new IllegalArgumentException("Ytid is null in SavedSongsFragment");
-            }
-            mListener.showYTVideo(yTid);
-        }
-        else if( action == 1 ){
-            if(yTid == null || TextUtils.isEmpty(yTid)){
-                throw new IllegalArgumentException("Ytid is null in SavedSongsFragment");
-            }
-
-            DialogInterface.OnClickListener positiveClickListener = new DialogInterface.OnClickListener() {
-
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    if(yTid == null || TextUtils.isEmpty(yTid))
-                        return;
-
-                    new DeleteSongInDatabaseTask(getActivity(),yTid,"Saved").execute();
+        switch (action){
+            case 0:
+                if(yTid == null || TextUtils.isEmpty(yTid)){
+                    throw new IllegalArgumentException("Ytid is null in SavedSongsFragment");
                 }
-            };
+                mListener.showYTVideo(yTid);
+
+                break;
 
 
-            AlertDialog removeSavedDataDialog = MiscUtils.getAlertDialogBox(getActivity(),
-                    "Are you sure you want to remove this song?",
-                    positiveClickListener,
-                    null,
-                    YES,
-                    NO
-            );
+            case 1:
+                if(yTid == null || TextUtils.isEmpty(yTid)){
+                    throw new IllegalArgumentException("Ytid is null in SavedSongsFragment");
+                }
 
-            removeSavedDataDialog.show();
+                DialogInterface.OnClickListener positiveClickListener = new DialogInterface.OnClickListener() {
+
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        if(yTid == null || TextUtils.isEmpty(yTid))
+                            return;
+
+                        new DeleteSongInDatabaseTask(getActivity(),yTid,"Saved").execute();
+                    }
+                };
+
+                AlertDialog removeSavedDataDialog = MiscUtils.getAlertDialogBox(getActivity(),
+                        "Are you sure you want to remove this song?",
+                        positiveClickListener,
+                        null,
+                        YES,
+                        NO
+                );
+
+                removeSavedDataDialog.show();
 
 
+                break;
+
+
+            case 2:
+                //Toast.makeText(getActivity().getApplicationContext(),"Share Button", Toast.LENGTH_LONG ).show();
+                MiscUtils.shareTextUrl(getActivity(),
+                        "Hey! Checkout this song I found on the Reach App\nhttp://youtu.be/" + yTid);
+                break;
 
         }
+
 
     }
 

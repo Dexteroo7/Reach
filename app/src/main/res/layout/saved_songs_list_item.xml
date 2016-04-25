@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout
+    android:id="@+id/saved_song_container"
+    xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     xmlns:tools="http://schemas.android.com/tools"
@@ -18,13 +20,12 @@
         />
 
     <ImageView
-        android:id="@+id/remove_image"
+        android:id="@+id/popup_menu"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentRight="true"
         android:layout_centerVertical="true"
-        app:srcCompat="@drawable/remove_button_selector"
-        android:layout_marginRight="8dp"
+        android:src="@drawable/icon_extra_dots_gray"
         android:padding="4dp"
         />
 
@@ -36,7 +37,7 @@
         android:layout_alignTop="@id/songThumbnail"
         android:layout_alignBottom="@id/songThumbnail"
         android:gravity="center_vertical"
-        android:layout_toLeftOf="@id/remove_image"
+        android:layout_toLeftOf="@id/popup_menu"
         >
 
     <TextView

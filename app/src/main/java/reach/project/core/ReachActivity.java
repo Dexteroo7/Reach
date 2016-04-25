@@ -518,6 +518,8 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface, 
                 Log.d("Ashish", "player created");
                 player = youTubePlayer;
                 player.setShowFullscreenButton(false);
+//                player.cueVideos();
+//                player.setLis
                 player.setPlaybackEventListener(new YouTubePlayer.PlaybackEventListener() {
                     @Override
                     public void onPlaying() {
