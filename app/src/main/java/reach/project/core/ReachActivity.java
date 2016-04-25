@@ -3,7 +3,6 @@ package reach.project.core;
 import android.annotation.SuppressLint;
 import android.content.ActivityNotFoundException;
 import android.content.ComponentCallbacks2;
-import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -44,9 +43,7 @@ import com.google.android.youtube.player.YouTubePlayer;
 import com.google.android.youtube.player.YouTubePlayerSupportFragment;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
-import com.squareup.wire.Wire;
 
-import org.joda.time.DateTime;
 import org.json.JSONException;
 
 import java.io.IOException;
@@ -62,7 +59,6 @@ import reach.project.coreViews.fileManager.apps.ApplicationFragment;
 import reach.project.coreViews.fileManager.music.downloading.DownloadingFragment;
 import reach.project.coreViews.fileManager.music.myLibrary.MyLibraryFragment;
 import reach.project.coreViews.friends.FriendsFragment;
-import reach.project.coreViews.friends.ReachFriendsHelper;
 import reach.project.coreViews.invite.InviteActivity;
 import reach.project.coreViews.push.PushActivity;
 import reach.project.coreViews.push.PushContainer;
@@ -74,17 +70,16 @@ import reach.project.music.Song;
 import reach.project.music.SongHelper;
 import reach.project.music.SongProvider;
 import reach.project.notificationCentre.NotificationActivity;
-//import reach.project.player.PlayerActivity;
-//import reach.project.reachProcess.reachService.ProcessManager;
 import reach.project.usageTracking.PostParams;
 import reach.project.usageTracking.UsageTracker;
 import reach.project.utils.FireOnce;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
-import reach.project.utils.StringCompress;
-import reach.project.utils.ThreadLocalRandom;
 import reach.project.utils.ancillaryClasses.SuperInterface;
 import reach.project.utils.viewHelpers.PagerFragment;
+
+//import reach.project.player.PlayerActivity;
+//import reach.project.reachProcess.reachService.ProcessManager;
 
 //import reach.project.coreViews.myProfile.MyProfileFragment;
 
