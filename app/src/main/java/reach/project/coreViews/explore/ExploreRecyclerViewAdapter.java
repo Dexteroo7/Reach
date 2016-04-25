@@ -88,6 +88,7 @@ public class ExploreRecyclerViewAdapter extends RecyclerView.Adapter implements 
             musicHolder.userHandle.setOnClickListener(this);
             musicHolder.userImage.setOnClickListener(this);
             musicHolder.saveBtn.setOnClickListener(this);
+            musicHolder.image.setOnClickListener(this);
 
             final YouTubeDataModel ytbData = new YouTubeDataModel();
 
@@ -146,6 +147,7 @@ public class ExploreRecyclerViewAdapter extends RecyclerView.Adapter implements 
                     .withSongName(musicTitle)
                     .withDisplayName(musicTitle);
 
+            musicHolder.image.setTag(savedSongsDataModelBuilder.withType(2).build());
             musicHolder.downBtn.setTag(savedSongsDataModelBuilder.withType(2).build());
             musicHolder.saveBtn.setTag(savedSongsDataModelBuilder.withType(1).build());
 

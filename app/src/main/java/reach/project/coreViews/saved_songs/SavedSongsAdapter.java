@@ -174,6 +174,14 @@ class SavedSongsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> im
 
     }
 
+    public void destroyCursorData(){
+
+        if(mySavedSongsCursor!=null){
+            mySavedSongsCursor = null;
+        }
+
+    }
+
     @Override
     public int getItemViewType(int position) {
 

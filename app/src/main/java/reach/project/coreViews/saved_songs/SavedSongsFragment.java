@@ -240,11 +240,14 @@ public class SavedSongsFragment extends Fragment implements LoaderManager.Loader
 
         }
 
+    }
 
-
-
-
-
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        if(mListAdapter!=null){
+            mListAdapter.destroyCursorData();
+        }
     }
 
     @Override

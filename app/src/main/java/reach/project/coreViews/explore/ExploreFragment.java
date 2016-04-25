@@ -36,6 +36,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Interpolator;
 import android.widget.Button;
+import android.widget.ListView;
 import android.widget.Scroller;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -119,6 +120,7 @@ public class ExploreFragment extends Fragment implements ExploreRecyclerViewAdap
     private final ExecutorService requestSender = MiscUtils.getRejectionExecutor();
     private AlertDialog fbShareDialog;
     private ExploreRecyclerViewAdapter exploreRecyclerViewAdapter;
+    private int lastItemPosition;
 
     public ExploreFragment() {
         reference = new WeakReference<>(this);
@@ -434,12 +436,64 @@ public class ExploreFragment extends Fragment implements ExploreRecyclerViewAdap
         toolbar.inflateMenu(R.menu.explore_menu);
         toolbar.setOnMenuItemClickListener(mListener != null ? mListener.getMenuClickListener() : null);
         exploreRecyclerView = (RecyclerView) rootView.findViewById(R.id.exploreRecyclerView);
-        exploreRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity(),LinearLayoutManager.VERTICAL,false));
+        final LinearLayoutManager layoutManager = new LinearLayoutManager(getActivity(),LinearLayoutManager.VERTICAL,false);
+        exploreRecyclerView.setLayoutManager(layoutManager);
         //explorePager = (ViewPagerCustomDuration) rootView.findViewById(R.id.explorer);
         // For changing the speed of page transition
         //explorePager.setScrollDurationFactor(0.4);
         //explorePager.setClipToPadding(false);
         final int size = MiscUtils.dpToPx(16);
+
+        ListView list;
+
+
+        exploreRecyclerView.setOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
+                super.onScrollStateChanged(recyclerView, newState);
+
+            }
+
+            @Override
+            public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
+                super.onScrolled(recyclerView, dx, dy);
+                if(!(dy>-1 && dy<1)){
+
+                    final int firstItemPosition = layoutManager.findFirstVisibleItemPosition();
+                    if(firstItemPosition == -1){
+                        return;
+                    }
+
+                    if(lastItemPosition == firstItemPosition) {
+                        return;
+                    }
+
+                    lastItemPosition = firstItemPosition;
+                    ((ReachApplication) getActivity().getApplication()).getTracker().send(new HitBuilders.EventBuilder()
+                            .setCategory("Explore - Page Swiped")
+                            .setAction("User Name - " + SharedPrefUtils.getUserName(preferences))
+                            .setValue(1)
+                            .build());
+                    Log.d(TAG, "onScrolled: dy = " + dy + " firstVisibleItemPosition = " + firstItemPosition);
+
+                    if(firstItemPosition == 10){
+
+                        if (SharedPrefUtils.getShowFacebookShareOrNot(preferences)) {
+
+                            //Toast.makeText(getActivity(), "11th item visible", Toast.LENGTH_SHORT).show();
+                            if (preferences == null) {
+                                preferences = SharedPrefUtils.getPreferences(getContext());
+                            }
+
+                            showFbDialog();
+                            SharedPrefUtils.storeFacebookShareButtonVisibleOrNot(preferences, false);
+                        }
+
+                    }
+                }
+            }
+        });
+
         //explorePager.setPadding(size, 0, size, (size * -1));
         //explorePager.setPageTransformer(false, new FlipHorizontalTransformer());
         //explorePager.setPageMargin(-1 * (MiscUtils.dpToPx(25)));
@@ -659,11 +713,11 @@ public class ExploreFragment extends Fragment implements ExploreRecyclerViewAdap
         exploreRecyclerView.setAdapter(exploreRecyclerViewAdapter);
 //        explorePager.setOffscreenPageLimit(1);
 
-        if (!SharedPrefUtils.getExploreCoach1Seen(preferences)) {
+        /*if (!SharedPrefUtils.getExploreCoach1Seen(preferences)) {
             if (mListener != null)
                 mListener.showSwipeCoach();
             SharedPrefUtils.setExploreCoach1Seen(preferences);
-        }
+        }*/
         noFriendsDiscoverLayoutContainer.setVisibility(View.GONE);
         /*explorePager.setVisibility(View.VISIBLE);*/
         exploreRecyclerView.setVisibility(View.VISIBLE);
@@ -783,6 +837,9 @@ public class ExploreFragment extends Fragment implements ExploreRecyclerViewAdap
         notifyDataAvailable();
         /*if (explorePager != null)
             explorePager.postDelayed(new ScrollToLast(count), 1500L);*/
+        if(exploreRecyclerView!=null){
+            exploreRecyclerView.scrollToPosition(count-2);
+        }
     }
 
     @Override
