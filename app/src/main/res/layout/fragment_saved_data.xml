@@ -1,0 +1,57 @@
+<android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    >
+
+    <android.support.design.widget.AppBarLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#fff"
+        app:elevation="0dp">
+
+        <android.support.v7.widget.Toolbar
+            android:id="@+id/myReachToolbar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="?attr/actionBarSize"
+            app:layout_scrollFlags="scroll|enterAlways"
+            app:popupTheme="@style/ThemeOverlay.AppCompat.Light"
+            app:theme="@style/ThemeOverlay.AppCompat.ActionBar"
+            app:titleTextColor="@color/reach_color" />
+        <View
+            android:background="@drawable/shadow_top"
+            android:layout_width="match_parent"
+            android:layout_height="2dp" />
+
+    </android.support.design.widget.AppBarLayout>
+
+
+    <FrameLayout
+
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        tools:context=".coreViews.saved_songs.SavedSongsFragment"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior"
+        >
+
+        <include layout="@layout/empty_view_layout"
+            />
+
+        <!-- TODO: Update blank fragment layout -->
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/saved_songs_recyclerview"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@null" />
+
+
+
+        <!--
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_gravity="center"-->
+
+    </FrameLayout>
+</android.support.design.widget.CoordinatorLayout>

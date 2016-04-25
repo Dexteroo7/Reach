@@ -117,11 +117,11 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage, Pare
         // Cursor is used for full list songs
         if (message instanceof Cursor) {
 
-            final Cursor cursor = (Cursor) message;
-            final int count = cursor.getColumnCount();
-            final Song musicData = SongCursorHelper.SONG_HELPER.parse(cursor);
+            //final Cursor cursor = (Cursor) message;
+            //final int count = cursor.getColumnCount();
+            //final Song musicData = SongCursorHelper.SONG_HELPER.parse(cursor);
             //musicData.setProcessed(musicData.size);
-            MiscUtils.playSong(musicData, getContext());
+            //MiscUtils.playSong(musicData, getContext());
 
             // To play songs of the user (not the downloaded ones)
             /*if (count == MySongsHelper.DISK_LIST.length) {*//*
@@ -139,9 +139,9 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage, Pare
             // Music Data is used for recent list songs
         } else if (message instanceof Song) {
 
-            final Song musicData = (Song) message;
+            //final Song musicData = (Song) message;
             //musicData.setProcessed(musicData.size);
-            MiscUtils.playSong(musicData, getContext());
+            //MiscUtils.playSong(musicData, getContext());
         } else
             throw new IllegalArgumentException("Unknown type handed over");
     }

@@ -6,7 +6,11 @@
     android:paddingLeft="4dp"
     android:paddingRight="4dp"
     android:paddingBottom="4dp"
-    android:background="@drawable/gradient_bg">
+    android:background="@drawable/gradient_bg"
+    android:layout_margin="4dp"
+    >
+
+    <!--#E6E6E6-->
 
     <TextView
         android:id="@+id/headerText"

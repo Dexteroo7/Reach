@@ -17,6 +17,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -35,7 +36,7 @@ import reach.project.core.StaticData;
 import reach.project.coreViews.friends.ReachFriendsHelper;
 import reach.project.coreViews.friends.ReachFriendsProvider;
 import reach.project.notificationCentre.NotificationActivity;
-import reach.project.player.PlayerActivity;
+//import reach.project.player.PlayerActivity;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
 import reach.project.utils.ancillaryClasses.SuperInterface;
@@ -48,6 +49,7 @@ public class ProfileFragment extends Fragment {
     public static final String TAG = ProfileFragment.class.getSimpleName();
 
     private SuperInterface mListener;
+    private ProgressBar progress_bar;
 
     @Nullable
     @Override
@@ -64,9 +66,9 @@ public class ProfileFragment extends Fragment {
         mToolbar.inflateMenu(R.menu.yourprofile_menu);
         mToolbar.setOnMenuItemClickListener(item -> {
             switch (item.getItemId()) {
-                case R.id.player_button:
-                    PlayerActivity.openActivity(getActivity());
-                    return true;
+//                case R.id.player_button:
+//                    PlayerActivity.openActivity(getActivity());
+//                    return true;
                 case R.id.notif_button:
                     NotificationActivity.openActivity(getActivity(), NotificationActivity.OPEN_NOTIFICATIONS);
                     return true;
@@ -105,6 +107,8 @@ public class ProfileFragment extends Fragment {
             mListener.removeProfileFragment(this);
         }
 
+        
+        progress_bar = (ProgressBar) v.findViewById(R.id.progress_bar);
         final RelativeLayout headerRoot = (RelativeLayout) v.findViewById(R.id.headerRoot);
 
         ((TextView) headerRoot.findViewById(R.id.userName)).setText(cursor.getString(0));
@@ -169,17 +173,10 @@ public class ProfileFragment extends Fragment {
                 userId,
                 SharedPrefUtils.getServerId(sharedPreferences));
 
-        //update locally
-        final ContentValues values = new ContentValues();
-        values.put(ReachFriendsHelper.COLUMN_STATUS, ReachFriendsHelper.Status.REQUEST_SENT_NOT_GRANTED.getValue());
-        getActivity().getContentResolver().update(
-                Uri.parse(ReachFriendsProvider.CONTENT_URI + "/" + userId),
-                values,
-                ReachFriendsHelper.COLUMN_ID + " = ?",
-                new String[]{userId + ""});
+
 
         //show in view
-        setRequestSent();
+        //setRequestSent();
     };
 
     private final View.OnClickListener cancelRequest = view -> {
@@ -229,8 +226,10 @@ public class ProfileFragment extends Fragment {
             text1.setText("Looks like the user has not accepted your request yet");
         if (text2 != null)
             text2.setText("Friend request pending");
-        if (sendButton != null)
+        if (sendButton != null) {
             sendButton.setText("CANCEL FRIEND REQUEST");
+            sendButton.setOnClickListener(cancelRequest);
+        }
     }
 
     private void setRequestNotSent() {
@@ -241,11 +240,27 @@ public class ProfileFragment extends Fragment {
             text1.setText("You need to be friends before you can access their collections");
         if (text2 != null)
             text2.setText("Do you wish to send a request to this user?");
-        if (sendButton != null)
+        if (sendButton != null) {
             sendButton.setText("SEND FRIEND REQUEST");
+            sendButton.setOnClickListener(sendRequest);
+        }
     }
 
     private static final class SendRequest extends AsyncTask<Long, Void, Long> {
+
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            if(reference.get()!=null) {
+                Log.d(TAG, "onPreExecute: Disabling send button");
+                reference.get().sendButton.setEnabled(false);
+                reference.get().progress_bar.setVisibility(View.VISIBLE);
+            }
+            else
+                cancel(true);
+
+        }
 
         @Override
         protected Long doInBackground(final Long... params) {
@@ -261,34 +276,60 @@ public class ProfileFragment extends Fragment {
                     Optional.of(input -> (input == null || TextUtils.isEmpty(input.getString()) || input.getString().equals("false")))).orNull();
 
             final String toParse;
-            if (dataAfterWork == null || TextUtils.isEmpty(toParse = dataAfterWork.getString()) || toParse.equals("false"))
+
+            if(reference.get()!=null) {
+            if (dataAfterWork == null || TextUtils.isEmpty(toParse = dataAfterWork.getString()) || toParse.equals("false")){
+                final ContentValues values = new ContentValues();
+                values.put(ReachFriendsHelper.COLUMN_STATUS, ReachFriendsHelper.Status.REQUEST_NOT_SENT.getValue());
+
+                    //response becomes the id of failed person
+                    reference.get().getActivity().getContentResolver().update(
+                            Uri.parse(ReachFriendsProvider.CONTENT_URI + "/" + params[0]),
+                            values,
+                            ReachFriendsHelper.COLUMN_ID + " = ?",
+                            new String[]{params[0] + ""});
                 return params[0];
-            return null;
+                }
+
+                else {
+
+                    //Log.d(TAG, "doInBackground: Send Request, To Parse = " + toParse);
+                    //update locally
+                    final ContentValues values = new ContentValues();
+                    values.put(ReachFriendsHelper.COLUMN_STATUS, ReachFriendsHelper.Status.REQUEST_SENT_NOT_GRANTED.getValue());
+                    reference.get().getActivity().getContentResolver().update(
+                            Uri.parse(ReachFriendsProvider.CONTENT_URI + "/" + userId),
+                            values,
+                            ReachFriendsHelper.COLUMN_ID + " = ?",
+                            new String[]{userId + ""});
+
+                    return null;
+                }
+            }
+            return 0L;
         }
 
         @Override
         protected void onPostExecute(final Long response) {
 
             super.onPostExecute(response);
+            if(reference.get()!=null) {
 
             if (response != null && response > 0) {
-
-                final ContentValues values = new ContentValues();
-                values.put(ReachFriendsHelper.COLUMN_STATUS, ReachFriendsHelper.Status.REQUEST_NOT_SENT.getValue());
-
-                //response becomes the id of failed person
-                MiscUtils.useFragment(reference, activity -> {
-
-                    Toast.makeText(activity.getActivity(), "Request Failed", Toast.LENGTH_SHORT).show();
-
-                    activity.getActivity().getContentResolver().update(
-                            Uri.parse(ReachFriendsProvider.CONTENT_URI + "/" + response),
-                            values,
-                            ReachFriendsHelper.COLUMN_ID + " = ?",
-                            new String[]{response + ""});
-                    activity.setRequestNotSent();
-                });
+                    reference.get().setRequestNotSent();
+                    Toast.makeText(reference.get().getActivity(), "Request Failed", Toast.LENGTH_SHORT).show();
+                }
+                else if(response == null){
+                reference.get().setRequestSent();
             }
+
+                Log.d(TAG, "onPostExecute: enabling send button");
+                reference.get().sendButton.setEnabled(true);
+                reference.get().progress_bar.setVisibility(View.INVISIBLE);
+
+            }
+
+
 
         }
     }

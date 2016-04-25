@@ -28,8 +28,8 @@ import reach.project.music.SongProvider;
 import reach.project.coreViews.friends.ReachFriendsHelper;
 import reach.project.coreViews.friends.ReachFriendsProvider;
 import reach.project.notificationCentre.NotificationActivity;
-import reach.project.reachProcess.auxiliaryClasses.Connection;
-import reach.project.reachProcess.reachService.ProcessManager;
+//import reach.project.reachProcess.auxiliaryClasses.Connection;
+//import reach.project.reachProcess.reachService.ProcessManager;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
 
@@ -342,46 +342,46 @@ public class GcmIntentService extends IntentService {
             /**
              * Service CONNECT, to establish connection while downloading
              */
-            else if (message.startsWith("CONNECT")) {
-
-                Log.d(TAG, "Notification type = : " + "Connect" + " , message = " + message);
-                //Verify
-                final String actualMessage = message.substring(7);
-                final Connection connection = new Gson().fromJson(actualMessage, Connection.class);
-                if (connection == null || TextUtils.isEmpty(connection.getMessageType())) {
-                    Log.i("Downloader", "illegal network request");
-                    GcmBroadcastReceiver.completeWakefulIntent(intent);
-                    return;
-                }
-
-                final Cursor isPaused = getContentResolver().query(
-                        SongProvider.CONTENT_URI,
-                        new String[]{SongHelper.COLUMN_STATUS},
-                        SongHelper.COLUMN_SENDER_ID + " = ? and " +
-                                SongHelper.COLUMN_RECEIVER_ID + " = ? and " +
-                                SongHelper.COLUMN_SONG_ID + " = ?",
-                        new String[]{connection.getSenderId() + "",
-                                connection.getReceiverId() + "",
-                                connection.getSongId() + ""}, null);
-
-                if (isPaused != null && isPaused.moveToFirst() && isPaused.getShort(0) == ReachDatabase.Status.PAUSED_BY_USER.getValue()) {
-
-                    isPaused.close();
-                    GcmBroadcastReceiver.completeWakefulIntent(intent);
-                    return;
-                } else if (isPaused != null)
-                    isPaused.close();
-
-                Log.i("Downloader", message + " Received");
-                if (!SharedPrefUtils.getMobileData(getSharedPreferences("Reach", MODE_PRIVATE)) && getNetworkType(this) != 1 && message.contains("REQ"))
-                    Log.i("Downloader", "Dropping request on mobile network");
-                else
-                    ProcessManager.submitNetworkRequest(this, actualMessage);
-            }
+//            else if (message.startsWith("CONNECT")) {
+//
+//                Log.d(TAG, "Notification type = : " + "Connect" + " , message = " + message);
+//                //Verify
+//                final String actualMessage = message.substring(7);
+//                final Connection connection = new Gson().fromJson(actualMessage, Connection.class);
+//                if (connection == null || TextUtils.isEmpty(connection.getMessageType())) {
+//                    Log.i("Downloader", "illegal network request");
+//                    GcmBroadcastReceiver.completeWakefulIntent(intent);
+//                    return;
+//                }
+//
+//                final Cursor isPaused = getContentResolver().query(
+//                        SongProvider.CONTENT_URI,
+//                        new String[]{SongHelper.COLUMN_STATUS},
+//                        SongHelper.COLUMN_SENDER_ID + " = ? and " +
+//                                SongHelper.COLUMN_RECEIVER_ID + " = ? and " +
+//                                SongHelper.COLUMN_SONG_ID + " = ?",
+//                        new String[]{connection.getSenderId() + "",
+//                                connection.getReceiverId() + "",
+//                                connection.getSongId() + ""}, null);
+//
+//                if (isPaused != null && isPaused.moveToFirst() && isPaused.getShort(0) == ReachDatabase.Status.PAUSED_BY_USER.getValue()) {
+//
+//                    isPaused.close();
+//                    GcmBroadcastReceiver.completeWakefulIntent(intent);
+//                    return;
+//                } else if (isPaused != null)
+//                    isPaused.close();
+//
+//                Log.i("Downloader", message + " Received");
+//                if (!SharedPrefUtils.getMobileData(getSharedPreferences("Reach", MODE_PRIVATE)) && getNetworkType(this) != 1 && message.contains("REQ"))
+//                    Log.i("Downloader", "Dropping request on mobile network");
+//                else
+//                    ProcessManager.submitNetworkRequest(this, actualMessage);
+//            }
 //                Log.i("Downloader", "Received unexpected GCM " + message);
         } else {
             switch (type) {
-                //Promotional messages from Devika
+                //Promotional messages from Devika, has added new songs
                 case "CURATED":
 
                     final String heading = extras.getString("heading");
@@ -415,6 +415,7 @@ public class GcmIntentService extends IntentService {
                         if(activityName.contains(YourProfileActivity.class.getSimpleName())) {
                             Log.d(TAG, "onHandleIntent: Activity name contains yourProfileActivity");
                             mIntent = new Intent(this, ReachActivity.class);
+                            //TODO: See if there is a need to clear all the other activities and create a new instance of ReachActivity
                             mIntent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
                             mIntent.setAction(ReachActivity.OPEN_FRIEND_PROFILE);
                             if (!TextUtils.isEmpty(extras.getString("userId"))) {

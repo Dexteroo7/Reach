@@ -11,11 +11,17 @@
         android:layout_height="wrap_content"
         android:minHeight="?attr/actionBarSize" />
 
-    <android.support.v4.view.ViewPager
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/exploreRecyclerView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@+id/exploreToolbar"/>
+
+    <!--<reach.project.utils.viewHelpers.ViewPagerCustomDuration
         android:id="@+id/explorer"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_below="@+id/exploreToolbar" />
+        android:layout_below="@+id/exploreToolbar" />-->
     <include layout="@layout/no_friends_discover_layout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"

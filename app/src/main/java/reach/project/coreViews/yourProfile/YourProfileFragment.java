@@ -133,7 +133,7 @@ public class YourProfileFragment extends Fragment {
                             true,
                             150,
                             150)
-            ,150,150));
+                    , 150, 150));
             coverPic.setController(MiscUtils.getControllerResize(coverPic.getController(),
                     AlbumArtUri.getUserImageUri(
                             userId,
@@ -144,7 +144,7 @@ public class YourProfileFragment extends Fragment {
                             150),
                     300,
                     150)
-                    );
+            );
 //            coverPic.setController(MiscUtils.getControllerResize(coverPic.getController(),
 //                    Uri.parse(MiscUtils.getRandomPic()), 500, 500));
 

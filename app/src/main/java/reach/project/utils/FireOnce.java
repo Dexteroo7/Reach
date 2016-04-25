@@ -41,7 +41,7 @@ import reach.project.music.SongCursorHelper;
 import reach.project.music.SongHelper;
 import reach.project.music.SongProvider;
 import reach.project.reachProcess.auxiliaryClasses.Connection;
-import reach.project.reachProcess.reachService.ProcessManager;
+//import reach.project.reachProcess.reachService.ProcessManager;
 import reach.project.utils.viewHelpers.HandOverMessage;
 
 /**
@@ -422,63 +422,63 @@ public enum FireOnce implements Closeable {
             return new Gson().toJson(connection);
         }
 
-        private ArrayList<ContentProviderOperation> bulkStartDownloads(List<ReachDatabase> reachDatabases) {
-
-            final ArrayList<ContentProviderOperation> operations = new ArrayList<>();
-
-            for (ReachDatabase reachDatabase : reachDatabases) {
-
-//                Log.i("Downloader", "Scanning " + reachDatabase.getId() + " " + reachDatabase.getProcessed() + " " + reachDatabase.getLength());
-                final ContentValues values = new ContentValues();
-                if (reachDatabase.getProcessed() >= reachDatabase.getLength()) {
-
-                    //mark finished
-                    if (reachDatabase.getStatus() != ReachDatabase.Status.FINISHED) {
-
-                        values.put(SongHelper.COLUMN_STATUS, ReachDatabase.Status.FINISHED.getValue());
-                        values.put(SongHelper.COLUMN_PROCESSED, reachDatabase.getLength());
-                        operations.add(getForceUpdateOperation(values, reachDatabase.getId()));
-                    }
-                    continue;
-                }
-
-                final MyBoolean myBoolean;
-                if (reachDatabase.getSenderId() == StaticData.DEVIKA) {
-
-                    //hit cloud
-                    MiscUtils.useContextFromContext(reference, context -> {
-                        ProcessManager.submitNetworkRequest(context, fakeResponse(reachDatabase));
-                        return null;
-                    });
-
-                    myBoolean = new MyBoolean();
-                    myBoolean.setGcmexpired(false);
-                    myBoolean.setOtherGCMExpired(false);
-                } else {
-                    //sending REQ to senderId
-                    myBoolean = MiscUtils.sendGCM(
-                            generateRequest(reachDatabase),
-                            reachDatabase.getSenderId(),
-                            reachDatabase.getReceiverId());
-                }
-
-                if (myBoolean == null) {
-                    Log.i("Ayush", "GCM sending resulted in shit");
-                    values.put(SongHelper.COLUMN_STATUS, ReachDatabase.Status.GCM_FAILED.getValue());
-                } else if (myBoolean.getGcmexpired()) {
-                    Log.i("Ayush", "GCM re-registry needed");
-                    values.put(SongHelper.COLUMN_STATUS, ReachDatabase.Status.GCM_FAILED.getValue());
-                } else if (myBoolean.getOtherGCMExpired()) {
-                    Log.i("Downloader", "SENDING GCM FAILED " + reachDatabase.getSenderId());
-                    values.put(SongHelper.COLUMN_STATUS, ReachDatabase.Status.GCM_FAILED.getValue());
-                } else {
-                    Log.i("Downloader", "GCM SENT " + reachDatabase.getSenderId());
-                    values.put(SongHelper.COLUMN_STATUS, ReachDatabase.Status.NOT_WORKING.getValue());
-                }
-                operations.add(getUpdateOperation(values, reachDatabase.getId()));
-            }
-            return operations;
-        }
+//        private ArrayList<ContentProviderOperation> bulkStartDownloads(List<ReachDatabase> reachDatabases) {
+//
+//            final ArrayList<ContentProviderOperation> operations = new ArrayList<>();
+//
+//            for (ReachDatabase reachDatabase : reachDatabases) {
+//
+////                Log.i("Downloader", "Scanning " + reachDatabase.getId() + " " + reachDatabase.getProcessed() + " " + reachDatabase.getLength());
+//                final ContentValues values = new ContentValues();
+//                if (reachDatabase.getProcessed() >= reachDatabase.getLength()) {
+//
+//                    //mark finished
+//                    if (reachDatabase.getStatus() != ReachDatabase.Status.FINISHED) {
+//
+//                        values.put(SongHelper.COLUMN_STATUS, ReachDatabase.Status.FINISHED.getValue());
+//                        values.put(SongHelper.COLUMN_PROCESSED, reachDatabase.getLength());
+//                        operations.add(getForceUpdateOperation(values, reachDatabase.getId()));
+//                    }
+//                    continue;
+//                }
+//
+//                final MyBoolean myBoolean;
+//                if (reachDatabase.getSenderId() == StaticData.DEVIKA) {
+//
+//                    //hit cloud
+//                    MiscUtils.useContextFromContext(reference, context -> {
+//                        ProcessManager.submitNetworkRequest(context, fakeResponse(reachDatabase));
+//                        return null;
+//                    });
+//
+//                    myBoolean = new MyBoolean();
+//                    myBoolean.setGcmexpired(false);
+//                    myBoolean.setOtherGCMExpired(false);
+//                } else {
+//                    //sending REQ to senderId
+//                    myBoolean = MiscUtils.sendGCM(
+//                            generateRequest(reachDatabase),
+//                            reachDatabase.getSenderId(),
+//                            reachDatabase.getReceiverId());
+//                }
+//
+//                if (myBoolean == null) {
+//                    Log.i("Ayush", "GCM sending resulted in shit");
+//                    values.put(SongHelper.COLUMN_STATUS, ReachDatabase.Status.GCM_FAILED.getValue());
+//                } else if (myBoolean.getGcmexpired()) {
+//                    Log.i("Ayush", "GCM re-registry needed");
+//                    values.put(SongHelper.COLUMN_STATUS, ReachDatabase.Status.GCM_FAILED.getValue());
+//                } else if (myBoolean.getOtherGCMExpired()) {
+//                    Log.i("Downloader", "SENDING GCM FAILED " + reachDatabase.getSenderId());
+//                    values.put(SongHelper.COLUMN_STATUS, ReachDatabase.Status.GCM_FAILED.getValue());
+//                } else {
+//                    Log.i("Downloader", "GCM SENT " + reachDatabase.getSenderId());
+//                    values.put(SongHelper.COLUMN_STATUS, ReachDatabase.Status.NOT_WORKING.getValue());
+//                }
+//                operations.add(getUpdateOperation(values, reachDatabase.getId()));
+//            }
+//            return operations;
+//        }
 
         @Override
         protected Void doInBackground(Void... params) {
@@ -498,27 +498,27 @@ public enum FireOnce implements Closeable {
             if (cursor == null)
                 return null;
 
-            final List<ReachDatabase> reachDatabaseList = new ArrayList<>(cursor.getCount());
-            while (cursor.moveToNext())
-                reachDatabaseList.add(SongCursorHelper.DOWNLOADING_HELPER.parse(cursor));
-            cursor.close();
-
-            if (reachDatabaseList.size() > 0) {
-
-                final ArrayList<ContentProviderOperation> operations = bulkStartDownloads(reachDatabaseList);
-                if (operations.size() > 0) {
-
-                    MiscUtils.useContextFromContext(reference, context -> {
-
-                        try {
-                            Log.i("Downloader", "Starting Download op " + operations.size());
-                            context.getContentResolver().applyBatch(SongProvider.AUTHORITY, operations);
-                        } catch (RemoteException | OperationApplicationException e) {
-                            e.printStackTrace();
-                        }
-                    });
-                }
-            }
+//            final List<ReachDatabase> reachDatabaseList = new ArrayList<>(cursor.getCount());
+//            while (cursor.moveToNext())
+//                reachDatabaseList.add(SongCursorHelper.DOWNLOADING_HELPER.parse(cursor));
+//            cursor.close();
+//
+//            if (reachDatabaseList.size() > 0) {
+//
+//                final ArrayList<ContentProviderOperation> operations = bulkStartDownloads(reachDatabaseList);
+//                if (operations.size() > 0) {
+//
+//                    MiscUtils.useContextFromContext(reference, context -> {
+//
+//                        try {
+//                            Log.i("Downloader", "Starting Download op " + operations.size());
+//                            context.getContentResolver().applyBatch(SongProvider.AUTHORITY, operations);
+//                        } catch (RemoteException | OperationApplicationException e) {
+//                            e.printStackTrace();
+//                        }
+//                    });
+//                }
+//            }
 
             return null;
         }

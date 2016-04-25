@@ -1,128 +1,166 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.v7.widget.CardView xmlns:card_view="http://schemas.android.com/apk/res-auto"
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
+<android.support.v7.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:card_view="http://schemas.android.com/apk/res-auto"
     xmlns:fresco="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:descendantFocusability="blocksDescendants"
     android:id="@+id/card_view"
-    android:layout_marginBottom="-10dp"
-    card_view:cardUseCompatPadding="true"
+    android:layout_width="match_parent"
+    android:layout_height="320dp"
+    android:descendantFocusability="blocksDescendants"
+    card_view:cardCornerRadius="4dp"
     card_view:cardElevation="4dp"
-    card_view:cardCornerRadius="2dp"
-    card_view:cardPreventCornerOverlap="true">
+    card_view:cardPreventCornerOverlap="true"
+    card_view:cardUseCompatPadding="true">
+
+    <!--android:layout_marginBottom="-10dp"-->
+
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent">
+
         <ImageView
             android:id="@+id/saveBtn"
-            android:visibility="gone"
+            android:layout_width="25dp"
+            android:layout_height="25dp"
             android:layout_alignParentRight="true"
-            android:layout_marginTop="16dp"
-            android:layout_marginRight="16dp"
             android:layout_marginLeft="8dp"
-            android:src="@drawable/icon_download_white"
+            android:layout_marginRight="16dp"
+            android:layout_marginTop="16dp"
             android:background="@drawable/circular_background_grey"
             android:padding="3dp"
-            android:layout_width="25dp"
-            android:layout_height="25dp" />
+            android:src="@drawable/icon_download_white"
+            android:visibility="gone" />
+
+        <ImageView
+            android:id="@+id/saveSong"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignBottom="@+id/handle"
+            android:layout_alignParentRight="true"
+            android:layout_alignTop="@+id/handle"
+            android:layout_marginRight="12dp"
+            card_view:srcCompat="@drawable/save_button_selector" />
 
         <ImageView
             android:id="@+id/fb_share_btn"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginLeft="16dp"
-            android:layout_alignRight="@+id/downBtn"
-            android:layout_centerHorizontal="true"
-            android:layout_marginRight="16dp"
-            android:layout_alignTop="@+id/handle"
             android:layout_alignBottom="@+id/handle"
-            fresco:srcCompat="@drawable/ic_share_grey_24dp"
-            />
+            android:layout_alignTop="@+id/handle"
+            android:layout_centerHorizontal="true"
+            android:layout_marginRight="12dp"
+            android:layout_toLeftOf="@id/saveSong"
+            card_view:srcCompat="@drawable/ic_share_black_24dp" />
+
 
         <LinearLayout
             android:id="@+id/handle"
-            android:layout_marginLeft="16dp"
-            android:layout_marginTop="16dp"
-            android:layout_marginRight="16dp"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginLeft="8dp"
+            android:layout_marginRight="16dp"
+            android:layout_marginTop="16dp"
             android:layout_toLeftOf="@id/fb_share_btn"
-            >
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
             <com.facebook.drawee.view.SimpleDraweeView
                 android:id="@+id/userImage"
-                fresco:roundAsCircle="true"
-                fresco:placeholderImage="@drawable/default_profile_circle"
-                android:layout_marginRight="8dp"
                 android:layout_width="35dp"
-                android:layout_height="35dp" />
+                android:layout_height="35dp"
+                android:layout_marginRight="8dp"
+                fresco:placeholderImage="@drawable/default_profile_circle"
+                fresco:roundAsCircle="true" />
+
             <TextView
                 android:id="@+id/userHandle"
-                android:text="handle"
-                android:textSize="16sp"
-                android:maxLines="2"
-                android:ellipsize="marquee"
-                android:textColor="@color/reach_grey"
-                android:textStyle="bold"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                tools:text="this song is trending in your network"
-                />
+                android:ellipsize="marquee"
+                android:maxLines="2"
+                android:text="handle"
+                android:textColor="@color/primary_text"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                tools:text="this song is trending in your network" />
+
+        </LinearLayout>
+
+        <com.facebook.drawee.view.SimpleDraweeView
+            android:id="@+id/image"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_below="@id/handle"
+            android:layout_marginTop="16dp"
+            android:adjustViewBounds="true"
+            android:background="@drawable/explore_bg"
+            card_view:actualImageScaleType="fitXY"
+            card_view:placeholderImageScaleType="center"
+            fresco:placeholderImage="@drawable/explore_placeholder"
+            />
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="2dp"
+            android:layout_alignTop="@id/image"
+            android:background="@drawable/shadow_bottom" />
+
+        <android.support.design.widget.FloatingActionButton
+            android:id="@+id/downBtn"
+            android:layout_width="42dp"
+            android:layout_height="42dp"
+            android:layout_alignTop="@+id/title_container"
+            android:layout_alignRight="@id/title_container"
+            android:layout_marginRight="12dp"
+            android:layout_marginTop="-24dp"
+            android:src="@drawable/play_white_selector1"
+            android:scaleType="center"
+            />
+
+
+
+        <LinearLayout
+            android:id="@id/title_container"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_alignBottom="@id/image"
+            android:background="#44FFFFFF"
+            >
+
+
+            <TextView
+                android:id="@+id/title"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:layout_marginLeft="8dp"
+                android:layout_marginRight="64dp"
+                android:ellipsize="marquee"
+                android:lines="1"
+                android:textColor="#FFFFFFFF"
+                android:textSize="20sp"
+                tools:text="Title Title" />
+
+
+        <TextView
+            android:id="@id/subtitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignLeft="@id/title"
+            android:layout_marginBottom="8dp"
+            android:layout_marginLeft="8dp"
+            android:layout_marginRight="64dp"
+            android:ellipsize="marquee"
+            android:lines="1"
+            android:textColor="#BBFFFFFF"
+            android:textSize="16sp"
+            tools:text="Subtitle" />
+
+
 
         </LinearLayout>
 
 
-
-        <TextView
-            android:id="@+id/title"
-            android:lines="1"
-            android:ellipsize="marquee"
-            android:text="Title Title"
-            android:textColor="#000"
-            android:textSize="20sp"
-            android:layout_marginTop="24dp"
-            android:layout_marginBottom="8dp"
-            android:layout_marginRight="16dp"
-            android:layout_below="@id/handle"
-            android:layout_alignLeft="@id/handle"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
-        <TextView
-            android:id="@+id/subtitle"
-            android:lines="1"
-            android:layout_marginBottom="16dp"
-            android:layout_alignLeft="@id/title"
-            android:ellipsize="marquee"
-            android:layout_below="@id/title"
-            android:text="Subtitle"
-            android:layout_toLeftOf="@+id/downBtn"
-            android:textSize="16sp"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
-        <com.facebook.drawee.view.SimpleDraweeView
-            android:id="@+id/image"
-            android:layout_below="@id/subtitle"
-            android:background="@drawable/explore_bg"
-            fresco:placeholderImage="@drawable/explore_placeholder"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent" />
-        <View
-            android:background="@drawable/shadow_bottom"
-            android:layout_width="match_parent"
-            android:layout_height="2dp"
-            android:layout_alignTop="@id/image" />
-        <android.support.design.widget.FloatingActionButton
-            android:id="@id/downBtn"
-            android:layout_alignTop="@id/image"
-            android:layout_alignParentRight="true"
-            android:layout_marginRight="16dp"
-            android:layout_marginLeft="8dp"
-            android:layout_marginTop="-32dp"
-            android:src="@drawable/play_white_selector"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
     </RelativeLayout>
 </android.support.v7.widget.CardView>

@@ -29,7 +29,7 @@ import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.lang.reflect.Array;
 
-import reach.project.reachProcess.reachService.ProcessManager;
+//import reach.project.reachProcess.reachService.ProcessManager;
 
 /**
  * The JavaLayerUtils class is not strictly part of the JavaLayer API.
@@ -129,16 +129,16 @@ public class JavaLayerUtils {
         return obj;
     }
 
-    static public Object deserializeArrayResource(String name, Class elemType, int length)
-            throws IOException {
-
-
-        InputStream str = ProcessManager.getSERStream(name);
-        if (str == null)
-            throw new IOException("unable to load resource '" + name + "'");
-
-        return deserializeArray(str, elemType, length);
-    }
+//    static public Object deserializeArrayResource(String name, Class elemType, int length)
+//            throws IOException {
+//
+//
+//        InputStream str = ProcessManager.getSERStream(name);
+//        if (str == null)
+//            throw new IOException("unable to load resource '" + name + "'");
+//
+//        return deserializeArray(str, elemType, length);
+//    }
 
     static public void serialize(OutputStream out, Object obj)
             throws IOException {

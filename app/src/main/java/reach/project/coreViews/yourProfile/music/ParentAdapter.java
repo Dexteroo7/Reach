@@ -1,6 +1,7 @@
 package reach.project.coreViews.yourProfile.music;
 
 import android.net.Uri;
+import android.support.v4.util.Pair;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -15,6 +16,8 @@ import com.facebook.imagepipeline.request.ImageRequestBuilder;
 import com.google.common.base.Optional;
 import com.squareup.wire.Message;
 
+import javax.annotation.Nonnull;
+
 import reach.project.R;
 import reach.project.coreViews.yourProfile.blobCache.CacheAdapterInterface;
 import reach.project.music.Song;
@@ -22,13 +25,13 @@ import reach.project.utils.AlbumArtUri;
 import reach.project.utils.ThreadLocalRandom;
 import reach.project.utils.viewHelpers.CustomGridLayoutManager;
 import reach.project.utils.viewHelpers.CustomLinearLayoutManager;
-import reach.project.utils.viewHelpers.MoreListHolder;
+import reach.project.utils.viewHelpers.HandOverMessage;
 import reach.project.utils.viewHelpers.RecyclerViewMaterialAdapter;
 
 /**
  * Created by dexter on 13/11/15.
  */
-class ParentAdapter<T extends Message> extends RecyclerViewMaterialAdapter<RecyclerView.ViewHolder> {
+class ParentAdapter<T extends Message> extends RecyclerViewMaterialAdapter<RecyclerView.ViewHolder> implements View.OnClickListener {
 
     private static final byte SONG_ITEM_TYPE = 1;
     private static final byte RECENT_LIST_TYPE = 2;
@@ -38,10 +41,12 @@ class ParentAdapter<T extends Message> extends RecyclerViewMaterialAdapter<Recyc
     private final long smartHolderId = ThreadLocalRandom.current().nextLong(Long.MAX_VALUE);
 
     private final CacheAdapterInterface<T, Song> cacheAdapterInterface;
+    private final HandOverPerformActionTask handOverPerformAction;
 
-    public ParentAdapter(CacheAdapterInterface<T, Song> cacheAdapterInterface) {
+    public ParentAdapter(CacheAdapterInterface<T, Song> cacheAdapterInterface, HandOverPerformActionTask handOverPerformAction) {
 
         this.cacheAdapterInterface = cacheAdapterInterface;
+        this.handOverPerformAction = handOverPerformAction;
         setHasStableIds(true);
     }
 
@@ -54,10 +59,13 @@ class ParentAdapter<T extends Message> extends RecyclerViewMaterialAdapter<Recyc
             final Song song = (Song) message;
             final SongItemHolder songSongItemHolder = (SongItemHolder) holder;
 
-            songSongItemHolder.extraButton.setVisibility(View.INVISIBLE);
-            songSongItemHolder.likeButton.setVisibility(View.INVISIBLE);
+            //songSongItemHolder.extraButton.setVisibility(View.INVISIBLE);
+            //songSongItemHolder.likeButton.setVisibility(View.INVISIBLE);
             songSongItemHolder.songName.setText(song.displayName);
             songSongItemHolder.artistName.setText(song.artist);
+            songSongItemHolder.saveButton.setTag(position);
+            songSongItemHolder.saveButton.setOnClickListener(this);
+
             //TODO: Figure Out The Error
             //songSongItemHolder.downButton.setImageResource(R.drawable.icon_download_gray);
 
@@ -90,10 +98,10 @@ class ParentAdapter<T extends Message> extends RecyclerViewMaterialAdapter<Recyc
                 return;
             }
             simpleListHolder.headerText.setText(recentSong.title);
-            simpleListHolder.itemView.setBackgroundResource(R.drawable.border_shadow1);
+            //simpleListHolder.itemView.setBackgroundResource(R.drawable.border_shadow1);
             if (simpleListHolder.listOfItems.getLayoutManager() == null)
                 simpleListHolder.listOfItems.setLayoutManager(new CustomLinearLayoutManager(simpleListHolder.listOfItems.getContext()));
-            simpleListHolder.listOfItems.setAdapter(new MoreAdapter(recentSong.songList, cacheAdapterInterface, R.layout.song_list_item));
+            simpleListHolder.listOfItems.setAdapter(new MoreAdapter(recentSong.songList, cacheAdapterInterface, R.layout.song_list_item,handOverPerformAction));
 
         } else if (message instanceof SmartSong && holder instanceof MoreListHolder) {
 
@@ -103,7 +111,7 @@ class ParentAdapter<T extends Message> extends RecyclerViewMaterialAdapter<Recyc
             simpleListHolder.headerText.setText(smartSong.title);
             if (simpleListHolder.listOfItems.getLayoutManager() == null)
                 simpleListHolder.listOfItems.setLayoutManager(new CustomLinearLayoutManager(simpleListHolder.listOfItems.getContext(), LinearLayoutManager.HORIZONTAL, false));
-            simpleListHolder.listOfItems.setAdapter(new MoreAdapter(smartSong.songList, cacheAdapterInterface, R.layout.song_grid_item));
+            simpleListHolder.listOfItems.setAdapter(new MoreAdapter(smartSong.songList, cacheAdapterInterface, R.layout.song_grid_item,handOverPerformAction));
         }
     }
 
@@ -114,17 +122,25 @@ class ParentAdapter<T extends Message> extends RecyclerViewMaterialAdapter<Recyc
 
             case SONG_ITEM_TYPE:
                 return new SongItemHolder(LayoutInflater.from(parent.getContext())
-                        .inflate(R.layout.song_list_item_without_extra, parent, false), position -> {
+                        .inflate(R.layout.song_list_item, parent, false), new HandOverMessage<Pair<Integer, Integer>>() {
+                    @Override
+                    public void handOverMessage(@Nonnull Pair<Integer, Integer> position) {
 
-                    if (position < 1)
-                        throw new IllegalArgumentException(" Invalid position: " + (position-1)
-                                + " provided in HandOverMessage of YourProfile->SongItemHolder");
+                        if (position.first < 1)
+                            throw new IllegalArgumentException(" Invalid position: " + (position.first - 1)
+                                    + " provided in HandOverMessage of YourProfile->SongItemHolder");
 
-                    final T message = cacheAdapterInterface.getItem(position - 1);
-                    if (message instanceof Song)
-                        cacheAdapterInterface.handOverMessage((Song) message);
-                    else
-                        throw new IllegalArgumentException("Song item holder passed on an illegal value type");
+                        final T message = cacheAdapterInterface.getItem(position.first - 1);
+                        if (message instanceof Song) {
+                            if(position.second == 1)
+                            cacheAdapterInterface.handOverMessage((Song) message);
+                            else
+                                handOverPerformAction.performAction(1,(Song)message);
+
+                        }
+                        else
+                            throw new IllegalArgumentException("Song item holder passed on an illegal value type");
+                    }
                 });
             case RECENT_LIST_TYPE:
                 return new MoreListHolder(parent,
@@ -178,4 +194,17 @@ class ParentAdapter<T extends Message> extends RecyclerViewMaterialAdapter<Recyc
         return new RecyclerView.ViewHolder(view) {
         };
     }
+
+    @Override
+    public void onClick(View v) {
+        final int position = (int) v.getTag();
+        final Song song = (Song) cacheAdapterInterface.getItem(position);
+        handOverPerformAction.performAction(0,song);
+
+    }
+
+    public interface HandOverPerformActionTask{
+        public void performAction(int action, Song song);
+    }
+
 }

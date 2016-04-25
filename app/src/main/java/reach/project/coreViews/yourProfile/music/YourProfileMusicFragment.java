@@ -1,13 +1,16 @@
 package reach.project.coreViews.yourProfile.music;
 
 import android.app.Activity;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.database.Cursor;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v4.util.Pair;
 import android.support.v4.widget.NestedScrollView;
 import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
@@ -17,6 +20,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.appspot.able_door_616.userApi.UserApi;
 import com.appspot.able_door_616.userApi.model.SimpleSong;
@@ -51,6 +55,8 @@ import reach.project.R;
 import reach.project.core.ReachActivity;
 import reach.project.core.ReachApplication;
 import reach.project.core.StaticData;
+import reach.project.coreViews.saved_songs.SavedSongsContract;
+import reach.project.coreViews.saved_songs.SavedSongsDataModel;
 import reach.project.coreViews.yourProfile.blobCache.Cache;
 import reach.project.coreViews.yourProfile.blobCache.CacheAdapterInterface;
 import reach.project.coreViews.yourProfile.blobCache.CacheInjectorCallbacks;
@@ -58,10 +64,12 @@ import reach.project.coreViews.yourProfile.blobCache.CacheType;
 import reach.project.music.Song;
 import reach.project.utils.CloudEndPointsUtils;
 import reach.project.utils.CloudStorageUtils;
+import reach.project.utils.DividerItemDecoration;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
 import reach.project.utils.ancillaryClasses.SuperInterface;
 import reach.project.utils.viewHelpers.CustomLinearLayoutManager;
+import reach.project.utils.viewHelpers.HandOverMessage;
 
 /**
  * Full list loads from cache, and checks network for update, if update is found, whole data is reloaded.
@@ -71,7 +79,7 @@ import reach.project.utils.viewHelpers.CustomLinearLayoutManager;
  * A placeholder fragment containing a simple view.
  */
 public class YourProfileMusicFragment extends Fragment implements CacheInjectorCallbacks<Message>,
-        CacheAdapterInterface<Message, Song> {
+        CacheAdapterInterface<Message, Song>, ParentAdapter.HandOverPerformActionTask {
 
     private static WeakReference<YourProfileMusicFragment> reference = null;
     private static long hostId = 0;
@@ -139,7 +147,8 @@ public class YourProfileMusicFragment extends Fragment implements CacheInjectorC
                              Bundle savedInstanceState) {
 
         rootView = inflater.inflate(R.layout.fragment_simple_recycler, container, false);
-         mRecyclerView = (RecyclerView) rootView.findViewById(R.id.recyclerView);
+        mRecyclerView = (RecyclerView) rootView.findViewById(R.id.recyclerView);
+        //mRecyclerView.addItemDecoration(new DividerItemDecoration(getActivity()));
         //emptyView = rootView.findViewById(R.id.empty_imageView);
         //final TextView emptyViewText = (TextView) rootView.findViewById(R.id.empty_textView);
         //emptyViewText.setText(StaticData.NO_SONGS_TEXT);
@@ -147,10 +156,11 @@ public class YourProfileMusicFragment extends Fragment implements CacheInjectorC
         //mRecyclerView.setHasFixedSize(true);
         loadingProgress = (ProgressBar)rootView.findViewById(R.id.loadingProgress);
         loadingProgress.setVisibility(View.VISIBLE);
-        parentAdapter = new ParentAdapter<>(this);
+        parentAdapter = new ParentAdapter<>(this,this);
         mRecyclerView.setLayoutManager(new CustomLinearLayoutManager(activity));
         mRecyclerView.setAdapter(parentAdapter);
         emptyImageView = (NestedScrollView) rootView.findViewById(R.id.empty_imageView);
+        emptyImageView.setVisibility(View.GONE);
         MaterialViewPagerHelper.registerRecyclerView(activity, mRecyclerView, null);
         emptyTextView = (TextView) rootView.findViewById(R.id.empty_textView);
         emptyTextView.setText("No songs!");
@@ -244,6 +254,16 @@ public class YourProfileMusicFragment extends Fragment implements CacheInjectorC
         return musicData.get(position);
     }
 
+    @Override
+    public void performAction(int action, Song song) {
+        if(song == null){
+            Toast.makeText(getActivity().getApplicationContext(), "Couldn't save song", Toast.LENGTH_SHORT).show();
+        }
+
+        Toast.makeText(getActivity().getApplicationContext(), "Saving song...", Toast.LENGTH_SHORT).show();
+        new YTTestSaveInDatabase(song,hostId).execute(song.getDisplayName());
+    }
+
 
     private static class YTTest extends AsyncTask<String, Void, SearchResult> {
         @Override
@@ -315,6 +335,152 @@ public class YourProfileMusicFragment extends Fragment implements CacheInjectorC
                 reachActRef.currentYTId = searchResult.getId().getVideoId();
                 reachActRef.player.loadVideo(reachActRef.currentYTId);
             });
+        }
+    }
+
+    private static class YTTestSaveInDatabase extends AsyncTask<String, Void, Boolean> {
+
+
+        private static final String TAG = YTTestSaveInDatabase.class.getSimpleName();
+        private final Song song;
+        private final long senderId;
+
+        public YTTestSaveInDatabase(Song song, long senderId) {
+
+            this.song = song;
+            this.senderId = senderId;
+
+        }
+
+
+        @Override
+        protected Boolean doInBackground(String... params) {
+            try {
+                final HttpTransport transport = new NetHttpTransport();
+                final JsonFactory factory = new JacksonFactory();
+                final HttpRequestInitializer initialize = request -> {
+                    request.setConnectTimeout(request.getConnectTimeout() * 2);
+                    request.setReadTimeout(request.getReadTimeout() * 2);
+                };
+                final YouTube youTube = new YouTube.Builder(transport, factory, initialize).build();
+                // Define the API request for retrieving search results.
+                final YouTube.Search.List search = youTube.search().list("id");
+
+                // Set your developer key from the Google Developers Console for
+                // non-authenticated requests. See:
+                // https://console.developers.google.com/
+                final String apiKey = "AIzaSyAYH8mcrHrqG7HJwjyGUuwxMeV7tZP6nmY";
+                search.setKey(apiKey);
+
+                search.setQ(params[0]);
+
+                // Restrict the search results to only include videos. See:
+                // https://developers.google.com/youtube/v3/docs/search/list#type
+                search.setType("video");
+
+                search.setVideoCategoryId("10");
+
+                // To increase efficiency, only retrieve the fields that the
+                // application uses.
+                search.setFields("items/id/videoId");
+                search.setMaxResults(1L);
+
+                // Call the API and print results.
+                final SearchListResponse searchResponse = search.execute();
+                final List<SearchResult> searchResultList = searchResponse.getItems();
+                /*final StringBuilder stringBuilder = new StringBuilder();
+                for (SearchResult searchResult : searchResultList)
+                    stringBuilder.append(searchResult.getSnippet().getTitle()).append("\n\n");
+                return stringBuilder.toString();*/
+                if (searchResultList == null || searchResultList.isEmpty())
+                    return false;
+
+                SavedSongsDataModel data = new SavedSongsDataModel.Builder()
+                        .withArtistAlbumName(song.getArtist())
+                        .withDate_Added(System.currentTimeMillis())
+                        .withDisplayName(song.displayName)
+                        .withSenderId(senderId)
+                        .withSongName(song.getDisplayName())
+                        .withType(1)
+                        .withYoutube_Id(searchResultList.get(0).getId().getVideoId())
+                        .build();
+
+                final YourProfileMusicFragment context = reference.get();
+                if(context == null){
+                    return false;
+                }
+
+                final Cursor cursor = context.getActivity().getContentResolver().query(SavedSongsContract.SavedSongsEntry.CONTENT_URI,
+                        SavedSongsContract.SavedSongsEntry.projection,
+                        SavedSongsContract.SavedSongsEntry.YOUTUBE_ID + " LIKE ? ",
+                        new String[]{data.getYoutube_id()},
+                        null
+                );
+                if(cursor !=null || !cursor.isClosed()){
+                    Log.d(TAG, "Query of - if the song to be saved already exists returns null");
+                    if (cursor.getCount() > 0 ){
+                        Log.d(TAG, cursor.getCount() + " instance of song to be saved already exists");
+                        //TODO: Check for the condition when contentvalues data is null
+                        context.getActivity().getContentResolver().update(
+                                SavedSongsContract.SavedSongsEntry.CONTENT_URI,
+                                getContentValuesData(data),
+                                SavedSongsContract.SavedSongsEntry.YOUTUBE_ID + " LIKE ? ",
+                                new String[]{data.getYoutube_id()}
+                        );
+                        return true;
+                    }
+                }
+
+                final ContentValues cv = getContentValuesData(data);
+                if(cv == null)
+                    return false;
+
+                context.getActivity().getContentResolver().insert(SavedSongsContract.SavedSongsEntry.CONTENT_URI,
+                        cv
+                );
+
+                return true;
+            } catch (IOException e) {
+                e.printStackTrace();
+                return null;
+            }
+        }
+
+        @Override
+        protected void onPostExecute(Boolean successful) {
+            super.onPostExecute(successful);
+            /*MiscUtils.useContextFromFragment(reference, activity -> {
+                new AlertDialog.Builder(activity).setMessage(s).setTitle("Youtube").create().show();
+            });*/
+
+
+            if(successful){
+                if(reference.get()!=null)
+                    Toast.makeText(reference.get().getActivity().getApplicationContext(), "Song saved", Toast.LENGTH_SHORT).show();
+            }
+            else{
+                if(reference.get()!=null)
+                    Toast.makeText(reference.get().getActivity().getApplicationContext(), "Song couldn't be saved", Toast.LENGTH_SHORT).show();
+            }
+        }
+
+        private ContentValues getContentValuesData(SavedSongsDataModel data) {
+            if(data == null)
+                return null;
+
+            final ContentValues cv = new ContentValues();
+            cv.put(SavedSongsContract.SavedSongsEntry.ARTIST_ALBUM_NAME,data.getArtist_album_name());
+            cv.put(SavedSongsContract.SavedSongsEntry.DATE_ADDED,data.getDate_added());
+            cv.put(SavedSongsContract.SavedSongsEntry.SENDER_ID,data.getSender_id());
+            cv.put(SavedSongsContract.SavedSongsEntry.DISPLAY_NAME, data.getDisplay_name());
+            cv.put(SavedSongsContract.SavedSongsEntry.SENDER_NAME, data.getSender_name());
+            cv.put(SavedSongsContract.SavedSongsEntry.SONG_NAME, data.getSong_name() );
+            cv.put(SavedSongsContract.SavedSongsEntry.TYPE, data.getType());
+            cv.put(SavedSongsContract.SavedSongsEntry.YOUTUBE_ID, data.getYoutube_id() );
+            //cv.put();
+
+
+            return cv;
         }
     }
 
@@ -435,19 +601,20 @@ public class YourProfileMusicFragment extends Fragment implements CacheInjectorC
         if (!elements.isEmpty())
             painter(elements, typeChecker);
 
-        loadingProgress.setVisibility(View.GONE);
         //notify
         Log.i("Ayush", "Reloading list " + musicData.size());
 
         if(musicData!=null && musicData.size()<=1){
-            emptyImageView.setVisibility(View.VISIBLE);
+            //emptyImageView.setVisibility(View.VISIBLE);
         }
         else if(musicData!=null && musicData.size()>1){
-            emptyImageView.setVisibility(View.GONE);
+            //emptyImageView.setVisibility(View.GONE);
         }
 
         if (parentAdapter != null)
             parentAdapter.notifyDataSetChanged();
+
+        loadingProgress.setVisibility(View.GONE);
 
         /**
          * If loading has finished request a full injection of smart lists
