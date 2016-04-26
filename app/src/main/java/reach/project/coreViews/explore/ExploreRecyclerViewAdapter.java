@@ -204,11 +204,14 @@ public class ExploreRecyclerViewAdapter extends RecyclerView.Adapter implements 
 
                     return VIEW_TYPE_MISC;
 
+                default:
+                    throw new IllegalStateException("No item type could be set, type " + exploreTypes);
+
             }
 
         }
 
-        throw new IllegalStateException("No item type could be set");
+
 
     }
 
