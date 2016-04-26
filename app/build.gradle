@@ -9,7 +9,7 @@ android {
     defaultConfig {
         applicationId "reach.project"
         targetSdkVersion 23
-        minSdkVersion 23
+        minSdkVersion 22
         versionCode 102
         versionName "1.2.2"
         multiDexEnabled true
@@ -39,7 +39,7 @@ dependencies {
     compile fileTree(includes: ['*.jar'], dir: 'libs')
     //TODO: There are todos written where crittercism related codes have been commented out. Uncomment them as well
 //    compile 'com.crittercism:crittercism-android-agent:5.5.5'
-//    compile 'com.android.support:multidex:1.0.1'
+    compile 'com.android.support:multidex:1.0.1'
     compile 'com.google.android.gms:play-services:6.1.11'
     compile 'com.google.apis:google-api-services-storage:v1-rev65-1.21.0'
     compile 'com.google.apis:google-api-services-youtube:v3-rev163-1.21.0'
