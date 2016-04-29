@@ -249,13 +249,18 @@
 
         <!-- Things on process :remote -->
 
-        <!--<service
+
+        <!--
+            <service
             android:name=".reachProcess.reachService.ProcessManager"
             android:exported="false"
-            android:process=":remote" />-->
+            android:process=":remote" />
+        -->
+
 
         <!-- Use single instance as only 1 activity -->
-        <!--<activity
+        <!--
+        <activity
             android:name=".player.PlayerActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:label="@string/title_activity_player"
@@ -266,7 +271,8 @@
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="reach.project.core.ReachActivity" />
-        </activity>-->
+        </activity>
+        -->
         <activity
             android:name="com.facebook.FacebookActivity"
             android:configChanges="keyboard|keyboardHidden|screenLayout|screenSize|orientation"
@@ -281,7 +287,11 @@
             android:name=".coreViews.saved_songs.SavedSongsProvider"
             android:authorities="reach.project.coreViews.saved_songs.SavedSongsProvider"
             android:enabled="true"
-            android:exported="false"></provider>
+            android:exported="false" />
+
+
+
+
     </application>
 
 </manifest>

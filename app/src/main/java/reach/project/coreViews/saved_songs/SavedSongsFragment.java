@@ -5,6 +5,7 @@ import android.app.SearchManager;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.database.Cursor;
+import android.database.MatrixCursor;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
@@ -13,6 +14,7 @@ import android.support.v4.content.Loader;
 import android.support.v4.util.Pair;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v4.widget.PopupMenuCompat;
+import android.support.v4.widget.SimpleCursorAdapter;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.PopupMenu;
@@ -25,11 +27,16 @@ import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.util.ArrayList;
+
 import javax.annotation.Nonnull;
 import reach.project.R;
+import reach.project.core.ReachActivity;
 import reach.project.core.StaticData;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.ancillaryClasses.SuperInterface;
@@ -50,6 +57,7 @@ public class SavedSongsFragment extends Fragment implements LoaderManager.Loader
     final Bundle bundle = new Bundle();
     public static final String YES = "YES";
     public static final String NO = "NO";
+    private View mPlayAllContainer;
 
     public SavedSongsFragment() {
         // Required empty public constructor
@@ -65,11 +73,33 @@ public class SavedSongsFragment extends Fragment implements LoaderManager.Loader
         mToolbar.setTitle("Saved Songs");
         mToolbar.inflateMenu(R.menu.pager_menu);
         mToolbar.setOnMenuItemClickListener(mListener != null ? mListener.getMenuClickListener() : null);
-        SearchManager searchManager =
-                (SearchManager) getActivity().getSystemService(Context.SEARCH_SERVICE);
+        //SearchManager searchManager =
+          //      (SearchManager) getActivity().getSystemService(Context.SEARCH_SERVICE);
         MenuItem searchViewMenuItem = mToolbar.getMenu().findItem(R.id.search);
         searchView = (SearchView) searchViewMenuItem.getActionView();
         searchView.setQueryHint("Search");
+        mPlayAllContainer =  rootView.findViewById(R.id.playButtonContainer);
+        mPlayAllContainer.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(mListener == null)
+                    return;
+
+                final Cursor cursor = mListAdapter.getSavedSongsCursor();
+                if(cursor == null || !cursor.moveToFirst() || cursor.getCount() == 0)
+                    return;
+
+                ReachActivity.nowPlaying.clear();
+
+                for (cursor.moveToFirst(); !cursor.isAfterLast(); cursor.moveToNext()) {
+
+                    ReachActivity.nowPlaying.add(cursor.getString(0));
+                }
+                mListener.playYoutubePlayList();
+
+
+            }
+        });
         mSavedSongsList = (RecyclerView)rootView.findViewById(R.id.saved_songs_recyclerview);
         mListAdapter = new SavedSongsAdapter(this);
         mSavedSongsList.setLayoutManager(new LinearLayoutManager(getContext()));
@@ -78,6 +108,18 @@ public class SavedSongsFragment extends Fragment implements LoaderManager.Loader
         emptyTextView = (TextView) rootView.findViewById(R.id.empty_textView);
         emptyTextView.setText("No Saved Songs");
         getLoaderManager().initLoader(SAVED_SONGS_LOADER,null,this);
+        /*MatrixCursor c = new MatrixCursor(new String[]{ "_id","Song_name"});
+        c.addRow(new Object[]{"0","hello" });
+        c.addRow(new Object[]{"1","very well"});
+        c.addRow(new Object[]{"2","how are you"});
+        searchView.setSuggestionsAdapter(new SimpleCursorAdapter(
+                getActivity(),
+                android.R.layout.simple_list_item_1,
+                c,
+                new String[]{"Song_name"},
+                new int[]{android.R.id.text1},
+                0
+        ));*/
 
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
@@ -165,10 +207,11 @@ public class SavedSongsFragment extends Fragment implements LoaderManager.Loader
     }
 
     private void hideEmptyView() {
-        if(emptyView == null || mSavedSongsList == null)
+        if(emptyView == null || mSavedSongsList == null || mPlayAllContainer == null)
             return;
         emptyView.setVisibility(View.GONE);
         mSavedSongsList.setVisibility(View.VISIBLE);
+        mPlayAllContainer.setVisibility(View.VISIBLE);
     }
 
     @Override
@@ -181,13 +224,14 @@ public class SavedSongsFragment extends Fragment implements LoaderManager.Loader
 
     private void showEmptyView() {
         Log.d(TAG, "showEmptyView: Inside show emptyView");
-        if(emptyView == null || mSavedSongsList == null) {
+        if(emptyView == null || mSavedSongsList == null || mPlayAllContainer == null) {
             Log.d(TAG, "showEmptyView: view is null");
             return;
         }
         Log.d(TAG, "showing EmptyView");
         emptyView.setVisibility(View.VISIBLE);
         mSavedSongsList.setVisibility(View.GONE);
+        mPlayAllContainer.setVisibility(View.GONE);
     }
 
 
@@ -211,7 +255,6 @@ public class SavedSongsFragment extends Fragment implements LoaderManager.Loader
                     throw new IllegalArgumentException("Ytid is null in SavedSongsFragment");
                 }
                 mListener.showYTVideo(yTid);
-
                 break;
 
 
@@ -282,6 +325,16 @@ public class SavedSongsFragment extends Fragment implements LoaderManager.Loader
         super.onDetach();
         Log.d("Ayush", "ExploreFragment - onDetach");
         mListener = null;
+    }
+
+    public static class SearchviewCursorAdapter extends SimpleCursorAdapter{
+
+        public SearchviewCursorAdapter(Context context, int layout, Cursor c, String[] from, int[] to, int flags) {
+            super(context, layout, c, from, to, flags);
+        }
+
+
+
     }
 
 }

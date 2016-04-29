@@ -10,7 +10,7 @@ public class SavedSongsDataModel {
         private long date_added;
         private String sender_name;
         private long sender_id;
-        private int type = -1; //0 is for saved songs and 1 is for history
+        private int type = -1; //0 is for saved songs and 1 is for history, can later also be used for making playlists
         private String song_name;
         private String artist_album_name;
         private String display_name;
@@ -59,7 +59,6 @@ public class SavedSongsDataModel {
 
             if (youtube_id == null
                     || date_added == 0L
-                    || sender_id == 0L
                     || type == 0) {
 
                 throw new IllegalStateException("Can not create object, not enough data");

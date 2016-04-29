@@ -71,13 +71,13 @@
             card_view:cardElevation="4dp"
             card_view:cardCornerRadius="0dp"
             card_view:contentPadding="1dp"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content">
+            android:layout_width="240dp"
+            android:layout_height="140dp">
             <fragment
                 class="com.google.android.youtube.player.YouTubePlayerSupportFragment"
                 android:id="@+id/video_fragment_container"
-                android:layout_width="210dp"
-                android:layout_height="120dp" />
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
         </android.support.v7.widget.CardView>
     </LinearLayout>
 

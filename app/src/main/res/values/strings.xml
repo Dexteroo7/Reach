@@ -18,5 +18,7 @@
     <string name="title_splash">Discover Stories That Matter</string>
     <string name="music_list">List</string>
     <string name="facebook_app_id">1506078176373024</string>
+    <string name="search_hint">Search youtube</string>
+    <string name="app_label">Reach</string>
 
 </resources>

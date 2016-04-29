@@ -15,6 +15,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.Nullable;
+import android.support.design.widget.CoordinatorLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTabHost;
 import android.support.v4.content.CursorLoader;
@@ -22,6 +23,7 @@ import android.support.v4.content.Loader;
 import android.support.v4.util.LongSparseArray;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.CardView;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
 import android.util.Log;
@@ -48,6 +50,9 @@ import org.json.JSONException;
 
 import java.io.IOException;
 import java.lang.ref.WeakReference;
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -65,6 +70,7 @@ import reach.project.coreViews.push.PushContainer;
 import reach.project.coreViews.saved_songs.SavedSongsFragment;
 import reach.project.coreViews.yourProfile.ProfileFragment;
 import reach.project.coreViews.yourProfile.YourProfileFragment;
+import reach.project.coreViews.youtube_search.YoutubeSearchFragment;
 import reach.project.music.ReachDatabase;
 import reach.project.music.Song;
 import reach.project.music.SongHelper;
@@ -91,6 +97,10 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface, 
     private AlertDialog alertDialog;
     private int tabPosition = -1;
     private AlertDialog inviteDialog;
+    public static List<String> explorePlayList = new ArrayList<>();
+    public static Set<String> nowPlaying = new LinkedHashSet<>();
+    public static List<String> nowPlayingList = new ArrayList<>();
+    private int initialPlayListSize;
     //public static boolean PROCESS_ONPOSTRESUME_INTENT = true;
 
     public static void openActivity(Context context) {
@@ -189,7 +199,6 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface, 
                         .songCount(SELECTED_SONGS.size())
                         .appCount(SELECTED_APPS.size())
                         .build();
-
                 try {
                     PushActivity.startPushActivity(pushContainer, this);
                 } catch (IOException e) {
@@ -245,11 +254,96 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface, 
             }
         }
         currentYTId = text;
-        try {
-            player.loadVideo(currentYTId);
-        } catch (IllegalStateException e) {
-            initializePlayer();
+        final boolean modified = nowPlaying.add(text);
+        int position = 0;
+        if(modified) {
+            nowPlayingList.clear();
+            nowPlayingList.addAll(nowPlaying);
+            position = nowPlayingList.size()-1;
         }
+        else
+        {
+            position = nowPlayingList.indexOf(text);
+        }
+
+        try {
+            //player.cueVideos(null);
+            if(player.isPlaying())
+                player.pause();
+            player.loadVideos(nowPlayingList,position,0);
+        } catch (IllegalStateException e) {
+            initializePlayer(4,currentYTId);
+        }
+    }
+
+    @Override
+    public void playYoutubePlayList() {
+
+
+        //TODO: Handle Case when youtube player is not visible and there is need to pla the playlist
+
+        if (ytLayout.getVisibility() != View.VISIBLE)
+            ytLayout.setVisibility(View.VISIBLE);
+        if (ytFragment.isHidden()) {
+            if (isFinishing())
+                return;
+            try {
+                //TODO: Check why this error is coming
+                getSupportFragmentManager().beginTransaction().show(ytFragment).commit();
+            } catch (IllegalStateException ignored) {
+            }
+        }
+        try {
+            //player.cueVideos(explorePlayList);
+            nowPlayingList.clear();
+            nowPlayingList.addAll(nowPlaying);
+            player.loadVideos(nowPlayingList,0,0);
+            //player.loadVideos(explorePlayList);
+        } catch (IllegalStateException e) {
+            initializePlayer(3,null);
+        }
+
+    }
+
+    @Override
+    public void cueVideos() {
+        if(explorePlayList == null || explorePlayList.size() == 0 )
+            return;
+
+            if(player==null) {
+                initializePlayer(5,null);
+                return;
+            }
+        player.cueVideos(explorePlayList);
+    }
+
+    @Override
+    public void playVideoAtParticularAdapterPosition(int adapterItemPosition) {
+
+        if (ytLayout.getVisibility() != View.VISIBLE)
+            ytLayout.setVisibility(View.VISIBLE);
+        if (ytFragment.isHidden()) {
+            if (isFinishing())
+                return;
+            try {
+                //TODO: Check why this error is coming
+                getSupportFragmentManager().beginTransaction().show(ytFragment).commit();
+            } catch (IllegalStateException ignored) {
+            }
+        }
+        try {
+            //player.cueVideos(explorePlayList);
+            player.loadVideos(explorePlayList,adapterItemPosition,0);
+            //player.loadVideos(explorePlayList);
+        } catch (IllegalStateException e) {
+            initializePlayer(1,adapterItemPosition);
+        }
+
+    }
+
+    @Override
+    public void cueVideos(List<String> videos) {
+        player.cueVideo(videos.get(0));
     }
 
     public YouTubePlayer player = null;
@@ -412,6 +506,12 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface, 
                 R.drawable.saved_tab_selector
                 ))
                 , SavedSongsFragment.class, null);
+        mTabHost.addTab(mTabHost.newTabSpec("youtube_search").setIndicator(setUpTabView(
+                        inflater,
+                        "Search",
+                        R.drawable.search_selector
+                        ))
+                        , YoutubeSearchFragment.class, null);
 
 
 
@@ -501,11 +601,12 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface, 
         ytFragment = (YouTubePlayerSupportFragment) getSupportFragmentManager().findFragmentById(R.id.video_fragment_container);
         ytLayout = (LinearLayout) findViewById(R.id.ytLayout);
 
-        initializePlayer();
+        initializePlayer(0,null);
 
     }
 
-    private void initializePlayer() {
+    //action: 0 = Nothing, 1=cueVideoFromPlayListAtParticularIndex, 2 = close, 3=queueVideosAndPlay, 4=loadVideoFromYoutubeId, 5=queuevideos
+    private void initializePlayer(int action, Object dataForAction ) {
         final ImageView ytCloseBtn = (ImageView) findViewById(R.id.ytCloseBtn);
         ytFragment.initialize("AIzaSyAYH8mcrHrqG7HJwjyGUuwxMeV7tZP6nmY", new YouTubePlayer.OnInitializedListener() {
             @Override
@@ -513,15 +614,47 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface, 
                 Log.d("Ashish", "player created");
                 player = youTubePlayer;
                 player.setShowFullscreenButton(false);
+
 //                player.cueVideos();
-//                player.setLis
+
+                player.setPlaylistEventListener(new YouTubePlayer.PlaylistEventListener() {
+                    @Override
+                    public void onPrevious() {
+                        Toast.makeText(ReachActivity.this, "Playing Previous Video", Toast.LENGTH_SHORT).show();
+                    }
+
+                    @Override
+                    public void onNext() {
+
+                        ((ReachApplication) getApplication()).getTracker().send(new HitBuilders.EventBuilder()
+                                .setCategory("Playlist next song")
+                                .setAction("User Name - " + SharedPrefUtils.getUserName(preferences))
+                                .setLabel("YOUTUBE PLAYLIST NEXT")
+                                .setValue(1)
+                                .build());
+
+                        //Toast.makeText(ReachActivity.this, "Playing Next Video", Toast.LENGTH_SHORT).show();
+                        //Toast.makeText(ReachActivity.this, "hasNext? " + player.hasNext(), Toast.LENGTH_SHORT).show();
+                    }
+
+                    @Override
+                    public void onPlaylistEnded() {
+                        /*if(explorePlayList.size()>initialPlayListSize){
+                            player.loadVideos(explorePlayList,initialPlayListSize,0);
+                            initialPlayListSize = explorePlayList.size();
+                        }*/
+                        //Toast.makeText(ReachActivity.this, "Playing Ended", Toast.LENGTH_SHORT).show();
+
+                    }
+                });
+
                 player.setPlaybackEventListener(new YouTubePlayer.PlaybackEventListener() {
                     @Override
                     public void onPlaying() {
                         ((ReachApplication) getApplication()).getTracker().send(new HitBuilders.EventBuilder()
                                 .setCategory("Play song")
                                 .setAction("User Name - " + SharedPrefUtils.getUserName(preferences))
-                                .setLabel("YOUTUBE - EXPLORE")
+                                .setLabel("YOUTUBE")
                                 .setValue(1)
                                 .build());
                         /*final Intent intent = new Intent(ReachActivity.this, ProcessManager.class);
@@ -571,10 +704,65 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface, 
                         try {
                             player.pause();
                         } catch (IllegalStateException e) {
-                            initializePlayer(true);
+                            initializePlayer(2,null);
                             //player.pause();
                         }
+                        /*CoordinatorLayout.LayoutParams params1 = new CoordinatorLayout.LayoutParams(StaticData.deviceWidth,StaticData.deviceHeight-MiscUtils.dpToPx(97));
+                        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(StaticData.deviceWidth-MiscUtils.dpToPx(4),StaticData.deviceHeight-MiscUtils.dpToPx(97));
+                        CardView view = (CardView) findViewById(R.id.video_fragment_layout);
+                        ytLayout.setLayoutParams(params1);
+                        view.setLayoutParams(params);
+*/
                     });
+
+                switch (action){
+
+                    case 0:
+
+                        break;
+
+                    case 1:
+                        //player.cueVideos(explorePlayList,(int)dataForAction,0);
+                        initialPlayListSize = explorePlayList.size();
+                        player.loadVideos(explorePlayList,(int)dataForAction,0);
+                        break;
+
+                    case 2:
+                            player.pause();
+                        break;
+
+                    case 3:
+                        nowPlayingList.clear();
+                        nowPlayingList.addAll(nowPlaying);
+                        player.loadVideos(nowPlayingList,0,0);
+                        break;
+
+                    case 4:
+                        final String ytId = (String) dataForAction;
+                        final boolean modified = nowPlaying.add(ytId);
+                        int position = 0;
+                        if(modified) {
+                            nowPlayingList.clear();
+                            nowPlayingList.addAll(nowPlaying);
+                            position = nowPlayingList.size()-1;
+                        }
+                        else
+                        {
+                            position = nowPlayingList.indexOf(ytId);
+                        }
+                        player.loadVideos(nowPlayingList,position,0);
+
+                        break;
+                    case 5:
+                        player.cueVideos(explorePlayList);
+                        break;
+
+                    default:
+                        break;
+
+
+                }
+
             }
 
             @Override
@@ -585,18 +773,52 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface, 
     }
 
 
-    private void initializePlayer(boolean close) {
+    /*private void initializePlayer(boolean close) {
         final ImageView ytCloseBtn = (ImageView) findViewById(R.id.ytCloseBtn);
         ytFragment.initialize("AIzaSyAYH8mcrHrqG7HJwjyGUuwxMeV7tZP6nmY", new YouTubePlayer.OnInitializedListener() {
             @Override
             public void onInitializationSuccess(YouTubePlayer.Provider provider, YouTubePlayer youTubePlayer, boolean b) {
                 Log.d("Ashish", "player created");
                 player = youTubePlayer;
-                player.setShowFullscreenButton(false);
+                player.setShowFullscreenButton(true);
                 if(close){
                     player.pause();
                 }
 
+                player.setPlayerStateChangeListener(new YouTubePlayer.PlayerStateChangeListener() {
+                    @Override
+                    public void onLoading() {
+
+                    }
+
+                    @Override
+                    public void onLoaded(String s) {
+
+                    }
+
+                    @Override
+                    public void onAdStarted() {
+
+                    }
+
+                    @Override
+                    public void onVideoStarted() {
+
+                    }
+
+                    @Override
+                    public void onVideoEnded() {
+                        //TODO: Check what is the index of video which was just playing and then again load
+                        //the playlist using the arraylist above because it would probably contain new elements
+
+                    }
+
+                    @Override
+                    public void onError(YouTubePlayer.ErrorReason errorReason) {
+
+                    }
+                });
+
                 player.setPlaybackEventListener(new YouTubePlayer.PlaybackEventListener() {
                     @Override
                     public void onPlaying() {
@@ -606,9 +828,9 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface, 
                                 .setLabel("YOUTUBE - EXPLORE")
                                 .setValue(1)
                                 .build());
-                        /*final Intent intent = new Intent(ReachActivity.this, ProcessManager.class);
+                        *//*final Intent intent = new Intent(ReachActivity.this, ProcessManager.class);
                         intent.setAction(ProcessManager.ACTION_KILL);
-                        startService(intent);*/
+                        startService(intent);*//*
                     }
 
                     @Override
@@ -664,7 +886,7 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface, 
 
             }
         });
-    }
+    }*/
 
     public String fastSanitize(String str) {
 

@@ -2,6 +2,7 @@ package reach.project.coreViews.explore;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.app.SearchManager;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
@@ -26,16 +27,21 @@ import android.support.v4.view.ViewPager;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
 import android.text.Html;
 import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Interpolator;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.Scroller;
 import android.widget.TextView;
@@ -71,6 +77,8 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
+import org.w3c.dom.Text;
+
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.lang.ref.WeakReference;
@@ -80,6 +88,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Vector;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 
@@ -91,6 +100,7 @@ import okhttp3.RequestBody;
 import okhttp3.Response;
 import reach.backend.entities.messaging.model.MyString;
 import reach.project.R;
+import reach.project.core.ReachActivity;
 import reach.project.core.ReachApplication;
 import reach.project.core.StaticData;
 import reach.project.coreViews.friends.ReachFriendsHelper;
@@ -121,6 +131,7 @@ public class ExploreFragment extends Fragment implements ExploreRecyclerViewAdap
     private AlertDialog fbShareDialog;
     private ExploreRecyclerViewAdapter exploreRecyclerViewAdapter;
     private int lastItemPosition;
+    private View mPlayAllContainer;
 
     public ExploreFragment() {
         reference = new WeakReference<>(this);
@@ -356,6 +367,11 @@ public class ExploreFragment extends Fragment implements ExploreRecyclerViewAdap
                     imageRequest = ImageRequestBuilder.newBuilderWithSource(Uri.parse(image))
                             //.setResizeOptions(FULL_IMAGE_SIZE)
                             .build();
+                    //TODO: Add song to the playList
+                    //ReachActivity.explorePlayList.add(youtubeId.getAsString());
+
+
+
                     break;
                 case APP:
 
@@ -432,6 +448,7 @@ public class ExploreFragment extends Fragment implements ExploreRecyclerViewAdap
     private YouTubePlayer player = null;
 
     private TextView playerText = null;
+    private List<SearchResult> searchResults = new ArrayList<>(20);
 
 
     @Override
@@ -446,6 +463,7 @@ public class ExploreFragment extends Fragment implements ExploreRecyclerViewAdap
         toolbar.setTitle("Discover");
         toolbar.inflateMenu(R.menu.explore_menu);
         toolbar.setOnMenuItemClickListener(mListener != null ? mListener.getMenuClickListener() : null);
+
         exploreRecyclerView = (RecyclerView) rootView.findViewById(R.id.exploreRecyclerView);
         final LinearLayoutManager layoutManager = new LinearLayoutManager(getActivity(),LinearLayoutManager.VERTICAL,false);
         exploreRecyclerView.setLayoutManager(layoutManager);
@@ -454,9 +472,7 @@ public class ExploreFragment extends Fragment implements ExploreRecyclerViewAdap
         //explorePager.setScrollDurationFactor(0.4);
         //explorePager.setClipToPadding(false);
         final int size = MiscUtils.dpToPx(16);
-
-        ListView list;
-
+        mPlayAllContainer = rootView.findViewById(R.id.playButtonContainer);
 
         exploreRecyclerView.setOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
@@ -544,72 +560,37 @@ public class ExploreFragment extends Fragment implements ExploreRecyclerViewAdap
                 new SendRequest().executeOnExecutor(requestSender, StaticData.DEVIKA,
                         SharedPrefUtils.getServerId(getActivity().getSharedPreferences("Reach", Context.MODE_PRIVATE))));
         getLoaderManager().initLoader(StaticData.FRIENDS_VERTICAL_LOADER, null, this);
+        mPlayAllContainer.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (buffer != null) {
+                    Vector<JsonObject> bufferData = buffer.getAllBufferData();
+                    ReachActivity.nowPlaying.clear();
+                    for (int i = ReachActivity.explorePlayList.size(); i < bufferData.size(); i++) {
+
+                        JsonObject object = bufferData.get(i);
+                        final JsonElement youtubeId = MiscUtils.get(object, ExploreJSON.YOUTUBE_ID);
+                        if (youtubeId == null)
+                            continue;
+                        //TODO: Add song to the playList
+                        ReachActivity.nowPlaying.add(youtubeId.getAsString());
+                    }
+                    if(mListener!=null){
+                        mListener.playYoutubePlayList();
+                    }
+                    else{
+                        Toast.makeText(getActivity().getApplicationContext(), "Sorry, an error occured!", Toast.LENGTH_SHORT).show();
+                    }
+
+                } else {
+                    //TODO: Modify the text message
+                    Toast.makeText(getActivity().getApplicationContext(), "Sorry, an error occured!", Toast.LENGTH_SHORT).show();
+
+                }
+            }
+        });
 
         return rootView;
-    }
-
-    private static class YTTest extends AsyncTask<String, Void, SearchResult> {
-        @Override
-        protected SearchResult doInBackground(String... params) {
-            try {
-                final HttpTransport transport = new NetHttpTransport();
-                final JsonFactory factory = new JacksonFactory();
-                final HttpRequestInitializer initialize = request -> {
-                    request.setConnectTimeout(request.getConnectTimeout() * 2);
-                    request.setReadTimeout(request.getReadTimeout() * 2);
-                };
-                final YouTube youTube = new YouTube.Builder(transport, factory, initialize).build();
-                // Define the API request for retrieving search results.
-                final YouTube.Search.List search = youTube.search().list("snippet");
-
-                // Set your developer key from the Google Developers Console for
-                // non-authenticated requests. See:
-                // https://console.developers.google.com/
-                final String apiKey = "AIzaSyAYH8mcrHrqG7HJwjyGUuwxMeV7tZP6nmY";
-                search.setKey(apiKey);
-
-                search.setQ(params[0]);
-
-                // Restrict the search results to only include videos. See:
-                // https://developers.google.com/youtube/v3/docs/search/list#type
-                search.setType("video");
-
-                search.setVideoCategoryId("10");
-
-                // To increase efficiency, only retrieve the fields that the
-                // application uses.
-                search.setFields("items(id/videoId,snippet/title)");
-                search.setMaxResults(1L);
-
-                // Call the API and print results.
-                final SearchListResponse searchResponse = search.execute();
-                final List<SearchResult> searchResultList = searchResponse.getItems();
-                /*final StringBuilder stringBuilder = new StringBuilder();
-                for (SearchResult searchResult : searchResultList)
-                    stringBuilder.append(searchResult.getSnippet().getTitle()).append("\n\n");
-                return stringBuilder.toString();*/
-                if (searchResultList == null || searchResultList.isEmpty())
-                    return null;
-                return searchResultList.get(0);
-            } catch (IOException e) {
-                e.printStackTrace();
-                return null;
-            }
-        }
-
-        @Override
-        protected void onPostExecute(SearchResult searchResult) {
-            super.onPostExecute(searchResult);
-            /*MiscUtils.useContextFromFragment(reference, activity -> {
-                new AlertDialog.Builder(activity).setMessage(s).setTitle("Youtube").create().show();
-            });*/
-            if (searchResult == null)
-                return;
-            MiscUtils.useFragment(reference, fragment -> {
-                fragment.player.loadVideo(searchResult.getId().getVideoId());
-                fragment.playerText.setText(searchResult.getSnippet().getTitle());
-            });
-        }
     }
 
     private void showFbDialog() {
@@ -719,6 +700,7 @@ public class ExploreFragment extends Fragment implements ExploreRecyclerViewAdap
         /*exploreAdapter = new ExploreAdapter(this, this);
         explorePager.setAdapter(exploreAdapter);*/
 
+        mPlayAllContainer.setVisibility(View.VISIBLE);
         exploreRecyclerViewAdapter = new ExploreRecyclerViewAdapter(getActivity(),this,this);
 
         exploreRecyclerView.setAdapter(exploreRecyclerViewAdapter);
@@ -741,6 +723,7 @@ public class ExploreFragment extends Fragment implements ExploreRecyclerViewAdap
         if (exploreRecyclerViewAdapter != null)
             exploreRecyclerViewAdapter = null;
         noFriendsDiscoverLayoutContainer.setVisibility(View.VISIBLE);
+        mPlayAllContainer.setVisibility(View.GONE);
         if (exploreRecyclerView != null) {
             exploreRecyclerView.setAdapter(null);
             exploreRecyclerView.setVisibility(View.GONE);
@@ -836,10 +819,28 @@ public class ExploreFragment extends Fragment implements ExploreRecyclerViewAdap
     @Override
     public synchronized void notifyDataAvailable() {
 
-        //This is UI thread !
-        Log.i("Ayush", "Notifying data set changed on explore adapter");
         if (exploreRecyclerViewAdapter != null)
             exploreRecyclerViewAdapter.notifyDataSetChanged();
+
+        /*if(buffer!=null) {
+            Vector<JsonObject> bufferData = buffer.getAllBufferData();
+            for(int i=ReachActivity.explorePlayList.size();i<bufferData.size();i++) {
+
+                JsonObject object = bufferData.get(i);
+                final JsonElement youtubeId = MiscUtils.get(object, ExploreJSON.YOUTUBE_ID);
+                if (youtubeId == null)
+                    continue;
+                //TODO: Add song to the playList
+                ReachActivity.explorePlayList.add(youtubeId.getAsString());
+            }
+
+        }*/
+        /*if(mListener!=null){
+            mListener.cueVideos();
+        }*/
+        //This is UI thread !
+        Log.i("Ayush", "Notifying data set changed on explore adapter");
+
     }
 
     @Override
@@ -868,7 +869,9 @@ public class ExploreFragment extends Fragment implements ExploreRecyclerViewAdap
             switch (type) {
 
                 case MUSIC:
-                    addToDownload(exploreJson);
+                    //addToDownload(exploreJson);
+                    //mListener.playVideoAtParticularAdapterPosition((int)object);
+
                     break;
 
                 case APP:
@@ -1117,9 +1120,7 @@ public class ExploreFragment extends Fragment implements ExploreRecyclerViewAdap
         }
     }
 
-
-
-
+//    "items(id/kind,id/videoId,snippet/title,snippet/thumbnails/default/url)"
 
 
 

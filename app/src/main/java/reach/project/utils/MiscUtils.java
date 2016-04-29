@@ -1746,7 +1746,6 @@ public enum MiscUtils {
 
     }
 
-
 //    final HttpTransport transport = new NetHttpTransport();
 //    final JsonFactory factory = new JacksonFactory();
 //    final GoogleAccountCredential credential = GoogleAccountCredential.usingAudience(activity, StaticData.SCOPE);

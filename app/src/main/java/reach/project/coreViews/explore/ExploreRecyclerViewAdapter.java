@@ -148,7 +148,9 @@ public class ExploreRecyclerViewAdapter extends RecyclerView.Adapter implements 
                     .withDisplayName(musicTitle);
 
             musicHolder.image.setTag(savedSongsDataModelBuilder.withType(2).build());
+            //musicHolder.image.setTag(position);
             musicHolder.downBtn.setTag(savedSongsDataModelBuilder.withType(2).build());
+            //musicHolder.downBtn.setTag(position);
             musicHolder.saveBtn.setTag(savedSongsDataModelBuilder.withType(1).build());
 
 
