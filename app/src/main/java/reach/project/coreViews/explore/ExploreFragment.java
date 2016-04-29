@@ -566,7 +566,7 @@ public class ExploreFragment extends Fragment implements ExploreRecyclerViewAdap
                 if (buffer != null) {
                     Vector<JsonObject> bufferData = buffer.getAllBufferData();
                     ReachActivity.nowPlaying.clear();
-                    for (int i = ReachActivity.explorePlayList.size(); i < bufferData.size(); i++) {
+                    for (int i = 0; i < bufferData.size(); i++) {
 
                         JsonObject object = bufferData.get(i);
                         final JsonElement youtubeId = MiscUtils.get(object, ExploreJSON.YOUTUBE_ID);

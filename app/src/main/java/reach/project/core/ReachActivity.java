@@ -97,7 +97,6 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface, 
     private AlertDialog alertDialog;
     private int tabPosition = -1;
     private AlertDialog inviteDialog;
-    public static List<String> explorePlayList = new ArrayList<>();
     public static Set<String> nowPlaying = new LinkedHashSet<>();
     public static List<String> nowPlayingList = new ArrayList<>();
     private int initialPlayListSize;
@@ -307,20 +306,20 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface, 
 
     @Override
     public void cueVideos() {
-        if(explorePlayList == null || explorePlayList.size() == 0 )
+        /*if(explorePlayList == null || explorePlayList.size() == 0 )
             return;
 
             if(player==null) {
                 initializePlayer(5,null);
                 return;
             }
-        player.cueVideos(explorePlayList);
+        player.cueVideos(explorePlayList);*/
     }
 
     @Override
     public void playVideoAtParticularAdapterPosition(int adapterItemPosition) {
 
-        if (ytLayout.getVisibility() != View.VISIBLE)
+        /*if (ytLayout.getVisibility() != View.VISIBLE)
             ytLayout.setVisibility(View.VISIBLE);
         if (ytFragment.isHidden()) {
             if (isFinishing())
@@ -337,7 +336,7 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface, 
             //player.loadVideos(explorePlayList);
         } catch (IllegalStateException e) {
             initializePlayer(1,adapterItemPosition);
-        }
+        }*/
 
     }
 
@@ -721,11 +720,11 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface, 
 
                         break;
 
-                    case 1:
+                    /*case 1:
                         //player.cueVideos(explorePlayList,(int)dataForAction,0);
                         initialPlayListSize = explorePlayList.size();
                         player.loadVideos(explorePlayList,(int)dataForAction,0);
-                        break;
+                        break;*/
 
                     case 2:
                             player.pause();
@@ -753,9 +752,9 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface, 
                         player.loadVideos(nowPlayingList,position,0);
 
                         break;
-                    case 5:
+                    /*case 5:
                         player.cueVideos(explorePlayList);
-                        break;
+                        break;*/
 
                     default:
                         break;

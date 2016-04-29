@@ -24,7 +24,7 @@
             app:layout_scrollFlags="scroll|enterAlways"
             android:background="@color/reach_grey_bg1"
             android:layout_width="match_parent"
-            android:layout_height="60dp">
+            android:layout_height="54dp">
             <View
                 android:background="@drawable/shadow_top"
                 android:layout_width="match_parent"
