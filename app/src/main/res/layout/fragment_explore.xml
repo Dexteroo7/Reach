@@ -24,15 +24,14 @@
         <RelativeLayout
             android:id="@+id/playButtonContainer"
             app:layout_scrollFlags="scroll|enterAlways"
-            android:background="#F5F5F5"
+            android:background="#F0F0F0"
             android:layout_width="match_parent"
-            android:layout_height="60dp">
+            android:layout_height="48dp">
             <View
                 android:background="@drawable/shadow_top"
                 android:layout_width="match_parent"
                 android:layout_height="2dp" />
             <TextView
-                android:text="Play All Songs"
                 android:layout_marginLeft="20dp"
                 android:textSize="15sp"
                 android:textColor="@color/reach_grey"
@@ -44,10 +43,10 @@
                 android:textAllCaps="false"
                 android:textColor="#fff"
                 android:clickable="false"
-                android:layout_centerVertical="true"
                 android:layout_alignParentRight="true"
                 android:layout_marginRight="20dp"
                 android:background="@color/reach_color"
+                android:layout_marginTop="14dp"
                 android:layout_width="100dp"
                 android:layout_height="30dp" />
         </RelativeLayout>

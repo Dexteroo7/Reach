@@ -238,7 +238,7 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface, 
         ((ReachApplication) getApplication()).getTracker().send(new HitBuilders.EventBuilder()
                 .setCategory("Transaction - Add SongBrainz")
                 .setAction("User Name - " + SharedPrefUtils.getUserName(preferences))
-                .setLabel("YOUTUBE - EXPLORE")
+                .setLabel("YOUTUBE")
                 .setValue(1)
                 .build());
 
@@ -627,7 +627,7 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface, 
                     public void onNext() {
 
                         ((ReachApplication) getApplication()).getTracker().send(new HitBuilders.EventBuilder()
-                                .setCategory("Playlist next song")
+                                .setCategory("Transaction - Add SongBrainz")
                                 .setAction("User Name - " + SharedPrefUtils.getUserName(preferences))
                                 .setLabel("YOUTUBE PLAYLIST NEXT")
                                 .setValue(1)

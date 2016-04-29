@@ -26,13 +26,12 @@
             app:layout_scrollFlags="scroll|enterAlways"
             android:background="#F5F5F5"
             android:layout_width="match_parent"
-            android:layout_height="60dp">
+            android:layout_height="54dp">
             <View
                 android:background="@drawable/shadow_top"
                 android:layout_width="match_parent"
                 android:layout_height="2dp" />
             <TextView
-                android:text="Play All Songs"
                 android:layout_marginLeft="20dp"
                 android:textSize="15sp"
                 android:textColor="@color/reach_grey"
