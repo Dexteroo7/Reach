@@ -333,7 +333,8 @@ public class YourProfileMusicFragment extends Fragment implements CacheInjectorC
                 if (reachActRef.ytFragment.isHidden())
                     reachActRef.getSupportFragmentManager().beginTransaction().show(reachActRef.ytFragment).commit();
                 reachActRef.currentYTId = searchResult.getId().getVideoId();
-                reachActRef.player.loadVideo(reachActRef.currentYTId);
+                reachActRef.showYTVideo(reachActRef.currentYTId);
+                //reachActRef.player.loadVideo(reachActRef.currentYTId);
             });
         }
     }

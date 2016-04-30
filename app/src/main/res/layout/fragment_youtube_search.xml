@@ -1,0 +1,93 @@
+<android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:background="@color/reach_grey_bg">
+
+    <android.support.design.widget.AppBarLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#FFF"
+        app:elevation="0dp">
+
+        <android.support.v7.widget.Toolbar
+            android:id="@+id/exploreToolbar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="?attr/actionBarSize"
+            app:layout_scrollFlags="scroll|enterAlways"
+            app:popupTheme="@style/ThemeOverlay.AppCompat.Light"
+            app:theme="@style/ThemeOverlay.AppCompat.ActionBar"
+            app:titleTextColor="@color/reach_color" />
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="54dp"
+            android:orientation="horizontal"
+            android:background="#F5F5F5"
+            app:layout_scrollFlags="scroll|enterAlways"
+            >
+
+            <View
+                android:background="@drawable/shadow_top"
+                android:layout_width="match_parent"
+                android:layout_height="2dp" />
+
+            <ImageButton
+                android:id="@+id/youtube_search_button"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:layout_alignParentEnd="true"
+                android:layout_marginRight="16dp"
+                android:background="@null"
+                android:layout_centerVertical="true"
+                android:src="@drawable/icon_search_pink" />
+
+            <EditText
+                android:id="@+id/youtube_search_edt"
+                tools:text="@string/hello_blank_fragment"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:hint="Search on youtube"
+                android:layout_toLeftOf="@id/youtube_search_button"
+                android:imeOptions="actionSearch"
+                android:layout_centerVertical="true"
+                android:singleLine="true"
+                android:maxLines="1" />
+
+        </RelativeLayout>
+
+
+    </android.support.design.widget.AppBarLayout>
+
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
+
+        <ListView
+            android:id="@+id/youtube_search_results_list"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:paddingRight="8dp"
+            android:paddingBottom="56dp"
+            android:divider="@null"
+            android:background="#FAFAFA"
+            android:layout_marginBottom="56dp"
+            android:scrollbars="none" />
+
+        <ProgressBar
+            android:id="@+id/loadingProgress"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            style="?android:attr/progressBarStyle"
+            android:layout_gravity="center"
+            android:layout_marginBottom="48dp"
+            android:visibility="gone"
+            />
+    </FrameLayout>
+
+</android.support.design.widget.CoordinatorLayout>

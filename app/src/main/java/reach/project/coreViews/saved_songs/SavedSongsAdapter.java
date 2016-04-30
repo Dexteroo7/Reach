@@ -65,6 +65,10 @@ class SavedSongsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> im
         notifyDataSetChanged();
     }
 
+    public Cursor getSavedSongsCursor(){
+        return mySavedSongsCursor;
+    }
+
 
     @Override
     public void close() {

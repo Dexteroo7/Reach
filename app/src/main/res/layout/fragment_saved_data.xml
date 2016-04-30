@@ -20,15 +20,41 @@
             app:popupTheme="@style/ThemeOverlay.AppCompat.Light"
             app:theme="@style/ThemeOverlay.AppCompat.ActionBar"
             app:titleTextColor="@color/reach_color" />
-        <View
-            android:background="@drawable/shadow_top"
+
+        <RelativeLayout
+            android:id="@+id/playButtonContainer"
+            app:layout_scrollFlags="scroll|enterAlways"
+            android:background="#F5F5F5"
             android:layout_width="match_parent"
-            android:layout_height="2dp" />
+            android:layout_height="54dp">
+            <View
+                android:background="@drawable/shadow_top"
+                android:layout_width="match_parent"
+                android:layout_height="2dp" />
+            <TextView
+                android:layout_marginLeft="20dp"
+                android:textSize="15sp"
+                android:textColor="@color/reach_grey"
+                android:layout_centerVertical="true"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+            <Button
+                android:text="Play All"
+                android:textAllCaps="false"
+                android:textColor="#fff"
+                android:clickable="false"
+                android:layout_centerVertical="true"
+                android:layout_alignParentRight="true"
+                android:layout_marginRight="20dp"
+                android:background="@color/reach_color"
+                android:layout_width="100dp"
+                android:layout_height="30dp" />
+        </RelativeLayout>
 
     </android.support.design.widget.AppBarLayout>
 
 
-    <FrameLayout
+    <RelativeLayout
 
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -53,5 +79,5 @@
             android:layout_height="match_parent"
             android:layout_gravity="center"-->
 
-    </FrameLayout>
+    </RelativeLayout>
 </android.support.design.widget.CoordinatorLayout>

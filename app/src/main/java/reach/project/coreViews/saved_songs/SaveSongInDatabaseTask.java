@@ -9,7 +9,12 @@ import android.os.AsyncTask;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.google.android.gms.analytics.HitBuilders;
+
 import java.lang.ref.WeakReference;
+
+import reach.project.core.ReachApplication;
+import reach.project.utils.SharedPrefUtils;
 
 /**
  * Created by gauravsobti on 20/04/16.
@@ -69,8 +74,16 @@ public class SaveSongInDatabaseTask extends AsyncTask<Void, Void, Boolean> {
     @Override
     protected void onPostExecute(Boolean successful) {
         if(successful){
-            if(contextWeakReference.get()!=null)
-            Toast.makeText(contextWeakReference.get().getApplicationContext(), "Song saved", Toast.LENGTH_SHORT).show();
+            if(contextWeakReference.get()!=null) {
+                Toast.makeText(contextWeakReference.get().getApplicationContext(), "Song saved", Toast.LENGTH_SHORT).show();
+
+                ((ReachApplication) contextWeakReference.get().getApplicationContext()).getTracker().send(new HitBuilders.EventBuilder()
+                        .setCategory("Song Saved")
+                        .setAction("User Name - " + SharedPrefUtils.getUserName(SharedPrefUtils.getPreferences(contextWeakReference.get())))
+                        .setLabel("Save Song")
+                        .setValue(1)
+                        .build());
+            }
         }
         else{
             if(contextWeakReference.get()!=null)

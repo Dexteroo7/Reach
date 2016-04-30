@@ -114,6 +114,11 @@ class ExploreBuffer<T> implements Closeable {
         return storyBuffer.get(position);
     }
 
+    public Vector<T> getAllBufferData(){
+
+        return storyBuffer;
+    }
+
     /**
      * Get the current size of story buffer
      *

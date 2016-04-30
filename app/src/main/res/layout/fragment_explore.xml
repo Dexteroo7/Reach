@@ -1,30 +1,87 @@
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:background="@color/reach_grey_bg">
 
-    <android.support.v7.widget.Toolbar
-        android:id="@+id/exploreToolbar"
-        app:titleTextColor="@color/reach_color"
+    <android.support.design.widget.AppBarLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:minHeight="?attr/actionBarSize" />
+        android:background="#FFF"
+        app:elevation="0dp">
 
-    <android.support.v7.widget.RecyclerView
-        android:id="@+id/exploreRecyclerView"
+        <android.support.v7.widget.Toolbar
+            android:id="@+id/exploreToolbar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="?attr/actionBarSize"
+            app:layout_scrollFlags="scroll|enterAlways"
+            app:popupTheme="@style/ThemeOverlay.AppCompat.Light"
+            app:theme="@style/ThemeOverlay.AppCompat.ActionBar"
+            app:titleTextColor="@color/reach_color" />
+
+
+        <RelativeLayout
+            android:id="@+id/playButtonContainer"
+            app:layout_scrollFlags="scroll|enterAlways"
+            android:background="#F0F0F0"
+            android:layout_width="match_parent"
+            android:layout_height="48dp">
+            <View
+                android:background="@drawable/shadow_top"
+                android:layout_width="match_parent"
+                android:layout_height="2dp" />
+            <TextView
+                android:layout_marginLeft="20dp"
+                android:textSize="15sp"
+                android:textColor="@color/reach_grey"
+                android:layout_centerVertical="true"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+            <Button
+                android:text="Play All"
+                android:textAllCaps="false"
+                android:textColor="#fff"
+                android:clickable="false"
+                android:layout_alignParentRight="true"
+                android:layout_marginRight="20dp"
+                android:background="@color/reach_color"
+                android:layout_marginTop="14dp"
+                android:layout_width="100dp"
+                android:layout_height="30dp" />
+        </RelativeLayout>
+
+
+    </android.support.design.widget.AppBarLayout>
+
+
+
+    <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_below="@+id/exploreToolbar"/>
+        app:layout_behavior="@string/appbar_scrolling_view_behavior"
+        >
 
-    <!--<reach.project.utils.viewHelpers.ViewPagerCustomDuration
-        android:id="@+id/explorer"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_below="@+id/exploreToolbar" />-->
-    <include layout="@layout/no_friends_discover_layout"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_below="@+id/exploreToolbar" />
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/exploreRecyclerView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            />
 
-</RelativeLayout>
+        <!--<reach.project.utils.viewHelpers.ViewPagerCustomDuration
+            android:id="@+id/explorer"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_below="@+id/exploreToolbar" />-->
+        <include
+            layout="@layout/no_friends_discover_layout"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            />
+
+
+    </RelativeLayout>
+
+
+
+</android.support.design.widget.CoordinatorLayout>
