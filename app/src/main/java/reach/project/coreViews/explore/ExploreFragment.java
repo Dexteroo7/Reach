@@ -181,17 +181,16 @@ public class ExploreFragment extends Fragment implements ExploreRecyclerViewAdap
             final Iterator<JsonElement> elementIterator = jsonElements.iterator();
             final List<JsonObject> toReturn = new ArrayList<>(jsonElements.size());
 
-            while (elementIterator.hasNext()) {
-                JsonObject exploreJSON = elementIterator.next().getAsJsonObject();
+            for (JsonElement jsonElement : jsonElements) {
+                final JsonObject exploreJSON = jsonElement.getAsJsonObject();
                 final ExploreTypes exploreTypes = ExploreTypes.valueOf(MiscUtils.get(exploreJSON, ExploreJSON.TYPE).getAsString());
                 if(exploreTypes== null)
                     continue;
                 switch (exploreTypes){
                     case APP:
                         continue;
-
-                        default:
-                            toReturn.add(elementIterator.next().getAsJsonObject());
+                    default:
+                        toReturn.add(exploreJSON);
                 }
             }
 

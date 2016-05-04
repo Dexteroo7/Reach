@@ -56,7 +56,6 @@ public class ProfileFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
 
         View v = inflater.inflate(R.layout.activity_profile,container,false);
-        reference = new WeakReference<>(this);
 
         sharedPreferences = getActivity().getSharedPreferences("Reach", Context.MODE_PRIVATE);
 
@@ -146,8 +145,6 @@ public class ProfileFragment extends Fragment {
 
     private SharedPreferences sharedPreferences;
 
-    private static WeakReference<ProfileFragment> reference = null;
-
     public static ProfileFragment openProfile(long userId, Context context) {
         ProfileFragment fragment = new ProfileFragment();
         Bundle bundle = new Bundle();
@@ -156,11 +153,8 @@ public class ProfileFragment extends Fragment {
         return fragment;
     }
 
-    @Nullable
     private TextView sendButton;
-    @Nullable
     private ImageView requestIcon;
-    @Nullable
     private TextView text1, text2;
 
     private final ExecutorService requestSender = MiscUtils.getRejectionExecutor();
@@ -168,7 +162,7 @@ public class ProfileFragment extends Fragment {
     private final View.OnClickListener sendRequest = view -> {
 
         //send friend request
-        new SendRequest().executeOnExecutor(
+        new SendRequest(this).executeOnExecutor(
                 requestSender,
                 userId,
                 SharedPrefUtils.getServerId(sharedPreferences));
@@ -248,17 +242,19 @@ public class ProfileFragment extends Fragment {
 
     private static final class SendRequest extends AsyncTask<Long, Void, Long> {
 
+        private WeakReference<ProfileFragment> profileFragmentWeakReference;
+        public SendRequest(ProfileFragment profileFragment) {
+            profileFragmentWeakReference = new WeakReference<>(profileFragment);
+        }
 
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
-            if(reference.get()!=null) {
+            MiscUtils.useFragment(profileFragmentWeakReference, fragment -> {
                 Log.d(TAG, "onPreExecute: Disabling send button");
-                reference.get().sendButton.setEnabled(false);
-                reference.get().progress_bar.setVisibility(View.VISIBLE);
-            }
-            else
-                cancel(true);
+                fragment.sendButton.setEnabled(false);
+                fragment.progress_bar.setVisibility(View.VISIBLE);
+            });
 
         }
 
@@ -275,20 +271,19 @@ public class ProfileFragment extends Fragment {
                     () -> StaticData.MESSAGING_API.requestAccess(params[1], params[0]).execute(),
                     Optional.of(input -> (input == null || TextUtils.isEmpty(input.getString()) || input.getString().equals("false")))).orNull();
 
-            final String toParse;
-
-            if(reference.get()!=null) {
-            if (dataAfterWork == null || TextUtils.isEmpty(toParse = dataAfterWork.getString()) || toParse.equals("false")){
-                final ContentValues values = new ContentValues();
-                values.put(ReachFriendsHelper.COLUMN_STATUS, ReachFriendsHelper.Status.REQUEST_NOT_SENT.getValue());
+            return MiscUtils.useFragment(profileFragmentWeakReference, fragment -> {
+                final String toParse;
+                if (dataAfterWork == null || TextUtils.isEmpty(toParse = dataAfterWork.getString()) || toParse.equals("false")){
+                    final ContentValues values = new ContentValues();
+                    values.put(ReachFriendsHelper.COLUMN_STATUS, ReachFriendsHelper.Status.REQUEST_NOT_SENT.getValue());
 
                     //response becomes the id of failed person
-                    reference.get().getActivity().getContentResolver().update(
+                    fragment.getActivity().getContentResolver().update(
                             Uri.parse(ReachFriendsProvider.CONTENT_URI + "/" + params[0]),
                             values,
                             ReachFriendsHelper.COLUMN_ID + " = ?",
                             new String[]{params[0] + ""});
-                return params[0];
+                    return params[0];
                 }
 
                 else {
@@ -297,7 +292,7 @@ public class ProfileFragment extends Fragment {
                     //update locally
                     final ContentValues values = new ContentValues();
                     values.put(ReachFriendsHelper.COLUMN_STATUS, ReachFriendsHelper.Status.REQUEST_SENT_NOT_GRANTED.getValue());
-                    reference.get().getActivity().getContentResolver().update(
+                    fragment.getActivity().getContentResolver().update(
                             Uri.parse(ReachFriendsProvider.CONTENT_URI + "/" + userId),
                             values,
                             ReachFriendsHelper.COLUMN_ID + " = ?",
@@ -305,32 +300,27 @@ public class ProfileFragment extends Fragment {
 
                     return null;
                 }
-            }
-            return 0L;
+            }).or(0L);
         }
 
         @Override
         protected void onPostExecute(final Long response) {
 
             super.onPostExecute(response);
-            if(reference.get()!=null) {
 
-            if (response != null && response > 0) {
-                    reference.get().setRequestNotSent();
-                    Toast.makeText(reference.get().getActivity(), "Request Failed", Toast.LENGTH_SHORT).show();
+            MiscUtils.useFragment(profileFragmentWeakReference, fragment -> {
+                if (response != null && response > 0) {
+                    fragment.setRequestNotSent();
+                    Toast.makeText(fragment.getActivity(), "Request Failed", Toast.LENGTH_SHORT).show();
                 }
                 else if(response == null){
-                reference.get().setRequestSent();
-            }
+                    fragment.setRequestSent();
+                }
 
                 Log.d(TAG, "onPostExecute: enabling send button");
-                reference.get().sendButton.setEnabled(true);
-                reference.get().progress_bar.setVisibility(View.INVISIBLE);
-
-            }
-
-
-
+                fragment.sendButton.setEnabled(true);
+                fragment.progress_bar.setVisibility(View.INVISIBLE);
+            });
         }
     }
 
