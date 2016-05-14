@@ -48,7 +48,6 @@
 
     <LinearLayout
         android:id="@+id/ytLayout"
-        android:visibility="gone"
         android:orientation="vertical"
         android:layout_gravity="bottom|right"
         android:layout_marginBottom="60dp"
@@ -76,6 +75,10 @@
             <fragment
                 class="com.google.android.youtube.player.YouTubePlayerSupportFragment"
                 android:id="@+id/video_fragment_container"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
+            <SurfaceView
+                android:id="@+id/surfaceView"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent" />
         </android.support.v7.widget.CardView>

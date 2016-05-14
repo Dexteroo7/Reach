@@ -10,12 +10,14 @@ import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
+import android.media.AudioManager;
+import android.media.MediaPlayer;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.Nullable;
-import android.support.design.widget.CoordinatorLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTabHost;
 import android.support.v4.content.CursorLoader;
@@ -23,11 +25,12 @@ import android.support.v4.content.Loader;
 import android.support.v4.util.LongSparseArray;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.CardView;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
 import android.util.Log;
+import android.util.SparseArray;
 import android.view.LayoutInflater;
+import android.view.SurfaceView;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
@@ -56,6 +59,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import at.huber.youtubeExtractor.YouTubeUriExtractor;
+import at.huber.youtubeExtractor.YtFile;
 import reach.backend.entities.feedBackApi.model.FeedBack;
 import reach.project.R;
 import reach.project.apps.App;
@@ -149,6 +154,9 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface, 
     public static final Set<App> SELECTED_APPS = MiscUtils.getSet(5);
     public static final LongSparseArray<Boolean> SELECTED_SONG_IDS = new LongSparseArray<>(5);
 
+    private final static MediaPlayer mediaPlayer = new MediaPlayer();
+
+
     //TODO: Remove sharedPreferences global variable
     SharedPreferences preferences;
     ////////////////////////////////////////private static final
@@ -232,9 +240,26 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface, 
         return false;
     };
 
+    private static final String youTubePrefix = "http://youtube.com/watch?v=";
+
     @Override
     public void showYTVideo(String text) {
-        ((ReachApplication) getApplication()).getTracker().send(new HitBuilders.EventBuilder()
+        mediaPlayer.reset();
+        new YouTubeUriExtractor(this) {
+            @Override
+            public void onUrisAvailable(String videoId, String videoTitle, SparseArray<YtFile> ytFiles) {
+                if (ytFiles != null) {
+                    try {
+                        mediaPlayer.setDataSource(ytFiles.get(36).getUrl());
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    mediaPlayer.prepareAsync();
+                }
+            }
+        }.execute(youTubePrefix + text);
+
+        /*((ReachApplication) getApplication()).getTracker().send(new HitBuilders.EventBuilder()
                 .setCategory("Transaction - Add SongBrainz")
                 .setAction("User Name - " + SharedPrefUtils.getUserName(preferences))
                 .setLabel("YOUTUBE")
@@ -272,7 +297,7 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface, 
             player.loadVideos(nowPlayingList,position,0);
         } catch (IllegalStateException e) {
             initializePlayer(4,currentYTId);
-        }
+        }*/
     }
 
     @Override
@@ -440,6 +465,9 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface, 
         setContentView(R.layout.activity_reach);
 
         reference = new WeakReference<>(this);
+
+        mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+        mediaPlayer.setOnPreparedListener(mp -> mp.start());
 
         preferences = getSharedPreferences("Reach", Context.MODE_PRIVATE);
         serverId = SharedPrefUtils.getServerId(preferences);
@@ -610,6 +638,9 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface, 
         ytFragment.initialize("AIzaSyAYH8mcrHrqG7HJwjyGUuwxMeV7tZP6nmY", new YouTubePlayer.OnInitializedListener() {
             @Override
             public void onInitializationSuccess(YouTubePlayer.Provider provider, YouTubePlayer youTubePlayer, boolean b) {
+
+                mediaPlayer.setDisplay(((SurfaceView) findViewById(R.id.surfaceView)).getHolder());
+
                 Log.d("Ashish", "player created");
                 player = youTubePlayer;
                 player.setShowFullscreenButton(false);
